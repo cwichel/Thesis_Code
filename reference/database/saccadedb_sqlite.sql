@@ -1,7 +1,7 @@
 --===============================================
 -- SQLite Script generated manually 
 -- Date		: 24/01/2018
--- model	: saccadeApp
+-- model	: saccadedb
 -- version	: 1.0
 -- author	: Christian Wiche
 --===============================================
