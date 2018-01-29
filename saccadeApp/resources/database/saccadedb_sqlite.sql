@@ -17,13 +17,13 @@ create table if not exists master (
 	mas_screen			int				not null 	default 0,
 	mas_tracker			int				not null	default 0,
 	mas_monitor			varchar(50)		not null	default 'default',
-	mas_savepath		varchar(200)	not null	default './events',
+	mas_save_path		varchar(200)	not null	default './events',
 	primary key (mas_title)
 );
 
 
 --===============================================
--- TEST-RELATED TABLES 
+-- TEST-RELATED TABLES
 --===============================================
 -- Test: base table -----------------------------
 create table if not exists test (
@@ -31,8 +31,8 @@ create table if not exists test (
 	tes_title 			varchar(100) 	not null,
 	tes_version 		varchar(10)		not null,
 	tes_description 	mediumtext 		null,
-	tes_datecreation 	timestamp		null 		default current_timestamp,
-	tes_dateupdate		timestamp 		null 		default current_timestamp,
+	tes_date_create 	timestamp		null 		default current_timestamp,
+	tes_date_update		timestamp 		null 		default current_timestamp,
 	primary key (
 		tes_title,
 		tes_version
@@ -51,7 +51,7 @@ create trigger if not exists trg_tes_dat
 	on test
 	begin
 		update test
-		set tes_dateupdate = current_timestamp
+		set tes_date_update = current_timestamp
 		where tes_code = new.tes_code;
 	end;
 
@@ -60,7 +60,7 @@ create table if not exists tes_frame (
 	tes_code			varchar(10) 	not null,
 	fra_id				int				not null	default 1,
 	fra_color			varchar(20)		not null	default 'black',
-	fra_istask			tinyint			not null	default 0,
+	fra_is_task			tinyint			not null	default 0,
 	primary key (
 		tes_code,
 		fra_id
@@ -101,8 +101,8 @@ create table if not exists tes_fra_time (
 create table if not exists tes_fra_task (
 	tes_code			varchar(10)		not null,
 	fra_id				int				not null	default 1,
-	tas_keysall 		text			not null,
-	tas_keyssel			text			not null,
+	tas_key_all 		text			not null,
+	tas_key_sel			text			not null,
 	primary key (
 		tes_code,
 		fra_id
@@ -126,11 +126,12 @@ create table if not exists tes_fra_object (
 	fra_id				int				not null	default 1,
 	obj_id 				int 			not null	default 1,
 	obj_name			varchar(50)		null,
-	obj_units			varchar(10)		not null 	default 'deg',
+	obj_units			varchar(10)		not null 	default 'degFlat',
 	obj_posx			float 			not null 	default 0.0,
 	obj_posy			float 			not null 	default 0.0,
 	obj_ori				float 			not null 	default 0.0,
-	obj_isimg			tinyint 		not null 	default 0,
+	obj_size 			float 			not null 	default 1.0,
+	obj_is_img			tinyint 		not null 	default 0,
 	obj_image			blob 			null,
 	obj_shape			varchar(20)		not null 	default 'square',
 	obj_color			varchar(20)		not null 	default 'white',
@@ -157,7 +158,7 @@ create index if not exists idx_tes_fra_obj on tes_fra_object (tes_code asc, fra_
 
 
 --===============================================
--- EXPERIMENT-RELATED TABLES 
+-- EXPERIMENT-RELATED TABLES
 --===============================================
 -- Experiment: base table -----------------------
 create table if not exists experiment (
@@ -166,8 +167,8 @@ create table if not exists experiment (
 	exp_version			varchar(10)		not null,
 	exp_description		mediumtext		null,
 	exp_comment			mediumtext		null,
-	exp_datacreation	timestamp 		null		default current_timestamp,
-	exp_dataupdate		timestamp 		null		default current_timestamp,
+	exp_date_create		timestamp 		null		default current_timestamp,
+	exp_date_update		timestamp 		null		default current_timestamp,
 	primary key (
 		exp_title,
 		exp_version
@@ -187,7 +188,7 @@ create trigger if not exists trg_exp_dat
 	on experiment
 	begin
 		update experiment
-		set exp_dataupdate = current_timestamp
+		set exp_date_update = current_timestamp
 		where exp_code = new.exp_code;
 	end;
 
@@ -195,10 +196,10 @@ create trigger if not exists trg_exp_dat
 create table if not exists exp_dia (
 	exp_code			varchar(10)		not null,
 	dia_enable			tinyint 		not null 	default 1,
-	dia_askage			tinyint 		not null 	default 1,
-	dia_askgender		tinyint 		not null 	default 1,
-	dia_eskglasses		tinyint 		not null 	default 1,
-	dia_askeyecolor		tinyint 		not null 	default 1,
+	dia_ask_age			tinyint 		not null 	default 1,
+	dia_ask_gender		tinyint 		not null 	default 1,
+	dia_ask_glasses		tinyint 		not null 	default 1,
+	dia_ask_eye_color	tinyint 		not null 	default 1,
 	primary key (exp_code)
 	constraint fk_exp_dia
 		foreign key (exp_code)
@@ -210,11 +211,11 @@ create table if not exists exp_dia (
 -- Experiment: exp_con --------------------------
 create table if not exists exp_con (
 	exp_code			varchar(10)		not null,
-	con_spacetostart	tinyint 		not null 	default 0,
-	con_israndom		tinyint 		not null 	default 0,
-	con_isrest			tinyint 		not null 	default 0,
-	con_restperiod		int 			not null	default 0,
-	con_resttime		float			not null	default 0.0,
+	con_space_start		tinyint 		not null 	default 0,
+	con_is_rand			tinyint 		not null 	default 0,
+	con_is_rest			tinyint 		not null 	default 0,
+	con_rest_test		int 			not null	default 0,
+	con_rest_time		float			not null	default 0.0,
 	primary key (exp_code)
 	constraint fk_exp_con
 		foreign key (exp_code)
@@ -225,7 +226,7 @@ create table if not exists exp_con (
 
 
 --===============================================
--- EXPERIMENT-TEST RELATION TABLE 
+-- EXPERIMENT-TEST RELATION TABLE
 --===============================================
 create table if not exists exp_tes (
 	tes_code			varchar(10)		not null,

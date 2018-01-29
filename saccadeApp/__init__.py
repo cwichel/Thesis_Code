@@ -2,8 +2,7 @@
 # =============================================================================
 # Modules
 # =============================================================================
+from saccadeApp.utils import saccadedb, time
+from saccadeApp.core import experiment, test, frame, frame_object
 
 
-# Declaration
-from lib.db_saccadeApp import saccadedb
-#from lib.class_test import test, frame, frameobject
