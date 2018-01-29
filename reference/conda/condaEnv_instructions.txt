@@ -1,3 +1,5 @@
+Nota: Se sabe que funciona con conda 4.4.7
+
 1.- Instalar Anaconda, AVbin10, VLC y VCForPython
     - Python 2.7
     - x86

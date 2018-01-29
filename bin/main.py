@@ -2,6 +2,7 @@
 # =============================================================================
 # Modules
 # =============================================================================
+from psychopy import visual, core
 from saccadeApp import saccadedb, experiment, test, frame, frame_object
 
 
@@ -13,6 +14,8 @@ def test1(db):  # Test 1: Crear un test completo y guardarlo.
         # Create frames...
         # frame 1 ===============
         obj1 = frame_object()
+        obj1.set_units(u'deg')
+        obj1.set_size(2.0)
         obj1.set_name(u'fixation')
         obj1.set_shape(u'cross')
         # -------------
@@ -21,6 +24,8 @@ def test1(db):  # Test 1: Crear un test completo y guardarlo.
         fra1.object_new(obj1)
         # frame 2 ===============
         obj2 = frame_object()
+        obj2.set_units(u'deg')
+        obj2.set_size(2.0)
         obj2.set_name(u'objective')
         obj2.set_shape(u'square')
         obj2.set_color(u'yellow')
@@ -34,6 +39,9 @@ def test1(db):  # Test 1: Crear un test completo y guardarlo.
         # frame 4 ===============
         obj3 = frame_object()
         obj3.set_image(u'image1.jpeg')
+        obj3.set_units(u'deg')
+        obj3.set_orientation(45.0)
+        obj3.set_size(2.0)
         obj3.set_is_image(True)
         # -------------
         fra4 = frame()
@@ -85,8 +93,16 @@ if __name__ == '__main__':
         tes = None
     # Show frames...
     if isinstance(tes, test):
-        print 1
-
-
-
-
+        win = visual.Window(size=(800, 600), monitor=u'default', screen=1, color=u'black')
+        num = tes.frame_count()
+        fra = tes.frame_get_all()
+        if num is not None:
+            for fra_item in fra:
+                back = visual.Rect(win=win, width=800, height=600, fillColor=fra_item.get_color(), units=u'pix')
+                back.draw()
+                obj = fra_item.get_frame(win)
+                for obj_item in obj:
+                    obj_item.draw()
+                win.flip()
+                core.wait(2.0)
+        win.close()

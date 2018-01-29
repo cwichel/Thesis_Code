@@ -6,9 +6,8 @@ import os
 import copy
 import numpy as np
 from PIL import Image
-from psychopy import visual, colors
 from saccadeApp import saccadedb, time
-
+from psychopy import visual, core, colors
 
 # =============================================================================
 # Constants
@@ -1001,7 +1000,7 @@ class frame(object):
     def get_frame(self, win=visual.Window):
         obj_cnt = self.object_count()
         if obj_cnt is not None:
-            return [item.get_figure(win=win) for item in self.__obj_arr]
+            return [item.get_object(win=win) for item in self.__obj_arr]
         else:
             return None
 
@@ -1071,7 +1070,7 @@ class frame_object(object):
                 self.__ori = float(res[0, 4])
                 self.__size = float(res[0, 5])
                 self.__is_img = bool(int(res[0, 6]))
-                self.__image = self.decode_image(res[0, 7])
+                self.__image = self.__decode_image(res[0, 7])
                 self.__shape = unicode(res[0, 8])
                 self.__color = unicode(res[0, 9])
                 # -----------
@@ -1099,7 +1098,7 @@ class frame_object(object):
             sql %= (
                 tes_code, fra_id, obj_id,
                 self.__name, self.__units, self.__pos[0], self.__pos[1], self.__ori, self.__size,
-                self.__is_img, self.encode_image(),
+                self.__is_img, self.__encode_image(),
                 self.__shape, self.__color
             )
             # ---------------
@@ -1113,7 +1112,7 @@ class frame_object(object):
         return copy.deepcopy(self)
 
     # =================================
-    def decode_image(self, encimg):
+    def __decode_image(self, encimg):
         from io import BytesIO as bio
         # -------------------
         encimg = get_unicode(encimg)
@@ -1126,7 +1125,7 @@ class frame_object(object):
         else:
             return None
 
-    def encode_image(self):
+    def __encode_image(self):
         from io import BytesIO as bio
         # -------------------
         if self.__image is not None:
@@ -1203,10 +1202,10 @@ class frame_object(object):
         return self.__color
 
     # =================================
-    def get_figure(self, win=visual.Window):
+    def get_object(self, win=visual.Window):
         if self.__is_img and self.__image is not None:
             return visual.ImageStim(win=win, name=self.__name, image=self.__image,
-                                    size=self.__size, pos=self.__pos, ori=self.__ori,
+                                    pos=self.__pos, ori=self.__ori,
                                     units=self.__units
                                     )
         elif self.__shape == u'arrow':
