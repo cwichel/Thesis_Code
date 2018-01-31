@@ -2,5 +2,4 @@
 # =============================================================================
 # Modules
 # =============================================================================
-from saccadeApp.utils import saccadedb, time
-from saccadeApp.core import Experiment, Test, Frame, Component
+from saccadeApp.core import SaccadeDB, Experiment, Test, Frame, Component

@@ -4,9 +4,77 @@
 # =============================================================================
 import os
 import copy
+import platform
 import numpy as np
+import sqlite3 as lite
 from psychopy import visual, colors
-from saccadeApp import saccadedb, time
+
+
+# =============================================================================
+# Class: SaccadeDB
+# =============================================================================
+class SaccadeDB(object):
+    # ================================= Primary Constructor
+    def __init__(self, filepath=u'saccadedb.sqlite3'):
+        self.__conn = None
+        self.__dbfile = filepath
+        self.__script = self._get_script_path()
+        # -------------------
+        self.connect()
+
+    # ================================= Connection methods
+    def connect(self):
+        print u"Connecting to DB... "
+        if os.path.isfile(self.__dbfile):
+            self.__conn = lite.connect(self.__dbfile)
+            self.__conn.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
+            print u'Connected!'
+        else:
+            sql = open(self.__script, u'r').read()
+            self.__conn = lite.connect(self.__dbfile)
+            self.__conn.executescript(sql)
+            print u"Database not found. A new one was created."
+
+    def close(self):
+        try:
+            self.__conn.close()
+            print u"Disconnected!"
+            return True
+        except lite.Error, event:
+            print u"Error: %s" % event.args[0]
+            return False
+
+    @staticmethod
+    def _get_script_path():
+        is_win = any(platform.win32_ver())
+        os_dir = u'\\resources\\database\\' if is_win else u'/resources/database/'
+        return os.path.split(os.path.realpath(__file__))[0] + os_dir + u'saccadedb_sqlite.sql'
+
+    # ================================= Query methods
+    def push_query(self, query):       # insert, update, delete
+        try:
+            self.__conn.executescript(query)
+            self.__conn.commit()
+            return True
+        except lite.Error, event:
+            if self.__conn:
+                self.__conn.rollback()
+            print u"Error: %s" % event.args[0]
+            return False
+
+    def pull_query(self, query):       # select
+        try:
+            cursor = self.__conn.cursor()
+            cursor.execute(query)
+            result = cursor.fetchall()
+            result = np.array(result)
+            if result.shape[0] > 0:
+                return result
+            else:
+                return None
+        except lite.Error, event:
+            print u"Error: %s" % event.args[0]
+            return None
 
 
 # =============================================================================
@@ -58,6 +126,21 @@ class Utils(object):
             return temp
         except ValueError:
             return default
+
+    @staticmethod
+    def get_time(date):
+        import pytz
+        from datetime import datetime as dt
+        # -------------------
+        try:
+            gmt0 = pytz.timezone(u"GMT+0")
+            cltc = pytz.timezone(u"Chile/Continental")
+            date = Utils.ftext(date)
+            date = dt.strptime(date, u'%Y-%m-%d %H:%M:%S')
+            date = date.replace(tzinfo=gmt0)
+            return unicode(date.astimezone(cltc).strftime(u'%Y-%m-%d %H:%M:%S'))
+        except ValueError:
+            return u'No disponible'
 
 
 # =============================================================================
@@ -143,7 +226,6 @@ class Component(object):
         self.__ori = 0.0
         self.__size = 0.0
         # -------------------
-        self.__fimg = False
         self.__imag = None
         self.__shpe = u'square'
         self.__colr = u'white'
@@ -184,7 +266,7 @@ class Component(object):
         return self.__unit
 
     # -----------------------
-    def set_pos(self, posx, posy):
+    def set_position(self, posx, posy):
         posx = Utils.ffloat(posx)
         posy = Utils.ffloat(posy)
         if posx is not None and posy is not None:
@@ -193,7 +275,7 @@ class Component(object):
         else:
             return False
 
-    def get_pos(self):
+    def get_position(self):
         return self.__pos
 
     # -----------------------
@@ -226,7 +308,6 @@ class Component(object):
         # -------------------
         imagepath = Utils.ftext(imagepath)
         if imagepath is not u'' and os.path.isfile(imagepath):
-            self.__fimg = True
             self.__shpe = u'image'
             self.__imag = Image.open(imagepath)
             return True
@@ -234,13 +315,15 @@ class Component(object):
             return False
 
     def get_image(self):
-        return self.__imag
+        if self.__fimg:
+            return self.__imag
+        else:
+            return None
 
     # -----------------------
     def set_shape(self, shape):
         shape = Utils.ftext(shape)
         if shape in [u'arrow', u'circle', u'cross', u'gauss', u'square']:
-            self.__fimg = False
             self.__shpe = shape
             return True
         else:
@@ -268,16 +351,13 @@ class Component(object):
         # -------------------
         coded = Utils.ftext(encimg)
         if coded != u'':
-            try:
-                img_buff = BytesIO()
-                img_buff.write(coded.decode(u'base64'))
-                # -----------
-                self.__fimg = True
-                self.__imag = Image.open(img_buff)
-            except:
-                return False
+            img_buff = BytesIO()
+            img_buff.write(coded.decode(u'base64'))
+            # -----------
+            self.__shpe = u'image'
+            self.__imag = Image.open(img_buff)
         else:
-            return False
+            self.__imag = None
 
     def __encode_image(self):
         from io import BytesIO
@@ -293,7 +373,7 @@ class Component(object):
     def load(self, db, exp, tes, fra, com):
         sql = u"""
         select
-        com_name, com_unit, com_posx, com_posy, com_orie, com_size, com_fimg, com_imag, com_shpe, com_colr
+        com_name, com_unit, com_posx, com_posy, com_orie, com_size, com_imag, com_shpe, com_colr
         from component
         where exp_code='%s' and tes_indx='%d' and fra_indx='%d' and com_indx='%d'
         """ % (exp, tes, fra, com)
@@ -308,10 +388,10 @@ class Component(object):
                           float(com_res[0, 3]))
             self.__ori = float(com_res[0, 4])
             self.__size = float(com_res[0, 5])
-            self.__fimg = bool(int(com_res[0, 6]))
-            self.__imag = self.__decode_image(unicode(com_res[0, 7]))
-            self.__shpe = unicode(com_res[0, 8])
-            self.__colr = unicode(com_res[0, 9])
+            self.__shpe = unicode(com_res[0, 7])
+            self.__colr = unicode(com_res[0, 8])
+            # ---------------
+            self.__decode_image(unicode(com_res[0, 6]))
             # ---------------
             return True
         else:
@@ -323,12 +403,12 @@ class Component(object):
         insert into component
         (exp_code, tes_indx, fra_indx, com_indx, 
         com_name, com_unit, com_posx, com_posy, com_orie, com_size, 
-        com_fimg, com_imag, com_shpe, com_colr)
-        values ('%s', '%d', '%d', '%d', '%s', '%s', '%f', '%f', '%f', '%f', '%x', '%s', '%s', '%s')
+        com_imag, com_shpe, com_colr)
+        values ('%s', '%d', '%d', '%d', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s', '%s')
         """ % (
             exp, tes, fra, com,
             self.__name, self.__unit, self.__pos[0], self.__pos[1], self.__ori, self.__size,
-            self.__fimg, self.__encode_image(), self.__shpe, self.__colr
+            self.__encode_image(), self.__shpe, self.__colr
         )
         com_res = db.push_query(query=sql)
         # ---------------
@@ -341,6 +421,25 @@ class Component(object):
 
     def copy(self):
         return copy.deepcopy(self)
+
+    # =================================
+    def get_component(self, win):
+        if isinstance(win, visual.Window):
+            if self.__shpe == u'image':
+                return visual.ImageStim(win=win, name=self.__name, image=self.__imag,
+                                        pos=self.__pos, ori=self.__ori, units=self.__unit)
+            elif self.__shpe == u'arrow':
+                return visual.ShapeStim(win=win, name=self.__name, lineColor=self.__colr, fillColor=self.__colr,
+                                        size=self.__size, pos=self.__pos, ori=self.__ori, units=self.__unit,
+                                        vertices=((1.0, 0.0), (0.6667, 0.1667), (0.6667, 0.0667), (0.0, 0.0667),
+                                                  (0.0, -0.0667), (0.6667, -0.0667), (0.6667, -0.1667)))
+            else:
+                return visual.GratingStim(win=win, name=self.__name, color=self.__colr, sf=0,
+                                          mask=None if self.__shpe == u'square' else self.__shpe,
+                                          size=self.__size, pos=self.__pos, ori=self.__ori, units=self.__unit)
+        else:
+            print u"Error: 'win' must be a psychopy visual.Window instance."
+            return None
 
 
 # =============================================================================
@@ -536,7 +635,7 @@ class Frame(ItemList):
         if com_lst is not None:
             for com in com_lst:
                 new_com = Component()
-                new_com.load(db=db, exp=exp, tes=tes, fra=fra, com=com[0])
+                new_com.load(db=db, exp=exp, tes=int(tes), fra=int(fra), com=int(com[0]))
                 self.component_add(item=new_com)
         else:
             print u"Exp %s, Tes %d: Frame %d don't have any component saved on the DB." % (exp, tes, fra)
@@ -549,6 +648,22 @@ class Frame(ItemList):
         else:
             print u"Exp %s, Tes %d: Frame %d don't have any component to be saved." % (exp, tes, fra)
 
+    # =================================
+    def get_frame(self, win):
+        if isinstance(win, visual.Window):
+            com_num = self.component_number()
+            if com_num is not None:
+                components = [item.get_component(win=win) for item in self.component_get_all()]
+            else:
+                components = None
+            # ---------------
+            back = visual.Rect(win=win, width=win.size[0], height=win.size[1], fillColor=self.__colr, units=u'pix')
+            # ---------------
+            return [self.__task, self.__time, self.__keya, self.__keys, back, components]
+        else:
+            print u"Error: 'win' must be a psychopy visual.Window instance."
+            return None
+
 
 # =============================================================================
 # Class: Test (child of ItemList)
@@ -560,7 +675,7 @@ class Test(ItemList):
         # -------------------
         self.__name = u'unnamed'
         self.__desc = u''
-        self.__reps = 0
+        self.__reps = 1
 
     # =================================
     @classmethod
@@ -686,7 +801,7 @@ class Test(ItemList):
         if fra_lst is not None:
             for fra in fra_lst:
                 new_fra = Frame()
-                new_fra.load(db=db, exp=exp, tes=tes, fra=fra[0])
+                new_fra.load(db=db, exp=exp, tes=int(tes), fra=int(fra[0]))
                 self.frame_add(item=new_fra)
         else:
             print u"Exp %s: Test %d don't have any frame saved on the DB." % (exp, tes)
@@ -698,6 +813,20 @@ class Test(ItemList):
                 self.frame_get_by_index(index=index).save(db=db, exp=exp, tes=tes, fra=index)
         else:
             print u"Exp %s: Test %d don't have any frame to be saved." % (exp, tes)
+
+    # =================================
+    def get_test(self, win):
+        if isinstance(win, visual.Window):
+            fra_num = self.frame_number()
+            if fra_num is not None:
+                frames = [item.get_frame(win=win) for item in self.frame_get_all()]
+                return [np.full(shape=(self.__reps, 1), fill_value=1, dtype=int), frames]
+            else:
+                return [1, None]
+            # ---------------
+        else:
+            print u"Error: 'win' must be a psychopy visual.Window instance."
+            return None
 
 
 # =============================================================================
@@ -744,7 +873,7 @@ class Experiment(ItemList):
 
     # =================================
     def set_database(self, db):
-        if isinstance(db, saccadedb):
+        if isinstance(db, SaccadeDB):
             self.__database = db
             return True
         else:
@@ -930,8 +1059,8 @@ class Experiment(ItemList):
                 self.__vers = unicode(exp_res[0, 1])
                 self.__desc = unicode(exp_res[0, 2])
                 self.__comm = unicode(exp_res[0, 3])
-                self.__datc = time(exp_res[0, 4])
-                self.__datu = time(exp_res[0, 5])
+                self.__datc = Utils.get_time(exp_res[0, 4])
+                self.__datu = Utils.get_time(exp_res[0, 5])
                 self.__dia_fact = bool(int(exp_res[0, 6]))
                 self.__dia_fage = bool(int(exp_res[0, 7]))
                 self.__dia_fgen = bool(int(exp_res[0, 8]))
@@ -1020,7 +1149,7 @@ class Experiment(ItemList):
         if tes_lst is not None:
             for tes in tes_lst:
                 new_tes = Test()
-                new_tes.load(db=self.__database, exp=self.__code, tes=tes[0])
+                new_tes.load(db=self.__database, exp=self.__code, tes=int(tes[0]))
                 self.test_add(item=new_tes)
         else:
             print u"Experiment %s don't have any test saved on the DB." % self.__code
@@ -1035,3 +1164,28 @@ class Experiment(ItemList):
                 self.test_get_by_index(index=index).save(db=self.__database, exp=self.__code, tes=index)
         else:
             print u"Experiment %s don't have any test to be saved." % self.__code
+
+    # =================================
+    def get_experiment(self, win):
+        if isinstance(win, visual.Window):
+            tes_num = self.test_number()
+            if tes_num is not None:
+                test_list = []
+                test_data = []
+                for index in range(tes_num):
+                    test = self.test_get_by_index(index=index)
+                    test = test.get_test(win=win)
+                    if test[1] is not None:
+                        test_list.append(index*test[0])
+                        test_data.append(test[1])
+                # -----------
+                test_list = np.concatenate(test_list)
+                if self.__con_frnd:
+                    np.random.shuffle(test_list)
+                # -----------
+                return [self.__con_fspc, self.__con_frst, self.__con_reps, self.__con_time, test_list, test_data]
+            else:
+                return None
+        else:
+            print u"Error: 'win' must be a psychopy visual.Window instance."
+            return None

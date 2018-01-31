@@ -1,5 +1,6 @@
 name: Memoria
 channels:
+  - menpo
   - jlaforet
   - cogsci
   - conda-forge
@@ -17,12 +18,11 @@ dependencies:
   - bleach=2.0.0
   - bzip2=1.0.6
   - ca-certificates=2017.11.5
-  - certifi=2017.11.5
   - chardet=3.0.4
   - colorama=0.3.9
   - configparser=3.5.0
   - cycler=0.10.0
-  - cython=0.24
+  - cython=0.24.1
   - decorator=4.1.2
   - docutils=0.14
   - entrypoints=0.2.3
@@ -64,7 +64,7 @@ dependencies:
   - opencv=3.2.0
   - openssl=1.0.2n
   - pandas=0.18.1
-  - pandoc=2.1
+  - pandoc=2.1.1
   - pandocfilters=1.4.1
   - path.py=10.3.1
   - pathlib2=2.1.0
@@ -121,6 +121,7 @@ dependencies:
   - wrapt=1.10.11
   - yaml=0.1.7
   - zlib=1.2.11
+  - certifi=2017.11.5
   - cffi=1.6.0
   - comtypes=0.6.2
   - configobj=5.0.6
@@ -147,6 +148,7 @@ dependencies:
   - xlrd=0.9.4
   - imageio=1.5
   - moviepy=0.2.2.11
+  - ffmpeg=2.7.0
   - pip:
     - backports.ssl-match-hostname==3.5.0.1
     - egi==0.9.0

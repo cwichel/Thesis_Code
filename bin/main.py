@@ -3,7 +3,7 @@
 # Modules
 # =============================================================================
 from psychopy import visual, core
-from saccadeApp import saccadedb, Experiment, Test, Frame, Component
+from saccadeApp import SaccadeDB, Experiment, Test, Frame, Component
 
 
 # Execute test 1
@@ -32,16 +32,70 @@ from saccadeApp import saccadedb, Experiment, Test, Frame, Component
 # Main Loop
 # =============================================================================
 if __name__ == '__main__':
-    database = saccadedb()
+    # com1 = Component()
+    # com1.set_name(u'fixation')
+    # com1.set_shape(u'cross')
+    #
+    # com2 = Component()
+    # com2.set_position(0.0, 10.0)
+    # com2.set_name(u'objective')
+    #
+    # com3 = Component()
+    # com3.set_name(u'image')
+    # com3.set_orientation(25.0)
+    # com3.set_image(u'image1.jpeg')
+    #
+    # # =======================
+    # fra1 = Frame()
+    # fra1.set_name(u'fixation')
+    # fra1.component_add(com1)
+    #
+    # fra2 = fra1.copy()
+    # fra2.set_name(u'prepare')
+    # fra2.component_add(com2)
+    #
+    # fra3 = Frame()
+    # fra3.set_name(u'nothing')
+    #
+    # fra4 = Frame()
+    # fra4.set_name(u'image presentation')
+    # fra4.component_add(com3)
+    #
+    # # =======================
+    # tes1 = Test()
+    # tes1.set_repetitions(5)
+    # tes1.set_name(u'test 1')
+    # tes1.frame_add(fra1)
+    # tes1.frame_add(fra2)
+    # tes1.frame_add(fra3)
+    #
+    # tes2 = tes1.copy()
+    # tes2.set_repetitions(3)
+    # tes2.frame_delete(2)
+    # tes2.frame_add(fra4)
 
+    # =======================
+    database = SaccadeDB()
     exp = Experiment()
     exp.set_database(db=database)
-    # exp.set_code(u'exp1_t23')
-    # exp.set_info(u'exp1', u'v1.0')
-
     exp.load(code=u'exp1_t23')
+    exp.set_code(u'exp1_t23')
+    # exp.set_info(u'exp1', u'v1.0')
+    # exp.set_random(status=True)
+    # exp.test_add(tes1)
+    # exp.test_add(tes2)
+    exp.save()
 
-    print 1
+
+
+    # =======================
+    win = visual.Window(monitor=u'default', screen=1)
+    exp_load = exp.get_experiment(win=win)
+
+    print exp_load[4]
+
+
+    print u'Ready!'
 
 
 
