@@ -26,6 +26,7 @@ class saccadedb(object):
         print u"Connecting to DB... "
         if os.path.isfile(self.__dbfile):
             self.__conn = lite.connect(self.__dbfile)
+            self.__conn.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
             print u'Connected!'
         else:
             sql = open(self.__script, u'r').read()
@@ -113,5 +114,5 @@ def time(date):
         temp = datetime.strptime(date, u'%Y-%m-%d %H:%M:%S')
         temp = temp.replace(tzinfo=gmt0)
         return unicode(temp.astimezone(clt).strftime(u'%Y-%m-%d %H:%M:%S'))
-    except:
+    except ValueError:
         return u'No disponible'

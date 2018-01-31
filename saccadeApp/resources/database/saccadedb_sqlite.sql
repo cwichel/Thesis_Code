@@ -144,7 +144,7 @@ create index if not exists idx_fra on frame (exp_code asc, tes_indx asc, fra_ind
 -- Test: tes_fra_object -------------------------
 create table if not exists component (
 	exp_code    varchar(10) 	not null,
-    tes_indx    int				not null	default 1,
+  	tes_indx    int				not null	default 1,
 	fra_indx    int				not null	default 1,
 	com_indx    int 			not null	default 1,
 	com_name    varchar(50)     not null    default 'unnamed',
@@ -165,7 +165,7 @@ create table if not exists component (
 	)
 	constraint fk_obj
 		foreign key (exp_code, tes_indx, fra_indx)
-		references tes_frame (exp_code, tes_indx, fra_indx)
+		references frame (exp_code, tes_indx, fra_indx)
 		on delete cascade
 		on update cascade
 );

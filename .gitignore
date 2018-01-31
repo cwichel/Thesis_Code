@@ -2,3 +2,4 @@
 *.ini
 *.sqlite3
 *.xml
+./bin/events/*
