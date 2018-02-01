@@ -12,9 +12,9 @@ pragma foreign_keys=1;
 -- MAIN CONFIG TABLE
 --===============================================
 create table if not exists master (
-  	mas_name    varchar(100) 	not null,
+  	mas_name    varchar(50) 	not null,
 	mas_scrn    int				not null 	default 0,
-	mas_trck    int				not null	default 0,
+	mas_trck    varchar(20)		not null	default 'none',
 	mas_mont    varchar(50)		not null	default 'default',
 	mas_path    varchar(200)	not null	default './events',
 	primary key (mas_name)
@@ -30,6 +30,7 @@ create table if not exists experiment (
 	exp_vers    varchar(10)		not null,
 	exp_desc    text		    null,
 	exp_comm    text		    null,
+	exp_istr    text		    null,
 	exp_datc    timestamp 		null		default current_timestamp,
 	exp_datu    timestamp 		null		default current_timestamp,
 	primary key (
@@ -80,7 +81,7 @@ create table if not exists exp_con (
 	con_fspc    tinyint 		not null 	default 0,
 	con_frnd    tinyint 		not null 	default 0,
 	con_frst    tinyint 		not null 	default 0,
-	con_reps    int 			not null	default 0,
+	con_perd    int 			not null	default 0,
 	con_time    float			not null	default 0.0,
 	primary key (exp_code)
 	constraint fk_exp_con
@@ -99,7 +100,7 @@ create index if not exists idx_exp_con on exp_con (exp_code asc);
 create table if not exists test (
 	exp_code    varchar(10)     not null,
 	tes_indx	int 		    not null    default 1,
-	tes_name 	varchar(50)     not null    default 'unnamed',
+	tes_name 	varchar(50)     not null    default 'Unnamed',
 	tes_desc 	text            null,
     tes_reps    int             not null    default 1,
 	primary key (
@@ -121,7 +122,7 @@ create table if not exists frame (
     exp_code    varchar(10)     not null,
     tes_indx    int	            not null    default 1,
 	fra_indx    int	            not null    default 1,
-	fra_name    varchar(50)     not null    default 'unnamed',
+	fra_name    varchar(50)     not null    default 'Unnamed',
     fra_colr    varchar(20)     not null    default 'black',
 	fra_task    tinyint	        not null    default 0,
     fra_time    float           not null    default 0.0,
@@ -147,13 +148,12 @@ create table if not exists component (
   	tes_indx    int				not null	default 1,
 	fra_indx    int				not null	default 1,
 	com_indx    int 			not null	default 1,
-	com_name    varchar(50)     not null    default 'unnamed',
+	com_name    varchar(50)     not null    default 'Unnamed',
 	com_unit    varchar(10)		not null 	default 'deg',
 	com_posx    float 			not null 	default 0.0,
 	com_posy    float 			not null 	default 0.0,
 	com_orie    float 			not null 	default 0.0,
 	com_size    float 			not null 	default 1.0,
-	com_fimg	tinyint 		not null 	default 0,
 	com_imag	blob 			null,
 	com_shpe	varchar(20)		not null 	default 'square',
 	com_colr	varchar(20)		not null 	default 'white',

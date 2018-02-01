@@ -4,77 +4,9 @@
 # =============================================================================
 import os
 import copy
-import platform
 import numpy as np
 import sqlite3 as lite
 from psychopy import visual, colors
-
-
-# =============================================================================
-# Class: SaccadeDB
-# =============================================================================
-class SaccadeDB(object):
-    # ================================= Primary Constructor
-    def __init__(self, filepath=u'saccadedb.sqlite3'):
-        self.__conn = None
-        self.__dbfile = filepath
-        self.__script = self._get_script_path()
-        # -------------------
-        self.connect()
-
-    # ================================= Connection methods
-    def connect(self):
-        print u"Connecting to DB... "
-        if os.path.isfile(self.__dbfile):
-            self.__conn = lite.connect(self.__dbfile)
-            self.__conn.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
-            print u'Connected!'
-        else:
-            sql = open(self.__script, u'r').read()
-            self.__conn = lite.connect(self.__dbfile)
-            self.__conn.executescript(sql)
-            print u"Database not found. A new one was created."
-
-    def close(self):
-        try:
-            self.__conn.close()
-            print u"Disconnected!"
-            return True
-        except lite.Error, event:
-            print u"Error: %s" % event.args[0]
-            return False
-
-    @staticmethod
-    def _get_script_path():
-        is_win = any(platform.win32_ver())
-        os_dir = u'\\resources\\database\\' if is_win else u'/resources/database/'
-        return os.path.split(os.path.realpath(__file__))[0] + os_dir + u'saccadedb_sqlite.sql'
-
-    # ================================= Query methods
-    def push_query(self, query):       # insert, update, delete
-        try:
-            self.__conn.executescript(query)
-            self.__conn.commit()
-            return True
-        except lite.Error, event:
-            if self.__conn:
-                self.__conn.rollback()
-            print u"Error: %s" % event.args[0]
-            return False
-
-    def pull_query(self, query):       # select
-        try:
-            cursor = self.__conn.cursor()
-            cursor.execute(query)
-            result = cursor.fetchall()
-            result = np.array(result)
-            if result.shape[0] > 0:
-                return result
-            else:
-                return None
-        except lite.Error, event:
-            print u"Error: %s" % event.args[0]
-            return None
 
 
 # =============================================================================
@@ -141,6 +73,314 @@ class Utils(object):
             return unicode(date.astimezone(cltc).strftime(u'%Y-%m-%d %H:%M:%S'))
         except ValueError:
             return u'No disponible'
+
+    @staticmethod
+    def format_path(path):
+        import platform
+        # -------------------
+        path = Utils.ftext(path)
+        is_win = any(platform.win32_ver())
+        # -------------------
+        path = path.replace(u'\\', u'#').replace(u'/', u'#')
+        return path.replace(u'#', u'\\') if is_win else path.replace(u'#', u'/')
+
+
+# =============================================================================
+# Class: SaccadeDB
+# =============================================================================
+class SaccadeDB(object):
+    # =================================
+    def __init__(self, filepath=u'saccadedb.sqlite3'):
+        self.__conn = None
+        self.__dbfile = filepath
+        self.__script = self.__get_script_path()
+        # -------------------
+        self.connect()
+
+    # =================================
+    @staticmethod
+    def __get_script_path():
+        path_base = os.path.split(os.path.realpath(__file__))[0]
+        path_conf = Utils.format_path(u'/resources/database/')
+        return path_base + path_conf + u'saccadedb_sqlite.sql'
+
+    # =================================
+    def connect(self):
+        print u"Connecting to DB... "
+        if os.path.isfile(self.__dbfile):
+            self.__conn = lite.connect(self.__dbfile)
+            self.__conn.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
+            print u'Connected!'
+        else:
+            sql = open(self.__script, u'r').read()
+            self.__conn = lite.connect(self.__dbfile)
+            self.__conn.executescript(sql)
+            print u"Database not found. A new one was created."
+
+    def close(self):
+        try:
+            self.__conn.close()
+            print u"Disconnected!"
+            return True
+        except lite.Error, event:
+            print u"Error: %s" % event.args[0]
+            return False
+
+    # =================================
+    def push_query(self, query):       # insert, update, delete
+        try:
+            self.__conn.executescript(query)
+            self.__conn.commit()
+            return True
+        except lite.Error, event:
+            if self.__conn:
+                self.__conn.rollback()
+            print u"Error: %s" % event.args[0]
+            return False
+
+    def pull_query(self, query):       # select
+        try:
+            cursor = self.__conn.cursor()
+            cursor.execute(query)
+            result = cursor.fetchall()
+            result = np.array(result)
+            if result.shape[0] > 0:
+                return result
+            else:
+                return None
+        except lite.Error, event:
+            print u"Error: %s" % event.args[0]
+            return None
+
+
+# =============================================================================
+# Class: Utils
+# =============================================================================
+class Master(object):
+    def __init__(self):
+        self.__in_db = False
+        self.__database = None
+        # -------------------
+        self.__name = u'Unnamed'
+        self.__scrn = 0
+        self.__trck = u'none'
+        self.__mont = u'default'
+        self.__path = u'./Experiments'
+
+    # =================================
+    @classmethod
+    def get_list(cls, db):
+        if isinstance(db, SaccadeDB):
+            sql = u"""
+            select mas_name
+            from master
+            order by mas_name asc;
+            """
+            return db.pull_query(query=sql)
+        else:
+            return None
+
+    # =================================
+    @staticmethod
+    def get_available_trackers():
+        import glob as gl
+        # -------------------
+        path_base = os.path.split(os.path.realpath(__file__))[0]
+        path_conf = Utils.format_path(u'/resources/eyetrackers/')
+        path_full = path_base + path_conf
+        # -------------------
+        return [os.path.basename(item).replace(u'_config.yaml', u'') for item in gl.glob(path_full+u'*.yaml')]
+
+    @staticmethod
+    def get_available_screens():
+        import pyglet
+        # -------------------
+        display = pyglet.window.Display()
+        screens = display.get_screens()
+        # -------------------
+        scr_num = 1
+        scr_lst = []
+        for screen in screens:
+            scr_lst.append(u"monitor %d: (w=%s, h=%s)" % (scr_num, screen.width, screen.height))
+            scr_num += 1
+        # -------------------
+        return scr_lst
+
+    @staticmethod
+    def get_available_monitors():
+        from psychopy import monitors
+        # -------------------
+        return monitors.getAllMonitors()
+
+    # =================================
+    def set_database(self, db):
+        if isinstance(db, SaccadeDB):
+            self.__database = db
+            return True
+        else:
+            return False
+
+    def get_database(self):
+        return self.__database
+
+    def is_on_database(self):
+        return self.__in_db
+
+    # -----------------------
+    def set_name(self, name):
+        name = Utils.ftext(name, lmin=3, lmax=50)
+        if self.__database is not None and name != u'':
+            sql = u"select * from master where mas_name='%s';" % name
+            mas_res = self.__database.pull_query(query=sql)
+            # ---------------
+            if mas_res is None:
+                self.__name = name
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def get_name(self):
+        return self.__name
+
+    # -----------------------
+    def set_screen(self, screen):
+        screen = Utils.fint(screen, default=0)
+        if 0 <= screen < len(self.get_available_screens()):
+            self.__scrn = screen
+            return True
+        else:
+            return False
+
+    def get_screen(self):
+        try:
+            return self.get_available_screens()[self.__scrn]
+        except:
+            return self.get_available_screens()[0]
+
+    # -----------------------
+    def set_monitor(self, monitor):
+        monitor = Utils.ftext(monitor)
+        if monitor in self.get_available_monitors():
+            self.__mont = monitor
+            return True
+        else:
+            return False
+
+    def get_monitor(self):
+        return self.__mont
+
+    # -----------------------
+    def set_tracker(self, tracker):
+        tracker = Utils.ftext(tracker)
+        if tracker in self.get_available_trackers():
+            self.__trck = tracker
+            return True
+        else:
+            return False
+
+    def get_tracker_name(self):
+        return self.__trck
+
+    def get_tracker_conf_path(self):
+        if self.__trck in self.get_available_trackers():
+            path_base = os.path.split(os.path.realpath(__file__))[0]
+            path_conf = Utils.format_path(u'/resources/eyetrackers/')
+            return path_base + path_conf + self.__trck + u'_config.yaml'
+        else:
+            return u''
+
+    # -----------------------
+    def set_experiment_path(self, path):
+        import sys
+        # -------------------
+        exp_path = Utils.ftext(path, lmin=0, lmax=200)
+        if os.path.isdir(exp_path):
+            base_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+            try:
+                self.__path = os.path.relpath(exp_path, base_path)
+            except:
+                self.__path = exp_path
+            print self.__path
+            return True
+        else:
+            return False
+
+    def get_experiment_path(self):
+        return self.__path
+
+    # =================================
+    def load(self, name):
+        name = Utils.ftext(name, lmin=3, lmax=50)
+        if self.__database is not None and name != u'':
+            sql = u"""
+            select 
+            mas_scrn, mas_trck, mas_mont, mas_path
+            from master
+            where mas_name='%s';
+            """ % name
+            mas_res = self.__database.pull_query(query=sql)
+            # ---------------
+            if mas_res is not None:
+                self.__in_db = True
+                self.__name = name
+                print u"Configuration profile %s loaded." % name
+                # -----------
+                self.__scrn = int(mas_res[0, 0])
+                self.__trck = unicode(mas_res[0, 1])
+                self.__mont = unicode(mas_res[0, 2])
+                self.__path = unicode(mas_res[0, 3])
+                # -----------
+                return True
+            else:
+                print u"Configuration profile %s doesn't exists." % name
+                return False
+        else:
+            print u'Error: Database or configuration profile name not configured!'
+            return False
+
+    def save(self):
+        if self.__database is not None and self.__name != u'':
+            sql = u"""
+            insert or replace into master
+            (mas_name, mas_scrn, mas_trck, mas_mont, mas_path)
+            values ('%s', '%d', '%s', '%s', '%s')
+            """ % (self.__name, self.__scrn, self.__trck, self.__mont, self.__path)
+            mas_res = self.__database.push_query(query=sql)
+            # ---------------
+            if mas_res:
+                print u"Configuration profile %s saved." % self.__name
+            else:
+                print u"Configuration profile %s not saved." % self.__name
+            self.__in_db = mas_res
+            return mas_res
+        else:
+            print u"Error: Database or configuration profile identifiers not configured!"
+            return False
+
+    def copy(self, name):
+        new_mas = copy.deepcopy(self)
+        # -------------------
+        new_mas.set_database(db=self.__database)
+        new_mas.__in_db = False
+        # -------------------
+        name_check = new_mas.set_name(name=name)
+        # -------------------
+        if name_check:
+            return new_mas
+        else:
+            return None
+
+    def remove(self):
+        if self.__in_db:
+            sql = u"delete from master where mas_name='%s';" % self.__name
+            mas_res = self.__database.push_query(query=sql)
+            # ---------------
+            self.__in_db = not mas_res
+            return mas_res
+        else:
+            return False
 
 
 # =============================================================================
@@ -220,7 +460,7 @@ class ItemList(object):
 class Component(object):
     # =================================
     def __init__(self):
-        self.__name = u'unnamed'
+        self.__name = u'Unnamed'
         self.__unit = u'deg'
         self.__pos = (0.0, 0.0)
         self.__ori = 0.0
@@ -237,13 +477,13 @@ class Component(object):
         select com_indx, com_name, com_shpe
         from component
         where exp_code='%s' and tes_indx='%d' and fra_indx='%d'
-        order by com_indx asc
+        order by com_indx asc;
         """ % (exp, tes, fra)
         return db.pull_query(query=sql)
 
     # =================================
     def set_name(self, name):
-        name = Utils.ftext(name, lmin=3)
+        name = Utils.ftext(name, lmin=3, lmax=50)
         if name != u'':
             self.__name = name
             return True
@@ -255,7 +495,7 @@ class Component(object):
 
     # -----------------------
     def set_units(self, units):
-        units = Utils.ftext(units)
+        units = Utils.ftext(units, lmin=2, lmax=20)
         if units in [u'norm', u'cm', u'deg', u'degFlat', u'degFlatPos', u'pix']:
             self.__unit = units
             return True
@@ -322,7 +562,7 @@ class Component(object):
 
     # -----------------------
     def set_shape(self, shape):
-        shape = Utils.ftext(shape)
+        shape = Utils.ftext(shape, lmin=5, lmax=20)
         if shape in [u'arrow', u'circle', u'cross', u'gauss', u'square']:
             self.__shpe = shape
             return True
@@ -334,7 +574,7 @@ class Component(object):
 
     # -----------------------
     def set_color(self, color):
-        color = Utils.ftext(color)
+        color = Utils.ftext(color, lmin=3, lmax=20)
         if colors.isValidColor(color):
             self.__colr = color
             return True
@@ -375,7 +615,7 @@ class Component(object):
         select
         com_name, com_unit, com_posx, com_posy, com_orie, com_size, com_imag, com_shpe, com_colr
         from component
-        where exp_code='%s' and tes_indx='%d' and fra_indx='%d' and com_indx='%d'
+        where exp_code='%s' and tes_indx='%d' and fra_indx='%d' and com_indx='%d';
         """ % (exp, tes, fra, com)
         com_res = db.pull_query(query=sql)
         # -------------------
@@ -404,7 +644,7 @@ class Component(object):
         (exp_code, tes_indx, fra_indx, com_indx, 
         com_name, com_unit, com_posx, com_posy, com_orie, com_size, 
         com_imag, com_shpe, com_colr)
-        values ('%s', '%d', '%d', '%d', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s', '%s')
+        values ('%s', '%d', '%d', '%d', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s', '%s');
         """ % (
             exp, tes, fra, com,
             self.__name, self.__unit, self.__pos[0], self.__pos[1], self.__ori, self.__size,
@@ -423,7 +663,7 @@ class Component(object):
         return copy.deepcopy(self)
 
     # =================================
-    def get_component(self, win):
+    def get_to_execute(self, win):
         if isinstance(win, visual.Window):
             if self.__shpe == u'image':
                 return visual.ImageStim(win=win, name=self.__name, image=self.__imag,
@@ -450,7 +690,7 @@ class Frame(ItemList):
     def __init__(self):
         super(Frame, self).__init__(itemclass=Component)
         # -------------------
-        self.__name = u'unnamed'
+        self.__name = u'Unnamed'
         self.__colr = u'black'
         self.__task = False
         self.__time = 0.0
@@ -464,13 +704,13 @@ class Frame(ItemList):
         select fra_indx, fra_name
         from frame
         where exp_code='%s' and tes_indx='%d'
-        order by fra_indx asc
+        order by fra_indx asc;
         """ % (exp, tes)
         return db.pull_query(query=sql)
 
     # =================================
     def set_name(self, name):
-        name = Utils.ftext(name, lmin=3)
+        name = Utils.ftext(name, lmin=3, lmax=20)
         if name != u'':
             self.__name = name
             return True
@@ -482,7 +722,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_color(self, color):
-        color = Utils.ftext(color)
+        color = Utils.ftext(color, lmin=3, lmax=20)
         if colors.isValidColor(color):
             self.__colr = color
             return True
@@ -585,7 +825,7 @@ class Frame(ItemList):
         select
         fra_name, fra_colr, fra_task, fra_time, fra_keya, fra_keys
         from frame
-        where exp_code='%s' and tes_indx='%d' and fra_indx='%d'
+        where exp_code='%s' and tes_indx='%d' and fra_indx='%d';
         """ % (exp, tes, fra)
         fra_res = db.pull_query(query=sql)
         # -------------------
@@ -611,7 +851,7 @@ class Frame(ItemList):
         insert into frame
         (exp_code, tes_indx, fra_indx, 
         fra_name, fra_colr, fra_task, fra_time, fra_keya, fra_keys)
-        values ('%s', '%d', '%d', '%s', '%s', '%x', '%f', '%s', '%s')
+        values ('%s', '%d', '%d', '%s', '%s', '%x', '%f', '%s', '%s');
         """ % (
             exp, tes, fra,
             self.__name, self.__colr, self.__task, self.__time, self.__keya, self.__keys
@@ -649,17 +889,26 @@ class Frame(ItemList):
             print u"Exp %s, Tes %d: Frame %d don't have any component to be saved." % (exp, tes, fra)
 
     # =================================
-    def get_frame(self, win):
+    def get_to_execute(self, win):
         if isinstance(win, visual.Window):
             com_num = self.component_number()
             if com_num is not None:
-                components = [item.get_component(win=win) for item in self.component_get_all()]
+                components = [component.get_to_execute(win=win) for component in self.component_get_all()]
             else:
                 components = None
             # ---------------
             back = visual.Rect(win=win, width=win.size[0], height=win.size[1], fillColor=self.__colr, units=u'pix')
             # ---------------
-            return [self.__task, self.__time, self.__keya, self.__keys, back, components]
+            frame = {
+                u'is_task':         self.__task,
+                u'time':            self.__time,
+                u'allowed_keys':    self.__keya,
+                u'correct_keys':    self.__keys,
+                u'background':      back,
+                u'components':      components
+            }
+            # ---------------
+            return frame
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
             return None
@@ -673,7 +922,7 @@ class Test(ItemList):
     def __init__(self):
         super(Test, self).__init__(itemclass=Frame)
         # -------------------
-        self.__name = u'unnamed'
+        self.__name = u'Unnamed'
         self.__desc = u''
         self.__reps = 1
 
@@ -684,13 +933,13 @@ class Test(ItemList):
         select tes_indx, tes_name, tes_reps
         from test
         where exp_code='%s'
-        order by tes_indx asc
+        order by tes_indx asc;
         """ % exp
         return db.pull_query(query=sql)
 
     # =================================
     def set_name(self, name):
-        name = Utils.ftext(name, lmin=3)
+        name = Utils.ftext(name, lmin=3, lmax=50)
         if name != u'':
             self.__name = name
             return True
@@ -702,7 +951,7 @@ class Test(ItemList):
 
     # -----------------------
     def set_description(self, text):
-        text = Utils.ftext(text)
+        text = Utils.ftext(text, lmin=10)
         if text != u'':
             self.__desc = text
             return True
@@ -755,7 +1004,7 @@ class Test(ItemList):
         select
         tes_name, tes_desc, tes_reps
         from test
-        where exp_code='%s' and tes_indx='%d'
+        where exp_code='%s' and tes_indx='%d';
         """ % (exp, tes)
         tes_res = db.pull_query(query=sql)
         # -------------------
@@ -777,7 +1026,7 @@ class Test(ItemList):
         sql = u"""
         insert into test
         (exp_code, tes_indx, tes_name, tes_desc, tes_reps) 
-        values ('%s', '%d', '%s', '%s', '%d')
+        values ('%s', '%d', '%s', '%s', '%d');
         """ % (
             exp, tes,
             self.__name, self.__desc, self.__reps
@@ -815,14 +1064,19 @@ class Test(ItemList):
             print u"Exp %s: Test %d don't have any frame to be saved." % (exp, tes)
 
     # =================================
-    def get_test(self, win):
+    def get_to_execute(self, win):
         if isinstance(win, visual.Window):
             fra_num = self.frame_number()
             if fra_num is not None:
-                frames = [item.get_frame(win=win) for item in self.frame_get_all()]
-                return [np.full(shape=(self.__reps, 1), fill_value=1, dtype=int), frames]
+                frames = [frame.get_to_execute(win=win) for frame in self.frame_get_all()]
+                test = {
+                    u'name':        self.__name,
+                    u'secuence':    np.full(shape=(self.__reps, 1), fill_value=1, dtype=int),
+                    u'frames':      frames
+                }
+                return test
             else:
-                return [1, None]
+                return None
             # ---------------
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
@@ -841,10 +1095,11 @@ class Experiment(ItemList):
         self.__database = None
         # -------------------
         self.__code = u''
-        self.__name = u'unnamed'
+        self.__name = u'Unnamed'
         self.__vers = u''
-        self.__comm = u''
         self.__desc = u''
+        self.__comm = u''
+        self.__istr = u''
         # -------------------
         self.__datc = u'Not available'
         self.__datu = u'Not available'
@@ -858,7 +1113,7 @@ class Experiment(ItemList):
         self.__con_fspc = False
         self.__con_frnd = False
         self.__con_frst = False
-        self.__con_reps = 0
+        self.__con_perd = 0
         self.__con_time = 0.0
 
     # =================================
@@ -867,7 +1122,7 @@ class Experiment(ItemList):
         sql = u"""
         select exp_code, exp_name, exp_vers
         from experiment
-        order by exp_name asc
+        order by exp_name asc;
         """
         return db.pull_query(query=sql)
 
@@ -928,7 +1183,7 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_descripton(self, text):
-        text = Utils.ftext(text)
+        text = Utils.ftext(text, lmin=10)
         if text != u'':
             self.__desc = text
             return True
@@ -939,16 +1194,28 @@ class Experiment(ItemList):
         return self.__desc
 
     # -----------------------
-    def set_comment(self, text):
-        text = Utils.ftext(text)
+    def set_comments(self, text):
+        text = Utils.ftext(text, lmin=10)
         if text != u'':
             self.__comm = text
             return True
         else:
             return False
 
-    def get_comment(self):
+    def get_comments(self):
         return self.__comm
+
+    # -----------------------
+    def set_instruction(self, text):
+        text = Utils.ftext(text, lmin=10)
+        if text != u'':
+            self.__istr = text
+            return True
+        else:
+            return False
+
+    def get_instruction(self):
+        return self.__istr
 
     # -----------------------
     def set_dialog(self, status, askage, askgender, askglasses, askeyecolor):
@@ -994,7 +1261,7 @@ class Experiment(ItemList):
         time = Utils.ffloat(time, default=-0.0)
         if status and period > 0 and time > 0.0:
             self.__con_frst = status
-            self.__con_reps = period
+            self.__con_perd = period
             self.__con_time = time
             return True
         else:
@@ -1004,7 +1271,7 @@ class Experiment(ItemList):
         return self.__con_frst
 
     def get_rest_period(self):
-        return self.__con_reps
+        return self.__con_perd
 
     def get_rest_time(self):
         return self.__con_time
@@ -1040,13 +1307,13 @@ class Experiment(ItemList):
         if self.__database is not None and code != u'':
             sql = u"""
             select
-            exp.exp_name, exp.exp_vers, exp.exp_desc, exp.exp_comm, exp.exp_datc, exp_datu, 
+            exp.exp_name, exp.exp_vers, exp.exp_desc, exp.exp_comm, exp.exp_istr, exp.exp_datc, exp_datu, 
             dia.dia_fact, dia.dia_fage, dia.dia_fgen, dia.dia_fgla, dia.dia_feye, 
-            con.con_fspc, con.con_frnd, con.con_frst, con.con_reps, con.con_time 
+            con.con_fspc, con.con_frnd, con.con_frst, con.con_perd, con.con_time 
             from experiment as exp
             inner join exp_dia as dia on exp.exp_code=dia.exp_code
             inner join exp_con as con on exp.exp_code=con.exp_code
-            where exp.exp_code='%s'
+            where exp.exp_code='%s';
             """ % code
             exp_res = self.__database.pull_query(query=sql)
             # ---------------
@@ -1059,18 +1326,19 @@ class Experiment(ItemList):
                 self.__vers = unicode(exp_res[0, 1])
                 self.__desc = unicode(exp_res[0, 2])
                 self.__comm = unicode(exp_res[0, 3])
-                self.__datc = Utils.get_time(exp_res[0, 4])
-                self.__datu = Utils.get_time(exp_res[0, 5])
-                self.__dia_fact = bool(int(exp_res[0, 6]))
-                self.__dia_fage = bool(int(exp_res[0, 7]))
-                self.__dia_fgen = bool(int(exp_res[0, 8]))
-                self.__dia_fgla = bool(int(exp_res[0, 9]))
-                self.__dia_feye = bool(int(exp_res[0, 10]))
-                self.__con_fspc = bool(int(exp_res[0, 11]))
-                self.__con_frnd = bool(int(exp_res[0, 12]))
-                self.__con_frst = bool(int(exp_res[0, 13]))
-                self.__con_reps = int(exp_res[0, 14])
-                self.__con_time = float(exp_res[0, 15])
+                self.__istr = unicode(exp_res[0, 4])
+                self.__datc = Utils.get_time(exp_res[0, 5])
+                self.__datu = Utils.get_time(exp_res[0, 6])
+                self.__dia_fact = bool(int(exp_res[0, 7]))
+                self.__dia_fage = bool(int(exp_res[0, 8]))
+                self.__dia_fgen = bool(int(exp_res[0, 9]))
+                self.__dia_fgla = bool(int(exp_res[0, 10]))
+                self.__dia_feye = bool(int(exp_res[0, 11]))
+                self.__con_fspc = bool(int(exp_res[0, 12]))
+                self.__con_frnd = bool(int(exp_res[0, 13]))
+                self.__con_frst = bool(int(exp_res[0, 14]))
+                self.__con_perd = int(exp_res[0, 15])
+                self.__con_time = float(exp_res[0, 16])
                 # -----------
                 self.__load_tests()
                 # -----------
@@ -1087,34 +1355,34 @@ class Experiment(ItemList):
             if self.__in_db:
                 sql = u"""
                 update experiment set
-                exp_name='%s', exp_vers='%s', exp_desc='%s', exp_comm='%s'
+                exp_name='%s', exp_vers='%s', exp_desc='%s', exp_comm='%s', exp_istr='%s'
                 where exp_code='%s';
                 update exp_dia set 
                 dia_fact='%x', dia_fage='%x', dia_fgen='%x', dia_fgla='%x', dia_feye='%x'
                 where exp_code='%s';
                 update exp_con set 
-                con_fspc='%x', con_frnd='%x', con_frst='%x', con_reps='%d', con_time='%f'
+                con_fspc='%x', con_frnd='%x', con_frst='%x', con_perd='%d', con_time='%f'
                 where exp_code='%s';
                 """ % (
-                    self.__name, self.__vers, self.__desc, self.__comm, self.__code,
+                    self.__name, self.__vers, self.__desc, self.__comm, self.__istr, self.__code,
                     self.__dia_fact, self.__dia_fage, self.__dia_fgen, self.__dia_fgla, self.__dia_feye, self.__code,
-                    self.__con_fspc, self.__con_frnd, self.__con_frst, self.__con_reps, self.__con_time, self.__code
+                    self.__con_fspc, self.__con_frnd, self.__con_frst, self.__con_perd, self.__con_time, self.__code
                 )
             else:
                 sql = u"""
                 insert into experiment 
-                (exp_code, exp_name, exp_vers, exp_desc, exp_comm)
-                values ('%s', '%s', '%s', '%s', '%s');
+                (exp_code, exp_name, exp_vers, exp_desc, exp_comm, exp_istr)
+                values ('%s', '%s', '%s', '%s', '%s', '%s');
                 insert into exp_dia
                 (exp_code, dia_fact, dia_fage, dia_fgen, dia_fgla, dia_feye)
                 values ('%s', '%x', '%x', '%x', '%x', '%x');
                 insert into exp_con
-                (exp_code, con_fspc, con_frnd, con_frst, con_reps, con_time)
+                (exp_code, con_fspc, con_frnd, con_frst, con_perd, con_time)
                 values ('%s', '%x', '%x', '%x', '%d', '%f');
                 """ % (
-                    self.__code, self.__name, self.__vers, self.__desc, self.__comm,
+                    self.__code, self.__name, self.__vers, self.__desc, self.__comm, self.__istr,
                     self.__code, self.__dia_fact, self.__dia_fage, self.__dia_fgen, self.__dia_fgla, self.__dia_feye,
-                    self.__code, self.__con_fspc, self.__con_frnd, self.__con_frst, self.__con_reps, self.__con_time
+                    self.__code, self.__con_fspc, self.__con_frnd, self.__con_frst, self.__con_perd, self.__con_time
                 )
             exp_res = self.__database.push_query(query=sql)
             # ---------------
@@ -1124,6 +1392,7 @@ class Experiment(ItemList):
             else:
                 print u"Experiment %s not saved." % self.__code
             # ---------------
+            self.__in_db = exp_res
             return exp_res
         else:
             print u"Error: Database or experiment basic identifiers not configured!"
@@ -1143,6 +1412,16 @@ class Experiment(ItemList):
         else:
             return None
 
+    def remove(self):
+        if self.__in_db:
+            sql = u"delete from experiment where exp_code='%s';" % self.__code
+            exp_res = self.__database.push_query(query=sql)
+            # ---------------
+            self.__in_db = not exp_res
+            return exp_res
+        else:
+            return False
+
     # =================================
     def __load_tests(self):
         tes_lst = Test.get_list(db=self.__database, exp=self.__code)
@@ -1155,7 +1434,7 @@ class Experiment(ItemList):
             print u"Experiment %s don't have any test saved on the DB." % self.__code
 
     def __save_tests(self):
-        sql = u"delete from test where exp_code='%s'" % self.__code
+        sql = u"delete from test where exp_code='%s';" % self.__code
         self.__database.push_query(query=sql)
         # -------------------
         tes_num = self.test_number()
@@ -1166,8 +1445,8 @@ class Experiment(ItemList):
             print u"Experiment %s don't have any test to be saved." % self.__code
 
     # =================================
-    def get_experiment(self, win):
-        if isinstance(win, visual.Window):
+    def get_to_execute(self, win):
+        if isinstance(win, visual.Window) and self.__in_db:
             tes_num = self.test_number()
             if tes_num is not None:
                 test_list = []
@@ -1175,17 +1454,78 @@ class Experiment(ItemList):
                 for index in range(tes_num):
                     test = self.test_get_by_index(index=index)
                     test = test.get_test(win=win)
-                    if test[1] is not None:
-                        test_list.append(index*test[0])
-                        test_data.append(test[1])
+                    if test is not None:
+                        test_list.append(index*test[u'secuence'])
+                        test_data.append({
+                            u'name':    test[u'name'],
+                            u'frames':  test[u'frames']
+                        })
                 # -----------
                 test_list = np.concatenate(test_list)
                 if self.__con_frnd:
                     np.random.shuffle(test_list)
                 # -----------
-                return [self.__con_fspc, self.__con_frst, self.__con_reps, self.__con_time, test_list, test_data]
+                experiment = {
+                    u'instruction':     self.__istr,
+                    u'space_start':     self.__con_fspc,
+                    u'rest_active':     self.__con_frst,
+                    u'rest_period':     self.__con_perd,
+                    u'rest_time':       self.__con_time,
+                    u'test_secuence':   test_list,
+                    u'test_data':       test_data,
+                }
+                # -----------
+                return experiment
             else:
                 return None
         else:
-            print u"Error: 'win' must be a psychopy visual.Window instance."
+            print u"Error: To execute a experiment you need to ensure that:" \
+                  u"\n\t- win is instance of pysychopy visual.Window." \
+                  u"\n\t- the experiment is saved on the DB."
+            return None
+
+    def get_config_to_execute(self):
+        import time
+        # -------------------
+        if self.__in_db is True:
+            experiment = {
+                u'title':       self.__name,
+                u'code':        self.__code,
+                u'version':     self.__vers,
+                u'description': self.__desc,
+                u'display_experiment_dialog:': True,
+                # -----------
+                u'session_defaults': {
+                    u'name':        u'Session...',
+                    u'code':        self.__code + u'xxxx',
+                    u'comments':    self.__comm,
+                    u'session_variable_order': [u'name', u'code', u'comments']
+                },
+                u'display_session_dialog': True,
+                # -----------
+                u'ioHub': {
+                    u'enable':      True,
+                    u'config':      u'['+self.__code+u']['+time.strftime(u"%Y-%m-%d")+u']iohub_config.yml'
+                },
+            }
+            if self.__dia_fact:
+                experiment[u'session_defaults'][u'user_variables'] = {}
+                if self.__dia_fage:
+                    experiment[u'session_defaults'][u'user_variables'][u'participant_age'] = u'Unknown'
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_age')
+                if self.__dia_fgen:
+                    experiment[u'session_defaults'][u'user_variables'][u'participant_gender'] = [u'Male', u'Female']
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_gender')
+                if self.__dia_fgla:
+                    experiment[u'session_defaults'][u'user_variables'][u'glasses'] = [u'Yes', u'No']
+                    experiment[u'session_defaults'][u'user_variables'][u'contacts'] = [u'Yes', u'No']
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'glasses')
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'contacts')
+                if self.__dia_feye:
+                    experiment[u'session_defaults'][u'user_variables'][u'eye_color'] = u'Unknown'
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'eye_color')
+
+            return experiment
+        else:
+            print u"Error: To execute a experiment you need to ensure that the experiment is saved on the DB."
             return None

@@ -2,4 +2,6 @@
 # =============================================================================
 # Modules
 # =============================================================================
-from saccadeApp.core import SaccadeDB, Experiment, Test, Frame, Component
+from saccadeApp.core import SaccadeDB
+from saccadeApp.core import Master
+from saccadeApp.core import Experiment, Test, Frame, Component
