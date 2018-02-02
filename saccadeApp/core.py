@@ -298,11 +298,7 @@ class Master(object):
         exp_path = Utils.ftext(path, lmin=0, lmax=200)
         if os.path.isdir(exp_path):
             base_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-            try:
-                self.__path = os.path.relpath(exp_path, base_path)
-            except:
-                self.__path = exp_path
-            print self.__path
+            self.__path = os.path.relpath(exp_path, base_path)
             return True
         else:
             return False
@@ -381,6 +377,12 @@ class Master(object):
             return mas_res
         else:
             return False
+
+    # =================================
+    def get_iohub(self, unixstamp):
+        return 1
+
+    def get_configuration(self, unixstamp):
 
 
 # =============================================================================
@@ -555,10 +557,7 @@ class Component(object):
             return False
 
     def get_image(self):
-        if self.__fimg:
-            return self.__imag
-        else:
-            return None
+        return self.__imag
 
     # -----------------------
     def set_shape(self, shape):
@@ -663,7 +662,7 @@ class Component(object):
         return copy.deepcopy(self)
 
     # =================================
-    def get_to_execute(self, win):
+    def get_execution(self, win):
         if isinstance(win, visual.Window):
             if self.__shpe == u'image':
                 return visual.ImageStim(win=win, name=self.__name, image=self.__imag,
@@ -680,6 +679,19 @@ class Component(object):
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
             return None
+
+    def get_configuration(self):
+        component = {
+            u'name':        self.__name,
+            u'units':       self.__unit,
+            u'position':    self.__pos,
+            u'orientation': self.__ori,
+            u'size':        self.__size,
+            u'image':       self.__encode_image(),
+            u'shape':       self.__shpe,
+            u'color':       self.__colr
+        }
+        return component
 
 
 # =============================================================================
@@ -889,11 +901,11 @@ class Frame(ItemList):
             print u"Exp %s, Tes %d: Frame %d don't have any component to be saved." % (exp, tes, fra)
 
     # =================================
-    def get_to_execute(self, win):
+    def get_execution(self, win):
         if isinstance(win, visual.Window):
             com_num = self.component_number()
             if com_num is not None:
-                components = [component.get_to_execute(win=win) for component in self.component_get_all()]
+                components = [component.get_execution(win=win) for component in self.component_get_all()]
             else:
                 components = None
             # ---------------
@@ -912,6 +924,24 @@ class Frame(ItemList):
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
             return None
+
+    def get_configuration(self):
+        com_num = self.component_number()
+        if com_num is not None:
+            components = [component.get_configuration() for component in self.component_get_all()]
+        else:
+            components = None
+        # ---------------
+        frame = {
+            u'is_task':         self.__task,
+            u'time':            self.__time,
+            u'allowed_keys':    self.__keya,
+            u'correct_keys':    self.__keys,
+            u'background':      self.__colr,
+            u'components':      components,
+        }
+        # ---------------
+        return frame
 
 
 # =============================================================================
@@ -1064,11 +1094,11 @@ class Test(ItemList):
             print u"Exp %s: Test %d don't have any frame to be saved." % (exp, tes)
 
     # =================================
-    def get_to_execute(self, win):
+    def get_execution(self, win):
         if isinstance(win, visual.Window):
             fra_num = self.frame_number()
             if fra_num is not None:
-                frames = [frame.get_to_execute(win=win) for frame in self.frame_get_all()]
+                frames = [frame.get_execution(win=win) for frame in self.frame_get_all()]
                 test = {
                     u'name':        self.__name,
                     u'secuence':    np.full(shape=(self.__reps, 1), fill_value=1, dtype=int),
@@ -1081,6 +1111,22 @@ class Test(ItemList):
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
             return None
+
+    def get_configuration(self):
+        fra_num = self.frame_number()
+        if fra_num is not None:
+            frames = [frame.get_configuration() for frame in self.frame_get_all()]
+        else:
+            frames = None
+        # ---------------
+        test = {
+            u'name':        self.__name,
+            u'repetitions': self.__reps,
+            u'description': self.__desc,
+            u'frames':      frames,
+        }
+        # ---------------
+        return test
 
 
 # =============================================================================
@@ -1445,7 +1491,51 @@ class Experiment(ItemList):
             print u"Experiment %s don't have any test to be saved." % self.__code
 
     # =================================
-    def get_to_execute(self, win):
+    def get_iohub(self, unixstamp):
+        if self.__in_db is True:
+            experiment = {
+                u'title':           self.__name,
+                u'code':            self.__code,
+                u'version':         self.__vers,
+                u'description':     self.__desc,
+                u'display_experiment_dialog:': True,
+                # -----------
+                u'session_defaults': {
+                    u'name':        u'Session...',
+                    u'code':        unixstamp,
+                    u'comments':    self.__comm,
+                    u'session_variable_order': [u'name', u'code', u'comments']
+                },
+                u'display_session_dialog': True,
+                # -----------
+                u'ioHub': {
+                    u'enable':  True,
+                    u'config':  Utils.format_path(u'config/')+u'['+self.__code+u']['+unixstamp+u']iohub_config.yml'
+                },
+            }
+            if self.__dia_fact:
+                experiment[u'session_defaults'][u'user_variables'] = {}
+                if self.__dia_fage:
+                    experiment[u'session_defaults'][u'user_variables'][u'participant_age'] = u'Unknown'
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_age')
+                if self.__dia_fgen:
+                    experiment[u'session_defaults'][u'user_variables'][u'participant_gender'] = [u'Male', u'Female']
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_gender')
+                if self.__dia_fgla:
+                    experiment[u'session_defaults'][u'user_variables'][u'glasses'] = [u'Yes', u'No']
+                    experiment[u'session_defaults'][u'user_variables'][u'contacts'] = [u'Yes', u'No']
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'glasses')
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'contacts')
+                if self.__dia_feye:
+                    experiment[u'session_defaults'][u'user_variables'][u'eye_color'] = u'Unknown'
+                    experiment[u'session_defaults'][u'session_variable_order'].append(u'eye_color')
+
+            return experiment
+        else:
+            print u"Error: To execute a experiment you need to ensure that the experiment is saved on the DB."
+            return None
+
+    def get_execution(self, win):
         if isinstance(win, visual.Window) and self.__in_db:
             tes_num = self.test_number()
             if tes_num is not None:
@@ -1453,7 +1543,7 @@ class Experiment(ItemList):
                 test_data = []
                 for index in range(tes_num):
                     test = self.test_get_by_index(index=index)
-                    test = test.get_test(win=win)
+                    test = test.get_execution(win=win)
                     if test is not None:
                         test_list.append(index*test[u'secuence'])
                         test_data.append({
@@ -1484,48 +1574,40 @@ class Experiment(ItemList):
                   u"\n\t- the experiment is saved on the DB."
             return None
 
-    def get_config_to_execute(self):
-        import time
-        # -------------------
-        if self.__in_db is True:
-            experiment = {
-                u'title':       self.__name,
-                u'code':        self.__code,
-                u'version':     self.__vers,
-                u'description': self.__desc,
-                u'display_experiment_dialog:': True,
-                # -----------
-                u'session_defaults': {
-                    u'name':        u'Session...',
-                    u'code':        self.__code + u'xxxx',
-                    u'comments':    self.__comm,
-                    u'session_variable_order': [u'name', u'code', u'comments']
-                },
-                u'display_session_dialog': True,
-                # -----------
-                u'ioHub': {
-                    u'enable':      True,
-                    u'config':      u'['+self.__code+u']['+time.strftime(u"%Y-%m-%d")+u']iohub_config.yml'
-                },
-            }
-            if self.__dia_fact:
-                experiment[u'session_defaults'][u'user_variables'] = {}
-                if self.__dia_fage:
-                    experiment[u'session_defaults'][u'user_variables'][u'participant_age'] = u'Unknown'
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_age')
-                if self.__dia_fgen:
-                    experiment[u'session_defaults'][u'user_variables'][u'participant_gender'] = [u'Male', u'Female']
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_gender')
-                if self.__dia_fgla:
-                    experiment[u'session_defaults'][u'user_variables'][u'glasses'] = [u'Yes', u'No']
-                    experiment[u'session_defaults'][u'user_variables'][u'contacts'] = [u'Yes', u'No']
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'glasses')
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'contacts')
-                if self.__dia_feye:
-                    experiment[u'session_defaults'][u'user_variables'][u'eye_color'] = u'Unknown'
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'eye_color')
-
-            return experiment
+    def get_configuration(self, unixstamp):
+        tes_num = self.test_number()
+        if tes_num is not None:
+            tests = [test.get_configuration() for test in self.test_get_all()]
         else:
-            print u"Error: To execute a experiment you need to ensure that the experiment is saved on the DB."
-            return None
+            tests = None
+        # ---------------
+        configuration = {
+            u'identifier': unixstamp,
+            u'experiment': {
+                u'title':           self.__name,
+                u'code':            self.__code,
+                u'version':         self.__vers,
+                u'description':     self.__desc,
+                u'instruction':     self.__istr,
+                u'session_configuration': {
+                    u'comments':    self.__comm,
+                    u'space_start': self.__con_fspc,
+                    u'randomize':   self.__con_frnd,
+                    u'rest': {
+                        u'active':  self.__con_frst,
+                        u'period':  self.__con_perd,
+                        u'time':    self.__con_time,
+                    },
+                    u'dialog': {
+                        u'active':          self.__dia_fact,
+                        u'ask_age':         self.__dia_fage,
+                        u'ask_gender':      self.__dia_fgen,
+                        u'ask_glasses':     self.__dia_fgla,
+                        u'ask_eye_color':   self.__dia_feye,
+                    }
+                },
+                u'tests': tests
+            }
+        }
+        # ---------------
+        return configuration
