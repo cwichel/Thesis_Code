@@ -37,7 +37,7 @@ if __name__ == '__main__':
     # =======================
     # mas = Master()
     # mas.set_database(db=database)
-    # # mas.load(name=u'Default')
+    # mas.load(name=u'Default')
     # mas.set_name(name=u'Default')
     # mas.set_screen(screen=1)
     # mas.set_tracker(tracker=u'pytribe')

@@ -165,7 +165,7 @@ class Master(object):
         self.__scrn = 0
         self.__trck = u'none'
         self.__mont = u'default'
-        self.__path = u'./Experiments'
+        self.__path = self.__get_base_path()
 
     # =================================
     @classmethod
@@ -211,6 +211,14 @@ class Master(object):
         from psychopy import monitors
         # -------------------
         return monitors.getAllMonitors()
+
+    @staticmethod
+    def __get_base_path():
+        import sys
+        # -------------------
+        path_base = os.path.dirname(os.path.realpath(sys.argv[0]))
+        path_fold = Utils.format_path(u'/events')
+        return path_base + path_fold
 
     # =================================
     def set_database(self, db):
@@ -385,28 +393,32 @@ class Master(object):
         # -------------------
         if self.__in_db:
             configuration = {
-                u'monitor_devices': {
-                    u'Display': {
+                u'monitor_devices': [
+                    {u'Display': {
                         u'name':                            u'display',
                         u'reporting_unit_type':             u'pix',
                         u'device_number':                   self.__scrn,
                         u'psychopy_monitor_name':           self.__mont,
                         u'override_using_psycho_settings':  True,
-                    },
-                    u'Keyboard': {
-                        u'name':    u'keyboard',
-                    },
-                    u'Experiment': {
-                        u'name':    u'experimentRuntime'
-                    }
-                },
+                    }},
+                    {u'Keyboard': {
+                        u'name':        u'keyboard',
+                        u'enable':      True,
+                        u'save_events': True,
+                    }},
+                    {u'Experiment': {
+                        u'name':        u'experimentRuntime',
+                        u'enable':      True,
+                        u'save_events': True,
+                    }}
+                ],
                 u'data_store': {
                     u'enable':      True,
                 }
             }
             # -------------------
             tracker = yaml.load(open(self.get_tracker_conf_path(), u'r'))[u'monitor_devices'][0]
-            configuration[u'monitor_devices'].update(tracker)
+            configuration[u'monitor_devices'].append(tracker)
             # -------------------
             return configuration
         else:
