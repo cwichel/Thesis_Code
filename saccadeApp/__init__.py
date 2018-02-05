@@ -2,8 +2,7 @@
 # =============================================================================
 # Modules
 # =============================================================================
-from saccadeApp.core import SaccadeDB
-from saccadeApp.core import Master
+from saccadeApp.core import SaccadeDB, Master
 from saccadeApp.core import Experiment, Test, Frame, Component
 
-from saccadeApp.script import generate_experiment_files
+from saccadeApp.script import generate_experiment

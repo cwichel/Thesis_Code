@@ -293,12 +293,13 @@ class Master(object):
 
     # -----------------------
     def set_experiment_path(self, path):
-        import sys
+        # import sys
         # -------------------
         exp_path = Utils.ftext(path, lmin=0, lmax=200)
         if os.path.isdir(exp_path):
-            base_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-            self.__path = os.path.relpath(exp_path, base_path)
+            # base_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+            # self.__path = os.path.relpath(exp_path, base_path)
+            self.__path = exp_path
             return True
         else:
             return False
@@ -337,7 +338,7 @@ class Master(object):
             return False
 
     def save(self):
-        if self.__database is not None and self.__name != u'':
+        if self.__database is not None and self.__name != u'' and self.__trck != u'none':
             sql = u"""
             insert or replace into master
             (mas_name, mas_scrn, mas_trck, mas_mont, mas_path)
@@ -379,10 +380,50 @@ class Master(object):
             return False
 
     # =================================
-    def get_iohub(self, unixstamp):
-        return 1
+    def get_iohub(self):
+        import yaml
+        # -------------------
+        if self.__in_db:
+            configuration = {
+                u'monitor_devices': {
+                    u'Display': {
+                        u'name':                            u'display',
+                        u'reporting_unit_type':             u'pix',
+                        u'device_number':                   self.__scrn,
+                        u'psychopy_monitor_name':           self.__mont,
+                        u'override_using_psycho_settings':  True,
+                    },
+                    u'Keyboard': {
+                        u'name':    u'keyboard',
+                    },
+                    u'Experiment': {
+                        u'name':    u'experimentRuntime'
+                    }
+                },
+                u'data_store': {
+                    u'enable':      True,
+                }
+            }
+            # -------------------
+            tracker = yaml.load(open(self.get_tracker_conf_path(), u'r'))[u'monitor_devices'][0]
+            configuration[u'monitor_devices'].update(tracker)
+            # -------------------
+            return configuration
+        else:
+            return None
 
-    def get_configuration(self, unixstamp):
+    def get_configuration(self):
+        if self.__in_db:
+            configuration = {
+                u'name':            self.__name,
+                u'screen':          self.__scrn,
+                u'tracker':         self.__trck,
+                u'monitor':         self.__mont,
+                u'experiment_path': self.__path,
+            }
+            return configuration
+        else:
+            return None
 
 
 # =============================================================================
@@ -1116,17 +1157,15 @@ class Test(ItemList):
         fra_num = self.frame_number()
         if fra_num is not None:
             frames = [frame.get_configuration() for frame in self.frame_get_all()]
+            test = {
+                u'name': self.__name,
+                u'repetitions': self.__reps,
+                u'description': self.__desc,
+                u'frames': frames,
+            }
+            return test
         else:
-            frames = None
-        # ---------------
-        test = {
-            u'name':        self.__name,
-            u'repetitions': self.__reps,
-            u'description': self.__desc,
-            u'frames':      frames,
-        }
-        # ---------------
-        return test
+            return None
 
 
 # =============================================================================
@@ -1492,43 +1531,42 @@ class Experiment(ItemList):
 
     # =================================
     def get_iohub(self, unixstamp):
-        if self.__in_db is True:
+        if self.__in_db:
             experiment = {
                 u'title':           self.__name,
                 u'code':            self.__code,
                 u'version':         self.__vers,
                 u'description':     self.__desc,
-                u'display_experiment_dialog:': True,
+                u'display_experiment_dialog': True,
                 # -----------
                 u'session_defaults': {
                     u'name':        u'Session...',
                     u'code':        unixstamp,
                     u'comments':    self.__comm,
-                    u'session_variable_order': [u'name', u'code', u'comments']
                 },
                 u'display_session_dialog': True,
+                u'session_variable_order': [u'name', u'code', u'comments'],
                 # -----------
                 u'ioHub': {
                     u'enable':  True,
-                    u'config':  Utils.format_path(u'config/')+u'['+self.__code+u']['+unixstamp+u']iohub_config.yml'
                 },
             }
             if self.__dia_fact:
                 experiment[u'session_defaults'][u'user_variables'] = {}
                 if self.__dia_fage:
                     experiment[u'session_defaults'][u'user_variables'][u'participant_age'] = u'Unknown'
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_age')
+                    experiment[u'session_variable_order'].append(u'participant_age')
                 if self.__dia_fgen:
                     experiment[u'session_defaults'][u'user_variables'][u'participant_gender'] = [u'Male', u'Female']
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'participant_gender')
+                    experiment[u'session_variable_order'].append(u'participant_gender')
                 if self.__dia_fgla:
                     experiment[u'session_defaults'][u'user_variables'][u'glasses'] = [u'Yes', u'No']
                     experiment[u'session_defaults'][u'user_variables'][u'contacts'] = [u'Yes', u'No']
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'glasses')
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'contacts')
+                    experiment[u'session_variable_order'].append(u'glasses')
+                    experiment[u'session_variable_order'].append(u'contacts')
                 if self.__dia_feye:
                     experiment[u'session_defaults'][u'user_variables'][u'eye_color'] = u'Unknown'
-                    experiment[u'session_defaults'][u'session_variable_order'].append(u'eye_color')
+                    experiment[u'session_variable_order'].append(u'eye_color')
 
             return experiment
         else:
@@ -1574,40 +1612,42 @@ class Experiment(ItemList):
                   u"\n\t- the experiment is saved on the DB."
             return None
 
-    def get_configuration(self, unixstamp):
-        tes_num = self.test_number()
-        if tes_num is not None:
-            tests = [test.get_configuration() for test in self.test_get_all()]
-        else:
-            tests = None
-        # ---------------
-        configuration = {
-            u'identifier': unixstamp,
-            u'experiment': {
-                u'title':           self.__name,
-                u'code':            self.__code,
-                u'version':         self.__vers,
-                u'description':     self.__desc,
-                u'instruction':     self.__istr,
-                u'session_configuration': {
-                    u'comments':    self.__comm,
-                    u'space_start': self.__con_fspc,
-                    u'randomize':   self.__con_frnd,
-                    u'rest': {
-                        u'active':  self.__con_frst,
-                        u'period':  self.__con_perd,
-                        u'time':    self.__con_time,
+    def get_configuration(self):
+        if self.__in_db:
+            tes_num = self.test_number()
+            if tes_num is not None:
+                tests = [test.get_configuration() for test in self.test_get_all()]
+            else:
+                tests = None
+            # ---------------
+            configuration = {
+                u'experiment': {
+                    u'title':           self.__name,
+                    u'code':            self.__code,
+                    u'version':         self.__vers,
+                    u'description':     self.__desc,
+                    u'instruction':     self.__istr,
+                    u'session_configuration': {
+                        u'comments':    self.__comm,
+                        u'space_start': self.__con_fspc,
+                        u'randomize':   self.__con_frnd,
+                        u'rest': {
+                            u'active':  self.__con_frst,
+                            u'period':  self.__con_perd,
+                            u'time':    self.__con_time,
+                        },
+                        u'dialog': {
+                            u'active':          self.__dia_fact,
+                            u'ask_age':         self.__dia_fage,
+                            u'ask_gender':      self.__dia_fgen,
+                            u'ask_glasses':     self.__dia_fgla,
+                            u'ask_eye_color':   self.__dia_feye,
+                        }
                     },
-                    u'dialog': {
-                        u'active':          self.__dia_fact,
-                        u'ask_age':         self.__dia_fage,
-                        u'ask_gender':      self.__dia_fgen,
-                        u'ask_glasses':     self.__dia_fgla,
-                        u'ask_eye_color':   self.__dia_feye,
-                    }
-                },
-                u'tests': tests
+                    u'tests': tests
+                }
             }
-        }
-        # ---------------
-        return configuration
+            # ---------------
+            return configuration
+        else:
+            return None

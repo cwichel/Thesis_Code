@@ -2,8 +2,7 @@
 # =============================================================================
 # Modules
 # =============================================================================
-from psychopy import visual, core
-from saccadeApp import generate_experiment_files
+from saccadeApp import generate_experiment
 from saccadeApp import SaccadeDB, Master, Experiment, Test, Frame, Component
 
 
@@ -38,7 +37,7 @@ if __name__ == '__main__':
     # =======================
     # mas = Master()
     # mas.set_database(db=database)
-    # mas.load(name=u'Default')
+    # # mas.load(name=u'Default')
     # mas.set_name(name=u'Default')
     # mas.set_screen(screen=1)
     # mas.set_tracker(tracker=u'pytribe')
@@ -96,7 +95,7 @@ if __name__ == '__main__':
     # =======================
     # win = visual.Window(size=(800, 600), monitor=u'default', screen=1, color=u'black')
 
-    generate_experiment_files(db=database, mas=u'Default', exp=u'exp1_t23')
+    generate_experiment(db=database, mas=u'Default', exp=u'exp1_t23')
 
     print u'FIN'
 
