@@ -3,7 +3,7 @@
 # Modules
 # =============================================================================
 import os
-from psychopy import visual
+from psychopy import visual, core
 from psychopy.data import TrialHandler, importConditions
 from psychopy.iohub import (ioHubExperimentRuntime, module_directory, getCurrentDateTimeString)
 
@@ -62,26 +62,26 @@ def generate_experiment(db, mas, exp):
             filepath = exp_cod_path_conf + u'\\' + file_exp_iohub_config
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
                 yaml.safe_dump(mas_config, outfile, default_flow_style=None, indent=4)
-            # # ---------------
-            # mas_log = mas_data.get_configuration()
-            # filepath = exp_cod_path_logs + u'\\' + file_log_master
-            # with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
-            #     yaml.safe_dump(mas_log, outfile, default_flow_style=False, indent=4)
-            # # ---------------
+            # ---------------
+            mas_log = mas_data.get_configuration()
+            filepath = exp_cod_path_logs + u'\\' + file_log_master
+            with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
+                yaml.safe_dump(mas_log, outfile, default_flow_style=False, indent=4)
+            # ---------------
             exp_config = exp_data.get_iohub(unixstamp=exp_time)
             exp_config[u'ioHub'][u'config'] = exp_cod_path_conf + u'\\' + file_exp_iohub_config
             filepath = exp_cod_path_conf + u'\\' + file_exp_config
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
                 yaml.safe_dump(exp_config, outfile, default_flow_style=None, indent=4)
-            # # ---------------
-            # exp_log = exp_data.get_configuration()
-            # filepath = exp_cod_path_logs + u'\\' + file_log_experiment
-            # with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
-            #     yaml.safe_dump(exp_log, outfile, default_flow_style=False, indent=4)
-            # # ===================================
-            # # Execution
-            # # ===================================
-            runtime = ExperimentRuntime(exp_cod_path_conf, file_exp_config)
+            # ---------------
+            exp_log = exp_data.get_configuration()
+            filepath = exp_cod_path_logs + u'\\' + file_log_experiment
+            with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
+                yaml.safe_dump(exp_log, outfile, default_flow_style=False, indent=4)
+            # ===================================
+            # Execution
+            # ===================================
+            runtime = ExperimentRuntime(exp_cod_path_conf, file_exp_config, exp_data)
             runtime.start()
             return True
         else:
@@ -94,28 +94,24 @@ def generate_experiment(db, mas, exp):
 # Script
 # =============================================================================
 class ExperimentRuntime(ioHubExperimentRuntime):
+    def __init__(self, conf_file_path, conf_file, experiment):
+        super(ExperimentRuntime, self).__init__(configFilePath=conf_file_path, configFile=conf_file)
+        self.experiment = experiment
+
     def run(self, *args):
-        from PIL import Image, ImageFile
-        ImageFile.LOAD_TRUNCATED_IMAGES = True
-        # -------------------
-        path_base = u'C:\\Users\\Practicante\\PycharmProjects\\Memoria_Code\\bin'
-        path_exp = path_base + u'\\events\\exp1\\[v1.0][exp1_t23]\\'
-
-        # -------------------
-        exp_conditions = importConditions(path_exp + u'\\config\\trial_conditions.xlsx')
-        trials = TrialHandler(exp_conditions, 1)
-        self.hub.createTrialHandlerRecordTable(trials)
-
-        # -------------------
+        # ===================
+        # Prepare Hardware
+        # ===================
         try:
             tracker = self.hub.devices.tracker
+            tracker.runSetupProcedure()
         except Exception:
             from psychopy.iohub.util import MessageDialog
             md = MessageDialog(title=u"No Eye Tracker Configuration Found",
-                               msg=u"Update the iohub_config.yaml file by "
-                               u"uncommenting\nthe appropriate eye tracker "
-                               u"config lines.\n\nPress OK to exit demo.",
-                               showButtons=MessageDialog.OK_BUTTON, dialogType=MessageDialog.ERROR_DIALOG,
+                               msg=u"No eyetracker selected/found. Check the" 
+                                   u"experiment settings.",
+                               showButtons=MessageDialog.OK_BUTTON,
+                               dialogType=MessageDialog.ERROR_DIALOG,
                                allowCancel=False, display_index=0)
             md.show()
             return 1
@@ -123,204 +119,209 @@ class ExperimentRuntime(ioHubExperimentRuntime):
         display = self.hub.devices.display
         kb = self.hub.devices.keyboard
 
-        # -------------------
-        tracker.runSetupProcedure()
+        # ===================
+        # Get experiment
+        # ===================
+        # Prepare Window
+        resolution = display.getPixelResolution()
+        coordinate = display.getCoordinateType()
+        window = visual.Window(size=resolution, monitor=display.getPsychopyMonitorName(), units=coordinate,
+                               fullscr=True, allowGUI=False, screen=display.getIndex())
 
-        # -------------------
-        res = display.getPixelResolution()  # Current pixel resolution of the Display to be used
-        coord_type = display.getCoordinateType()
-        window = visual.Window(res, monitor=display.getPsychopyMonitorName(), units=coord_type, fullscr=True,
-                               allowGUI=False, screen=display.getIndex())
+        # Get experiment content
+        exp_data = self.experiment.get_execution(win=window)
 
-        # -------------------
-        image_cache = dict()
-        imag_path = path_exp + u'\\config\\images'
-        imag_name = [u'canal.jpg', u'fall.jpg', u'party.jpg', u'swimming.jpg', u'lake.jpg']
-
-        for iname in imag_name:
-            image = Image.open(imag_path + u'\\' + iname)
-            image_cache[iname] = visual.ImageStim(win=window, image=image, name=iname, units=coord_type)
-
-        # -------------------
-        gaze_dot = visual.GratingStim(win=window, tex=None, mask=u'gauss', pos=(0, 0), size=(66, 66), color=u'green',
-                                      units=coord_type)
-
-        # -------------------
-        instructions_text_stim = visual.TextStim(window, text=u'', pos=(0, 0), height=24, color=[-1, -1, -1],
-                                                 colorSpace=u'rgb', alignHoriz=u'center', alignVert=u'center',
-                                                 wrapWidth=window.size[0]*0.9)
-
-        # -------------------
-        instuction_text = u"Press Any Key to Start Experiment."
-        instructions_text_stim.setText(instuction_text)
-        instructions_text_stim.draw()
+        # Show instructions
+        instruction_screen = visual.TextStim(window, text=u'', pos=(0, 0), height=24, color=u'white',
+                                             alignHoriz=u'center', alignVert=u'center', wrapWidth=window.size[0] * 0.9)
+        instruction_screen.setText(exp_data[u'instruction'] + u"\nPress Any Key to Start Experiment.")
+        instruction_screen.draw()
         flip_time = window.flip()
-        self.hub.sendMessageEvent(text=u"EXPERIMENT_START", sec_time=flip_time)
-
         # -------------------
-        self.hub.clearEvents(u'all')
-        kb.waitForPresses()
-
-        # -------------------
-        self.hub.sendMessageEvent(text=u"IO_HUB EXPERIMENT_INFO START")
-        self.hub.sendMessageEvent(text=u"ioHub Experiment started {0}".format(
-            getCurrentDateTimeString()))
-        self.hub.sendMessageEvent(text=u"Experiment ID: {0}, Session ID: {1}".format(
-            self.hub.experimentID, self.hub.experimentSessionID))
-        self.hub.sendMessageEvent(text=u"Stimulus Screen ID: {0}, Size (pixels): {1}, CoordType: {2}".format(
+        self.hub.sendMessageEvent(text=u"=== EXPERIMENT START ===", sec_time=flip_time)
+        self.hub.sendMessageEvent(text=u"========= INFO =========")
+        self.hub.sendMessageEvent(text=u"Date:          {0}".format(getCurrentDateTimeString()))
+        self.hub.sendMessageEvent(text=u"Experiment ID: {0}".format(self.hub.experimentID))
+        self.hub.sendMessageEvent(text=u"Session    ID: {0}".format(self.hub.experimentSessionID))
+        self.hub.sendMessageEvent(text=u"Screen (ID, Size, CoordType): ({0}, {1}, {2})".format(
             display.getIndex(), display.getPixelResolution(), display.getCoordinateType()))
-        self.hub.sendMessageEvent(text=u"Calculated Pixels Per Degree: {0} x, {1} y".format(
+        self.hub.sendMessageEvent(text=u"Screen calculated Pixels Per Degree: {0} x, {1} y".format(
             *display.getPixelsPerDegree()))
-        self.hub.sendMessageEvent(text=u"IO_HUB EXPERIMENT_INFO END")
-
-        # -------------------
+        self.hub.sendMessageEvent(text=u"======= END INFO =======")
         self.hub.clearEvents(u'all')
-
-        # =============================
-        t = 0
-        for trial in trials:
-            # Update the instruction screen text to indicate
-            # a trial is about to start.
-            #
-            instuction_text = u"Press Space Key To Start Trial %d"%t
-            instructions_text_stim.setText(instuction_text)
-            instructions_text_stim.draw()
-            flip_time = window.flip()
-
-            self.hub.sendMessageEvent(text=u"EXPERIMENT_START", sec_time=flip_time)
-
-
-            # Wait until a space key press event occurs after the
-            # start trial instuctions have been displayed.
-            #
-            self.hub.clearEvents(u'all')
-            kb.waitForPresses(keys=[u' ', ])
-
-
-            # Space Key has been pressed, start the trial.
-            # Set the current session and trial id values to be saved
-            # in the ioDataStore for the upcoming trial.
-            #
-
-            trial[u'session_id'] = self.hub.getSessionID()
-            trial[u'trial_id'] = t+1
-
-            # Send a msg to the ioHub indicating that the trial started, and the time of
-            # the first retrace displaying the trial stm.
-            #
-            self.hub.sendMessageEvent(text=u"TRIAL_START", sec_time=flip_time)
-
-
-            # Start Recording Eye Data
-            #
-            tracker.setRecordingState(True)
-
-            # Get the image stim for this trial.
-            imageStim = image_cache[trial[u'IMAGE_NAME']]
-            imageStim.draw()
-            flip_time=window.flip()
-            # Clear all the events received prior to the trial start.
-            #
-            self.hub.clearEvents(u'all')
-            # Send a msg to the ioHub indicating that the trial started,
-            # and the time of the first retrace displaying the trial stim.
-            #
-            self.hub.sendMessageEvent(text=u"TRIAL_START", sec_time=flip_time)
-            # Set the value of the trial start variable for this trial
-            #
-            trial[u'TRIAL_START']=flip_time
-
-            # Loop until we get a keyboard event
-            #
-            run_trial = True
-            while run_trial is True:
-                # Get the latest gaze position in display coord space..
-                #
-                gpos=tracker.getPosition()
-                if type(gpos) in [tuple,list]:
-                    # If we have a gaze position from the tracker,
-                    # redraw the background image and then the
-                    # gaze_cursor at the current eye position.
-                    #
-                    gaze_dot.setPos([gpos[0],gpos[1]])
-                    imageStim.draw()
-                    gaze_dot.draw()
-                else:
-                    # Otherwise just draw the background image.
-                    # This will remove the gaze cursor from the screen
-                    # when the eye tracker is not successfully
-                    # tracking eye position.
-                    #
-                    imageStim.draw()
-
-                # Flip video buffers, displaying the stim we just
-                # updated.
-                #
-                flip_time=window.flip()
-
-                # Send an experiment message to the ioDataStore
-                # indicating the time the image was drawn and
-                # current position of gaze spot.
-                #
-                if type(gpos) in [tuple,list]:
-                    self.hub.sendMessageEvent("IMAGE_UPDATE %s %.3f %.3f"%(
-                                                trial['IMAGE_NAME'],gpos[0],gpos[1]),
-                                                sec_time=flip_time)
-                else:
-                    self.hub.sendMessageEvent("IMAGE_UPDATE %s [NO GAZE]"%(
-                                                trial['IMAGE_NAME']),
-                                                sec_time=flip_time)
-
-                # Check any new keyboard press events by a space key.
-                # If one is found, set the trial end variable and break.
-                # from the loop
-                if kb.getPresses(keys=[' ',]):
-                    run_trial=False
-                    break
-
-            # The trial has ended, so update the trial end time condition value,
-            # and send a message to the ioDataStore with the trial end time.
-            #
-            flip_time=window.flip()
-            trial['TRIAL_END']=flip_time
-            self.hub.sendMessageEvent(text="TRIAL_END %d"%t,sec_time=flip_time)
-
-            # Stop recording eye data.
-            # In this example, we have no use for any eye data
-            # between trials, so why save it.
-            #
-            tracker.setRecordingState(False)
-
-            # Save the experiment condition variable values for this
-            # trial to the ioDataStore.
-            #
-            self.hub.addRowToConditionVariableTable(trial.values())
-
-            # Clear all event buffers
-            #
-            self.hub.clearEvents('all')
-            t+=1
-
-        # All trials have been run, so end the experiment.
-        #
-
-        flip_time=window.flip()
-        self.hub.sendMessageEvent(text='EXPERIMENT_COMPLETE',sec_time=flip_time)
-
-        # Disconnect the eye tracking device.
-        #
-        tracker.setConnectionState(False)
-
-        # The experiment is done, all trials have been run.
-        # Clear the screen and show an 'experiment  done' message using the
-        # instructionScreen text.
-        #
-        instuction_text="Press Any Key to Exit Demo"
-        instructions_text_stim.setText(instuction_text)
-        instructions_text_stim.draw()
-        flip_time=window.flip()
-        self.hub.sendMessageEvent(text="SHOW_DONE_TEXT",sec_time=flip_time)
-        self.hub.clearEvents('all')
-        # wait until any key is pressed
+        # -------------------
         kb.waitForPresses()
+
+        # ===================
+        # Experiment presentation
+        # ===================
+        self.hub.sendMessageEvent(text=u"= TESTS SECUENCE START =")
+        self.hub.clearEvents(u'all')
+        # -------------------
+        for test_index in exp_data[u'test_secuence'][:, 0]:
+            test = exp_data[u'test_data'][test_index]
+            instruction_screen.setText(test[u'name']+u"\nPress Space to Start Experiment.")
+            instruction_screen.draw()
+            flip_time = window.flip()
+            # ---------------
+            kb.waitForPresses(keys=[u' ', ])
+            # ---------------
+            for frame in test[u'frames']:
+                frame[u'background'].draw()
+                if frame[u'components'] is not None:
+                    for component in frame[u'components']:
+                        component.draw()
+                window.flip()
+                core.wait(1.5)
+
+
+
+
+
+        # t = 0
+        # for trial in trials:
+        #     # Update the instruction screen text to indicate
+        #     # a trial is about to start.
+        #     #
+        #     instuction_text = u"Press Space Key To Start Trial %d"%t
+        #     instructions_text_stim.setText(instuction_text)
+        #     instructions_text_stim.draw()
+        #     flip_time = window.flip()
+        #
+        #     self.hub.sendMessageEvent(text=u"EXPERIMENT_START", sec_time=flip_time)
+        #
+        #
+        #     # Wait until a space key press event occurs after the
+        #     # start trial instuctions have been displayed.
+        #     #
+        #     self.hub.clearEvents(u'all')
+        #     kb.waitForPresses(keys=[u' ', ])
+        #
+        #
+        #     # Space Key has been pressed, start the trial.
+        #     # Set the current session and trial id values to be saved
+        #     # in the ioDataStore for the upcoming trial.
+        #     #
+        #
+        #     trial[u'session_id'] = self.hub.getSessionID()
+        #     trial[u'trial_id'] = t+1
+        #
+        #     # Send a msg to the ioHub indicating that the trial started, and the time of
+        #     # the first retrace displaying the trial stm.
+        #     #
+        #     self.hub.sendMessageEvent(text=u"TRIAL_START", sec_time=flip_time)
+        #
+        #
+        #     # Start Recording Eye Data
+        #     #
+        #     tracker.setRecordingState(True)
+        #
+        #     # Get the image stim for this trial.
+        #     imageStim = image_cache[trial[u'IMAGE_NAME']]
+        #     imageStim.draw()
+        #     flip_time=window.flip()
+        #     # Clear all the events received prior to the trial start.
+        #     #
+        #     self.hub.clearEvents(u'all')
+        #     # Send a msg to the ioHub indicating that the trial started,
+        #     # and the time of the first retrace displaying the trial stim.
+        #     #
+        #     self.hub.sendMessageEvent(text=u"TRIAL_START", sec_time=flip_time)
+        #     # Set the value of the trial start variable for this trial
+        #     #
+        #     trial[u'TRIAL_START']=flip_time
+        #
+        #     # Loop until we get a keyboard event
+        #     #
+        #     run_trial = True
+        #     while run_trial is True:
+        #         # Get the latest gaze position in display coord space..
+        #         #
+        #         gpos=tracker.getPosition()
+        #         if type(gpos) in [tuple,list]:
+        #             # If we have a gaze position from the tracker,
+        #             # redraw the background image and then the
+        #             # gaze_cursor at the current eye position.
+        #             #
+        #             gaze_dot.setPos([gpos[0],gpos[1]])
+        #             imageStim.draw()
+        #             gaze_dot.draw()
+        #         else:
+        #             # Otherwise just draw the background image.
+        #             # This will remove the gaze cursor from the screen
+        #             # when the eye tracker is not successfully
+        #             # tracking eye position.
+        #             #
+        #             imageStim.draw()
+        #
+        #         # Flip video buffers, displaying the stim we just
+        #         # updated.
+        #         #
+        #         flip_time=window.flip()
+        #
+        #         # Send an experiment message to the ioDataStore
+        #         # indicating the time the image was drawn and
+        #         # current position of gaze spot.
+        #         #
+        #         if type(gpos) in [tuple,list]:
+        #             self.hub.sendMessageEvent("IMAGE_UPDATE %s %.3f %.3f"%(
+        #                                         trial['IMAGE_NAME'],gpos[0],gpos[1]),
+        #                                         sec_time=flip_time)
+        #         else:
+        #             self.hub.sendMessageEvent("IMAGE_UPDATE %s [NO GAZE]"%(
+        #                                         trial['IMAGE_NAME']),
+        #                                         sec_time=flip_time)
+        #
+        #         # Check any new keyboard press events by a space key.
+        #         # If one is found, set the trial end variable and break.
+        #         # from the loop
+        #         if kb.getPresses(keys=[' ',]):
+        #             run_trial=False
+        #             break
+        #
+        #     # The trial has ended, so update the trial end time condition value,
+        #     # and send a message to the ioDataStore with the trial end time.
+        #     #
+        #     flip_time=window.flip()
+        #     trial['TRIAL_END']=flip_time
+        #     self.hub.sendMessageEvent(text="TRIAL_END %d"%t,sec_time=flip_time)
+        #
+        #     # Stop recording eye data.
+        #     # In this example, we have no use for any eye data
+        #     # between trials, so why save it.
+        #     #
+        #     tracker.setRecordingState(False)
+        #
+        #     # Save the experiment condition variable values for this
+        #     # trial to the ioDataStore.
+        #     #
+        #     self.hub.addRowToConditionVariableTable(trial.values())
+        #
+        #     # Clear all event buffers
+        #     #
+        #     self.hub.clearEvents('all')
+        #     t+=1
+        #
+        # # All trials have been run, so end the experiment.
+        # #
+        #
+        # flip_time=window.flip()
+        # self.hub.sendMessageEvent(text='EXPERIMENT_COMPLETE',sec_time=flip_time)
+        #
+        # # Disconnect the eye tracking device.
+        # #
+        # tracker.setConnectionState(False)
+        #
+        # # The experiment is done, all trials have been run.
+        # # Clear the screen and show an 'experiment  done' message using the
+        # # instructionScreen text.
+        # #
+        # instuction_text="Press Any Key to Exit Demo"
+        # instructions_text_stim.setText(instuction_text)
+        # instructions_text_stim.draw()
+        # flip_time=window.flip()
+        # self.hub.sendMessageEvent(text="SHOW_DONE_TEXT",sec_time=flip_time)
+        # self.hub.clearEvents('all')
+        # # wait until any key is pressed
+        # kb.waitForPresses()
 
