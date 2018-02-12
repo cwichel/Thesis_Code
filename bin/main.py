@@ -48,8 +48,8 @@ if __name__ == '__main__':
     # =======================
     # exp = Experiment()
     # exp.set_database(db=database)
-    # exp.load(code=u'exp1_t23')
-    # # =======================
+    # # exp.load(code=u'exp1_t23')
+    # # # =======================
     # exp.set_code(u'exp1_t23')
     # exp.set_info(u'exp1', u'v1.0')
     # exp.set_random(status=True)
@@ -74,6 +74,9 @@ if __name__ == '__main__':
     # fra4 = Frame()
     # fra4.set_name(u'image presentation')
     # fra4.component_add(com3)
+    # fra4.set_as_task(True)
+    # fra4.set_keys_allowed(u'space, left, right')
+    # fra4.set_keys_selected(u'right')
     # tes1 = Test()
     # tes1.set_repetitions(5)
     # tes1.set_name(u'test 1')
@@ -87,7 +90,7 @@ if __name__ == '__main__':
     # tes2.frame_add(fra4)
     # exp.test_add(tes1)
     # exp.test_add(tes2)
-    # # =======================
+    # # # =======================
     # exp.save()
     # =======================
     # exp.remove()

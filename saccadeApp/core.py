@@ -962,15 +962,17 @@ class Frame(ItemList):
             else:
                 components = None
             # ---------------
-            back = visual.Rect(win=win, width=win.size[0], height=win.size[1], fillColor=self.__colr, units=u'pix')
+            back = visual.Rect(win=win, width=win.size[0], height=win.size[1], units=u'pix',
+                               lineColor=self.__colr, fillColor=self.__colr)
             # ---------------
             frame = {
-                u'is_task':         self.__task,
-                u'time':            self.__time,
-                u'allowed_keys':    self.__keya,
-                u'correct_keys':    self.__keys,
-                u'background':      back,
-                u'components':      components
+                u'is_task':             self.__task,
+                u'time':                self.__time,
+                u'allowed_keys':        self.__keya.replace(u'space', u' ').split(u','),
+                u'correct_keys':        self.__keys.replace(u'space', u' ').split(u','),
+                u'correct_keys_str':    self.__keys,
+                u'background':          back,
+                u'components':          components
             }
             # ---------------
             return frame
