@@ -19,7 +19,7 @@ class Utils(object):
 
     # =================================
     @staticmethod
-    def ftext(word, lmin=0, lmax=-1):
+    def format_text(word, lmin=0, lmax=-1):
         try:
             temp = unicode(word)
             if lmax <= lmin <= len(temp) or lmin <= len(temp) <= lmax:
@@ -30,7 +30,7 @@ class Utils(object):
             return u''
 
     @staticmethod
-    def fint(value, vmin=0, default=None):
+    def format_int(value, vmin=0, default=None):
         try:
             temp = int(value)
             if temp >= vmin:
@@ -41,7 +41,7 @@ class Utils(object):
             return default
 
     @staticmethod
-    def ffloat(value, vmin=0.0, default=None):
+    def format_float(value, vmin=0.0, default=None):
         try:
             temp = float(value)
             if temp >= vmin:
@@ -52,7 +52,7 @@ class Utils(object):
             return default
 
     @staticmethod
-    def fbool(state, default=False):
+    def format_bool(state, default=False):
         try:
             temp = bool(state)
             return temp
@@ -67,7 +67,7 @@ class Utils(object):
         try:
             gmt0 = pytz.timezone(u"GMT+0")
             cltc = pytz.timezone(u"Chile/Continental")
-            date = Utils.ftext(date)
+            date = Utils.format_text(date)
             date = dt.strptime(date, u'%Y-%m-%d %H:%M:%S')
             date = date.replace(tzinfo=gmt0)
             return unicode(date.astimezone(cltc).strftime(u'%Y-%m-%d %H:%M:%S'))
@@ -78,7 +78,7 @@ class Utils(object):
     def format_path(path):
         import platform
         # -------------------
-        path = Utils.ftext(path)
+        path = Utils.format_text(path)
         is_win = any(platform.win32_ver())
         # -------------------
         path = path.replace(u'\\', u'#').replace(u'/', u'#')
@@ -236,7 +236,7 @@ class Master(object):
 
     # -----------------------
     def set_name(self, name):
-        name = Utils.ftext(name, lmin=3, lmax=50)
+        name = Utils.format_text(name, lmin=3, lmax=50)
         if self.__database is not None and name != u'':
             sql = u"select * from master where mas_name='%s';" % name
             mas_res = self.__database.pull_query(query=sql)
@@ -254,7 +254,7 @@ class Master(object):
 
     # -----------------------
     def set_screen(self, screen):
-        screen = Utils.fint(screen, default=0)
+        screen = Utils.format_int(screen, default=0)
         if 0 <= screen < len(self.get_available_screens()):
             self.__scrn = screen
             return True
@@ -269,7 +269,7 @@ class Master(object):
 
     # -----------------------
     def set_monitor(self, monitor):
-        monitor = Utils.ftext(monitor)
+        monitor = Utils.format_text(monitor)
         if monitor in self.get_available_monitors():
             self.__mont = monitor
             return True
@@ -281,7 +281,7 @@ class Master(object):
 
     # -----------------------
     def set_tracker(self, tracker):
-        tracker = Utils.ftext(tracker)
+        tracker = Utils.format_text(tracker)
         if tracker in self.get_available_trackers():
             self.__trck = tracker
             return True
@@ -303,7 +303,7 @@ class Master(object):
     def set_experiment_path(self, path):
         # import sys
         # -------------------
-        exp_path = Utils.ftext(path, lmin=0, lmax=200)
+        exp_path = Utils.format_text(path, lmin=0, lmax=200)
         if os.path.isdir(exp_path):
             # base_path = os.path.dirname(os.path.realpath(sys.argv[0]))
             # self.__path = os.path.relpath(exp_path, base_path)
@@ -317,7 +317,7 @@ class Master(object):
 
     # =================================
     def load(self, name):
-        name = Utils.ftext(name, lmin=3, lmax=50)
+        name = Utils.format_text(name, lmin=3, lmax=50)
         if self.__database is not None and name != u'':
             sql = u"""
             select 
@@ -519,7 +519,7 @@ class Component(object):
         self.__unit = u'deg'
         self.__pos = (0.0, 0.0)
         self.__ori = 0.0
-        self.__size = 0.0
+        self.__size = 1.0
         # -------------------
         self.__imag = None
         self.__shpe = u'square'
@@ -538,7 +538,7 @@ class Component(object):
 
     # =================================
     def set_name(self, name):
-        name = Utils.ftext(name, lmin=3, lmax=50)
+        name = Utils.format_text(name, lmin=3, lmax=50)
         if name != u'':
             self.__name = name
             return True
@@ -550,7 +550,7 @@ class Component(object):
 
     # -----------------------
     def set_units(self, units):
-        units = Utils.ftext(units, lmin=2, lmax=20)
+        units = Utils.format_text(units, lmin=2, lmax=20)
         if units in [u'norm', u'cm', u'deg', u'degFlat', u'degFlatPos', u'pix']:
             self.__unit = units
             return True
@@ -562,8 +562,8 @@ class Component(object):
 
     # -----------------------
     def set_position(self, posx, posy):
-        posx = Utils.ffloat(posx)
-        posy = Utils.ffloat(posy)
+        posx = Utils.format_float(posx)
+        posy = Utils.format_float(posy)
         if posx is not None and posy is not None:
             self.__pos = (posx, posy)
             return True
@@ -575,7 +575,7 @@ class Component(object):
 
     # -----------------------
     def set_orientation(self, ori):
-        ori = Utils.ffloat(ori)
+        ori = Utils.format_float(ori)
         if ori is not None:
             self.__ori = ori
             return True
@@ -587,7 +587,7 @@ class Component(object):
 
     # -----------------------
     def set_size(self, size):
-        size = Utils.ffloat(size)
+        size = Utils.format_float(size)
         if size is not None:
             self.__size = size
             return True
@@ -601,7 +601,7 @@ class Component(object):
     def set_image(self, imagepath):
         from PIL import Image
         # -------------------
-        imagepath = Utils.ftext(imagepath)
+        imagepath = Utils.format_text(imagepath)
         if imagepath is not u'' and os.path.isfile(imagepath):
             self.__shpe = u'image'
             self.__imag = Image.open(imagepath)
@@ -614,7 +614,7 @@ class Component(object):
 
     # -----------------------
     def set_shape(self, shape):
-        shape = Utils.ftext(shape, lmin=5, lmax=20)
+        shape = Utils.format_text(shape, lmin=5, lmax=20)
         if shape in [u'arrow', u'circle', u'cross', u'gauss', u'square']:
             self.__shpe = shape
             return True
@@ -626,7 +626,7 @@ class Component(object):
 
     # -----------------------
     def set_color(self, color):
-        color = Utils.ftext(color, lmin=3, lmax=20)
+        color = Utils.format_text(color, lmin=3, lmax=20)
         if colors.isValidColor(color):
             self.__colr = color
             return True
@@ -641,7 +641,7 @@ class Component(object):
         from PIL import Image
         from io import BytesIO
         # -------------------
-        coded = Utils.ftext(encimg)
+        coded = Utils.format_text(encimg)
         if coded != u'':
             img_buff = BytesIO()
             img_buff.write(coded.decode(u'base64'))
@@ -758,7 +758,7 @@ class Frame(ItemList):
         self.__name = u'Unnamed'
         self.__colr = u'black'
         self.__task = False
-        self.__time = 0.0
+        self.__time = 0.5
         self.__keya = u''
         self.__keys = u''
 
@@ -775,7 +775,7 @@ class Frame(ItemList):
 
     # =================================
     def set_name(self, name):
-        name = Utils.ftext(name, lmin=3, lmax=20)
+        name = Utils.format_text(name, lmin=3, lmax=20)
         if name != u'':
             self.__name = name
             return True
@@ -787,7 +787,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_color(self, color):
-        color = Utils.ftext(color, lmin=3, lmax=20)
+        color = Utils.format_text(color, lmin=3, lmax=20)
         if colors.isValidColor(color):
             self.__colr = color
             return True
@@ -799,7 +799,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_as_task(self, state):
-        self.__task = Utils.fbool(state, default=self.__task)
+        self.__task = Utils.format_bool(state, default=self.__task)
         if self.__task:
             self.__time = 0.0
             return True
@@ -813,7 +813,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_time(self, value):
-        value = Utils.ffloat(value)
+        value = Utils.format_float(value)
         if not self.__task and value is not None:
             self.__time = value
             return True
@@ -826,7 +826,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_keys_allowed(self, keys):
-        keys = Utils.ftext(keys).replace(unicode(u' '), unicode(u''))
+        keys = Utils.format_text(keys).replace(unicode(u' '), unicode(u''))
         if self.__task and keys != u'':
             self.__keya = keys
             return True
@@ -839,7 +839,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_keys_selected(self, keys):
-        keys = Utils.ftext(keys).replace(unicode(u' '), unicode(u''))
+        keys = Utils.format_text(keys).replace(unicode(u' '), unicode(u''))
         keys.replace(u" ", u"")
         if self.__task and self.__keya != u'' and keys != u'':
             keys_alw = self.__keya.split(u',')
@@ -1024,7 +1024,7 @@ class Test(ItemList):
 
     # =================================
     def set_name(self, name):
-        name = Utils.ftext(name, lmin=3, lmax=50)
+        name = Utils.format_text(name, lmin=3, lmax=50)
         if name != u'':
             self.__name = name
             return True
@@ -1036,7 +1036,7 @@ class Test(ItemList):
 
     # -----------------------
     def set_description(self, text):
-        text = Utils.ftext(text, lmin=10)
+        text = Utils.format_text(text, lmin=10)
         if text != u'':
             self.__desc = text
             return True
@@ -1048,7 +1048,7 @@ class Test(ItemList):
 
     # -----------------------
     def set_repetitions(self, value):
-        value = Utils.fint(value, vmin=1)
+        value = Utils.format_int(value, vmin=1)
         if value is not None:
             self.__reps = value
             return True
@@ -1241,7 +1241,7 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_code(self, code):
-        code = Utils.ftext(code, lmin=3, lmax=10)
+        code = Utils.format_text(code, lmin=3, lmax=10)
         if self.__database is not None and code != u'':
             sql = u"select * from experiment where exp_code='%s';" % code
             exp_res = self.__database.pull_query(query=sql)
@@ -1259,8 +1259,8 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_info(self, name, version):
-        name = Utils.ftext(name, lmin=3, lmax=50)
-        version = Utils.ftext(version, lmin=3, lmax=10)
+        name = Utils.format_text(name, lmin=3, lmax=50)
+        version = Utils.format_text(version, lmin=3, lmax=10)
         if self.__database is not None and name != u'' and version != u'':
             sql = u"select * from experiment where exp_name='%s' and exp_vers='%s';" % (name, version)
             exp_res = self.__database.pull_query(query=sql)
@@ -1282,7 +1282,7 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_descripton(self, text):
-        text = Utils.ftext(text, lmin=10)
+        text = Utils.format_text(text, lmin=10)
         if text != u'':
             self.__desc = text
             return True
@@ -1294,7 +1294,7 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_comments(self, text):
-        text = Utils.ftext(text, lmin=10)
+        text = Utils.format_text(text, lmin=10)
         if text != u'':
             self.__comm = text
             return True
@@ -1306,7 +1306,7 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_instruction(self, text):
-        text = Utils.ftext(text, lmin=10)
+        text = Utils.format_text(text, lmin=10)
         if text != u'':
             self.__istr = text
             return True
@@ -1318,11 +1318,11 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_dialog(self, status, askage, askgender, askglasses, askeyecolor):
-        self.__dia_fact = Utils.fbool(status, default=self.__dia_fact)
-        self.__dia_fage = Utils.fbool(askage, default=self.__dia_fage)
-        self.__dia_fgen = Utils.fbool(askgender, default=self.__dia_fgen)
-        self.__dia_fgla = Utils.fbool(askglasses, default=self.__dia_fgla)
-        self.__dia_feye = Utils.fbool(askeyecolor, default=self.__dia_feye)
+        self.__dia_fact = Utils.format_bool(status, default=self.__dia_fact)
+        self.__dia_fage = Utils.format_bool(askage, default=self.__dia_fage)
+        self.__dia_fgen = Utils.format_bool(askgender, default=self.__dia_fgen)
+        self.__dia_fgla = Utils.format_bool(askglasses, default=self.__dia_fgla)
+        self.__dia_feye = Utils.format_bool(askeyecolor, default=self.__dia_feye)
 
     def is_dialog_active(self):
         return self.__dia_fact
@@ -1341,23 +1341,23 @@ class Experiment(ItemList):
 
     # -----------------------
     def set_space_start(self, status):
-        self.__con_fspc = Utils.fbool(status, default=self.__con_fspc)
+        self.__con_fspc = Utils.format_bool(status, default=self.__con_fspc)
 
     def is_space_start(self):
         return self.__con_fspc
 
     # -----------------------
     def set_random(self, status):
-        self.__con_frnd = Utils.fbool(status, default=self.__con_frnd)
+        self.__con_frnd = Utils.format_bool(status, default=self.__con_frnd)
 
     def is_random(self):
         return self.__con_frnd
 
     # -----------------------
     def set_rest_conf(self, status, period, time):
-        status = Utils.fbool(status, default=self.__con_frst)
-        period = Utils.fint(period, default=-0)
-        time = Utils.ffloat(time, default=-0.0)
+        status = Utils.format_bool(status, default=self.__con_frst)
+        period = Utils.format_int(period, default=-0)
+        time = Utils.format_float(time, default=-0.0)
         if status and period > 0 and time > 0.0:
             self.__con_frst = status
             self.__con_perd = period
@@ -1402,7 +1402,7 @@ class Experiment(ItemList):
 
     # =================================
     def load(self, code):
-        code = Utils.ftext(code, lmin=3, lmax=10)
+        code = Utils.format_text(code, lmin=3, lmax=10)
         if self.__database is not None and code != u'':
             sql = u"""
             select

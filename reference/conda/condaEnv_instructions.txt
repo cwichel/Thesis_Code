@@ -1,8 +1,7 @@
 Nota: Se sabe que funciona con conda 4.4.7
 
-1.- Instalar Anaconda, AVbin10, VLC y VCForPython
-    - Python 2.7
-    - x86
+1.- Instalar Anaconda (python 2.7, x86), AVbin10 (x64 y x86), VLC y VCForPython
+    - Copiar avbin64.dll y avbin.dll desde System32 a SysWOW64.
 2.- Actualizar Anaconda
 
 3.- Instalar Env
