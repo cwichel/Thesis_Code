@@ -2,7 +2,7 @@
 # =============================================================================
 # Modules
 # =============================================================================
-from saccadeApp import generate_experiment
+from saccadeApp import ExperimentHandler
 from saccadeApp import SaccadeDB, Master, Experiment, Test, Frame, Component
 
 
@@ -35,9 +35,9 @@ if __name__ == '__main__':
     database = SaccadeDB()
     # =======================
     # =======================
-    # mas = Master()
-    # mas.set_database(db=database)
-    # # mas.load(name=u'Default')
+    mas = Master()
+    mas.set_database(db=database)
+    mas.load(name=u'Default')
     # mas.set_name(name=u'Default')
     # mas.set_screen(screen=1)
     # mas.set_tracker(tracker=u'pytribe')
@@ -46,9 +46,9 @@ if __name__ == '__main__':
     # mas.save()
     # =======================
     # =======================
-    # exp = Experiment()
-    # exp.set_database(db=database)
-    # # exp.load(code=u'exp1_t23')
+    exp = Experiment()
+    exp.set_database(db=database)
+    exp.load(code=u'exp1_t23')
     # # =======================
     # exp.set_code(u'exp1_t23')
     # exp.set_info(u'exp1', u'v1.0')
@@ -83,14 +83,14 @@ if __name__ == '__main__':
     # fra4.set_keys_allowed(u'space, left, right')
     # fra4.set_keys_selected(u'right')
     # tes1 = Test()
-    # tes1.set_repetitions(5)
+    # tes1.set_quantity(5)
     # tes1.set_name(u'test 1')
     # tes1.frame_add(fra1)
     # tes1.frame_add(fra2)
     # tes1.frame_add(fra3)
     # tes2 = tes1.copy()
     # tes2.set_name(u'test2')
-    # tes2.set_repetitions(3)
+    # tes2.set_quantity(3)
     # tes2.frame_delete(2)
     # tes2.frame_add(fra4)
     # exp.test_add(tes1)
@@ -101,9 +101,11 @@ if __name__ == '__main__':
     # exp.remove()
     # =======================
     # =======================
-    # win = visual.Window(size=(800, 600), monitor=u'default', screen=1, color=u'black')
 
-    generate_experiment(db=database, mas=u'Default', exp=u'exp1_t23')
+    execution = ExperimentHandler()
+    if execution.load_experiment(db=database, mas=u'Default', exp=u'exp1_t23'):
+        execution.save_execution_parameters()
+        execution.execute_experiment()
 
     print u'FIN'
 

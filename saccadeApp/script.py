@@ -4,99 +4,128 @@
 # =============================================================================
 import os
 from psychopy import visual, core
-from psychopy.data import TrialHandler, importConditions
-from psychopy.iohub import (ioHubExperimentRuntime, module_directory, getCurrentDateTimeString)
+from psychopy.iohub import (ioHubExperimentRuntime, getCurrentDateTimeString)
 
 
 # =============================================================================
 # Script Handler
 # =============================================================================
-def generate_experiment(db, mas, exp):
-    import time
-    import yaml
-    import codecs
-    from saccadeApp import SaccadeDB, Master, Experiment
-    # -----------------------
-    if isinstance(db, SaccadeDB):
-        mas_data = Master()
-        mas_data.set_database(db=db)
-        mas_check = mas_data.load(name=mas)
+class ExperimentHandler(object):
+    # =================================
+    def __init__(self):
+        self.__database = None
+        self.__mas_data = None
+        self.__exp_data = None
+        self.__exp_exec = {}
+        self.__exp_path = u''
+        self.__base_path = u''
+        self.__timestamp = u''
+        self.__is_loaded = False
+        self.__is_ready = False
+
+    # =================================
+    def load_experiment(self, db, mas, exp):
+        import time
+        from saccadeApp import SaccadeDB, Master, Experiment
+        # -----------------------
+        if not self.__is_loaded:
+            if isinstance(db, SaccadeDB):
+                self.__mas_data = Master()
+                self.__mas_data.set_database(db=db)
+                mas_check = self.__mas_data.load(name=mas)
+                # -------------------
+                self.__exp_data = Experiment()
+                self.__exp_data.set_database(db=db)
+                exp_check = self.__exp_data.load(code=exp)
+                # -------------------
+                if mas_check and exp_check:
+                    self.__is_loaded = True
+                    self.__timestamp = unicode(int(time.time()))
+                    # ---------------
+                    self.__base_path = self.__mas_data.get_experiment_path()
+                    self.__exp_path = self.__base_path + u'\\' + self.__exp_data.get_name()
+                # -------------------
+                return self.__is_loaded
+        else:
+            return self.__is_loaded
+
+    def save_execution_parameters(self):
+        import yaml
+        import codecs
         # -------------------
-        exp_data = Experiment()
-        exp_data.set_database(db=db)
-        exp_check = exp_data.load(code=exp)
-        # -------------------
-        if mas_check and exp_check:
-            # ===================================
-            # Configuration
-            # ===================================
-            mas_path = mas_data.get_experiment_path()
-            exp_name = exp_data.get_name()
-            exp_code = exp_data.get_code()
-            exp_vers = exp_data.get_version()
-            exp_time = unicode(int(time.time()))
+        if self.__is_loaded and not self.__is_ready:
+            exp_code = self.__exp_data.get_code()
+            exp_version = self.__exp_data.get_version()
             # ---------------
-            exp_path = mas_path + u'\\' + exp_name
-            exp_cod_path_base = exp_path + u'\\' + u'['+exp_vers+u']['+exp_code+u']'
-            exp_cod_path_logs = exp_cod_path_base + u'\\' + u'logs'
-            exp_cod_path_conf = exp_cod_path_base + u'\\' + u'config'
+            exp_version_path = self.__exp_path + u'\\' + u'['+exp_version+u']['+exp_code+u']'
+            exp_version_log_path = exp_version_path + u'\\logs'
+            exp_version_cfg_path = exp_version_path + u'\\config'
             # ---------------
-            file_exp_config = u'['+exp_code+u']['+exp_time+u']experiment_config.yaml'
-            file_exp_iohub_config = u'['+exp_code+u']['+exp_time+u']iohub_config.yaml'
-            file_log_experiment = u'['+exp_code+u']['+exp_time+u']log_experiment_config.yaml'
-            file_log_master = u'['+exp_code+u']['+exp_time+u']log_master_config.yaml'
+            if not os.path.exists(self.__base_path):
+                os.makedirs(self.__base_path)
+            if not os.path.exists(self.__exp_path):
+                os.makedirs(self.__exp_path)
+            if not os.path.exists(exp_version_path):
+                os.makedirs(exp_version_path)
+            if not os.path.exists(exp_version_log_path):
+                os.makedirs(exp_version_log_path)
+            if not os.path.exists(exp_version_cfg_path):
+                os.makedirs(exp_version_cfg_path)
             # ---------------
-            if not os.path.exists(mas_path):
-                os.makedirs(mas_path)
-            if not os.path.exists(exp_path):
-                os.makedirs(exp_path)
-            if not os.path.exists(exp_cod_path_base):
-                os.makedirs(exp_cod_path_base)
-            if not os.path.exists(exp_cod_path_logs):
-                os.makedirs(exp_cod_path_logs)
-            if not os.path.exists(exp_cod_path_conf):
-                os.makedirs(exp_cod_path_conf)
+            exp_logfile_config = u'['+exp_code+u']['+self.__timestamp+u']log_experiment_config.yaml'
+            exp_logfile_master = u'['+exp_code+u']['+self.__timestamp+u']log_master_config.yaml'
+            exp_cfgfile_config = u'['+exp_code+u']['+self.__timestamp+u']experiment_config.yaml'
+            exp_cfgfile_iohub = u'[' + exp_code + u'][' + self.__timestamp + u']iohub_config.yaml'
             # ---------------
-            mas_config = mas_data.get_iohub()
-            mas_config[u'data_store'][u'filename'] = exp_cod_path_base + u'\\' + u'['+exp_code+u']events_data'
-            filepath = exp_cod_path_conf + u'\\' + file_exp_iohub_config
+            mas_config = self.__mas_data.get_iohub()
+            mas_config[u'data_store'][u'filename'] = exp_version_path + u'\\' + u'[' + exp_code + u']events_data'
+            filepath = exp_version_cfg_path + u'\\' + exp_cfgfile_iohub
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
                 yaml.safe_dump(mas_config, outfile, default_flow_style=None, indent=4)
             # ---------------
-            mas_log = mas_data.get_configuration()
-            filepath = exp_cod_path_logs + u'\\' + file_log_master
+            mas_log = self.__mas_data.get_configuration()
+            filepath = exp_version_log_path + u'\\' + exp_logfile_master
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
                 yaml.safe_dump(mas_log, outfile, default_flow_style=False, indent=4)
             # ---------------
-            exp_config = exp_data.get_iohub(unixstamp=exp_time)
-            exp_config[u'ioHub'][u'config'] = exp_cod_path_conf + u'\\' + file_exp_iohub_config
-            filepath = exp_cod_path_conf + u'\\' + file_exp_config
+            exp_config = self.__exp_data.get_iohub(unixstamp=self.__timestamp)
+            exp_config[u'ioHub'][u'config'] = exp_version_cfg_path + u'\\' + exp_cfgfile_iohub
+            filepath = exp_version_cfg_path + u'\\' + exp_cfgfile_config
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
                 yaml.safe_dump(exp_config, outfile, default_flow_style=None, indent=4)
             # ---------------
-            exp_log = exp_data.get_configuration()
-            filepath = exp_cod_path_logs + u'\\' + file_log_experiment
+            exp_log = self.__exp_data.get_configuration()
+            filepath = exp_version_log_path + u'\\' + exp_logfile_config
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
                 yaml.safe_dump(exp_log, outfile, default_flow_style=False, indent=4)
-            # ===================================
-            # Execution
-            # ===================================
-            runtime = ExperimentRuntime(exp_cod_path_conf, file_exp_config, exp_data)
+            # ---------------
+            self.__exp_exec[u'experiment_config_path'] = exp_version_cfg_path
+            self.__exp_exec[u'experiment_config_file'] = exp_cfgfile_config
+            self.__exp_exec[u'experiment_data'] = self.__exp_data
+            # -------------------
+            self.__is_ready = True
+            return self.__is_ready
+        else:
+            return self.__is_loaded
+
+    def execute_experiment(self):
+        if self.__is_loaded and self.__is_ready:
+            runtime = ExperimentRuntime(self.__exp_exec)
             runtime.start()
+            # ---------------
             return True
         else:
             return False
-    else:
-        return False
 
 
 # =============================================================================
 # Script
 # =============================================================================
 class ExperimentRuntime(ioHubExperimentRuntime):
-    def __init__(self, conf_file_path, conf_file, experiment):
-        super(ExperimentRuntime, self).__init__(configFilePath=conf_file_path, configFile=conf_file)
-        self.experiment = experiment
+    def __init__(self, exp_cfg_dict):
+        super(ExperimentRuntime, self).__init__(configFilePath=exp_cfg_dict[u'experiment_config_path'],
+                                                configFile=exp_cfg_dict[u'experiment_config_file'])
+        self.__experiment = exp_cfg_dict[u'experiment_data']
 
     def run(self, *args):
         # =======================================
@@ -130,7 +159,7 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                                fullscr=True, allowGUI=False, screen=display.getIndex())
 
         # Get experiment content
-        exp_data = self.experiment.get_execution(win=window)
+        exp_data = self.__experiment.get_execution(win=window)
 
         # Show instructions
         instruction_screen = visual.TextStim(window, text=u'', pos=(0, 0), height=24, color=u'white',
@@ -289,7 +318,7 @@ class Switch:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):  # Allows traceback to occur
+    def __exit__(self, swt_type, value, traceback):  # Allows traceback to occur
         return False
 
     def __call__(self, *mconds):
