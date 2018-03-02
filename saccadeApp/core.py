@@ -6,6 +6,8 @@ import os
 import copy
 import numpy as np
 import sqlite3 as lite
+import threading as thread
+import subprocess as subproc
 from psychopy import visual, colors
 
 
@@ -181,6 +183,28 @@ class Master(object):
             return None
 
     # =================================
+    @staticmethod
+    def open_psychopy_monitor_center():
+        is_open = False
+        threads = thread.enumerate()
+        # ===================
+        for proccess in threads:
+            if proccess.getName() == u'MonitorCenter':
+                is_open = True
+        # ===================
+        if not is_open:
+            print u'Opening Monitor Center...'
+            path_base = os.path.split(os.path.realpath(__file__))[0]
+            path_conf = Utils.format_path(u'/resources/monitors/')
+            command = u'python ' + path_base + path_conf + u'monitorCenter.py'
+            monitor_thread = thread.Thread(target=lambda: subproc.call(command))
+            monitor_thread.setName(u'MonitorCenter')
+            monitor_thread.start()
+            return True
+        else:
+            print u'Error: Monitor Center is already open'
+            return False
+
     @staticmethod
     def get_available_trackers():
         import glob as gl

@@ -233,7 +233,6 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                         frame_buffer_index += 1
                         if frame_buffer_index < frame_total:
                             self.hub.sendMessageEvent(text=u"Loading Frame (ID: {0})".format(frame_buffer_index))
-                            self.hub.sendMessageEvent(text=u"Loading Frame Components...")
                             # ---------
                             frame_buffer = frames[frame_buffer_index]
                             frame_buffer[u'background'].draw()
@@ -257,7 +256,14 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                             frame = frame_buffer
                             frame_index = frame_buffer_index
                             # ---------
-                            self.hub.sendMessageEvent(text=u"Frame Started (ID: {0})".format(frame_index))
+                            if frame[u'is_task']:
+                                self.hub.sendMessageEvent(
+                                    text=u"Frame Started (ID: {0}, Type: Task, Time: User dependent.)"
+                                    .format(frame_index))
+                            else:
+                                self.hub.sendMessageEvent(
+                                    text=u"Frame Started (ID: {0}, Type: Timed, Time: {1}.)"
+                                    .format(frame_index, frame[u'time']))
                             # ---------
                             flip_time = window.flip()
                             timer.reset()
@@ -268,15 +274,16 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                             pressed = kb.waitForPresses(keys=frame[u'allowed_keys'])
                             key = unicode(pressed[len(pressed)-1].key).replace(u' ', u'space')
                             # ---------
-                            self.hub.sendMessageEvent(text=u"Frame Ended (ID: {0}, Time:{1}, "
-                                                           u"Selected key: {2}, Correct key: {3})".format(
-                                frame_index, timer.getTime(), key, frame[u'correct_keys_str']))
+                            self.hub.sendMessageEvent(
+                                text=u"Frame Ended (ID: {0}, Time:{1}, Selected key: {2}, Correct key: {3})"
+                                .format(frame_index, timer.getTime(), key, frame[u'correct_keys_str']))
                             # ---------
                             state = u'flip'
 
                         elif timer.getTime() >= frame[u'time']:         # is a timed frame
-                            self.hub.sendMessageEvent(text=u"Frame Ended (ID: {0}, Time:{1})".format(
-                                frame_index, timer.getTime()))
+                            self.hub.sendMessageEvent(
+                                text=u"Frame Ended (ID: {0}, Time:{1})"
+                                .format(frame_index, timer.getTime()))
                             # ---------
                             state = u'flip'
 
@@ -292,8 +299,9 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                         self.hub.clearEvents(u'all')
 
                     elif case(u'end'):
-                        self.hub.sendMessageEvent(text=u"Ending Test (ID:{0} , Name: {1})".format(
-                            test_index, test[u'name']))
+                        self.hub.sendMessageEvent(
+                            text=u"Ending Test (ID:{0} , Name: {1})"
+                            .format(test_index, test[u'name']))
                         # ---------
                         is_test_finish = True
 
