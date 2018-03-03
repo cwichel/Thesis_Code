@@ -1345,7 +1345,7 @@ class Experiment(ItemList):
         return self.__instructions
 
     # -----------------------
-    def set_dialog(self, status, askage, askgender, askglasses, askeyecolor):
+    def set_dialog(self, status, askage=False, askgender=False, askglasses=False, askeyecolor=False):
         self.__dia_is_active = Utils.format_bool(status, default=self.__dia_is_active)
         self.__dia_ask_age = Utils.format_bool(askage, default=self.__dia_ask_age)
         self.__dia_ask_gender = Utils.format_bool(askgender, default=self.__dia_ask_gender)

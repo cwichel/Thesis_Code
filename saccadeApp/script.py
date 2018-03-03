@@ -49,7 +49,7 @@ class ExperimentHandler(object):
         else:
             return self.__is_loaded
 
-    def save_execution_parameters(self):
+    def save_parameters(self):
         import yaml
         import codecs
         # -------------------
