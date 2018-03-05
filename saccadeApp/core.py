@@ -1575,7 +1575,7 @@ class Experiment(ItemList):
             print u"Experiment %s don't have any test to be saved." % self.__code
 
     # =================================
-    def get_iohub(self, unixstamp):
+    def get_iohub(self):
         if self.__in_db:
             experiment = {
                 u'title':           self.__name,
@@ -1586,7 +1586,7 @@ class Experiment(ItemList):
                 # -----------
                 u'session_defaults': {
                     u'name':        u'Session...',
-                    u'code':        unixstamp,
+                    u'code':        0,
                     u'comments':    self.__comments,
                 },
                 u'display_session_dialog': True,
@@ -1666,33 +1666,32 @@ class Experiment(ItemList):
                 tests = None
             # ---------------
             configuration = {
-                u'experiment': {
-                    u'title':           self.__name,
-                    u'code':            self.__code,
-                    u'version':         self.__version,
-                    u'description':     self.__description,
-                    u'instruction':     self.__instructions,
-                    u'session_configuration': {
-                        u'comments':    self.__comments,
-                        u'space_start': self.__con_need_space,
-                        u'randomize':   self.__con_is_random,
-                        u'rest': {
-                            u'active':  self.__con_is_rest,
-                            u'period':  self.__con_rest_period,
-                            u'time':    self.__con_rest_time,
-                        },
-                        u'dialog': {
-                            u'active':          self.__dia_is_active,
-                            u'ask_age':         self.__dia_ask_age,
-                            u'ask_gender':      self.__dia_ask_gender,
-                            u'ask_glasses':     self.__dia_ask_glasses,
-                            u'ask_eye_color':   self.__dia_ask_eye_color,
-                        }
+                u'title':           self.__name,
+                u'code':            self.__code,
+                u'version':         self.__version,
+                u'description':     self.__description,
+                u'instruction':     self.__instructions,
+                u'session_configuration': {
+                    u'comments':    self.__comments,
+                    u'space_start': self.__con_need_space,
+                    u'randomize':   self.__con_is_random,
+                    u'rest': {
+                        u'active':  self.__con_is_rest,
+                        u'period':  self.__con_rest_period,
+                        u'time':    self.__con_rest_time,
                     },
-                    u'tests': tests
-                }
+                    u'dialog': {
+                        u'active':          self.__dia_is_active,
+                        u'ask_age':         self.__dia_ask_age,
+                        u'ask_gender':      self.__dia_ask_gender,
+                        u'ask_glasses':     self.__dia_ask_glasses,
+                        u'ask_eye_color':   self.__dia_ask_eye_color,
+                    }
+                },
+                u'tests': tests
             }
             # ---------------
             return configuration
+
         else:
             return None

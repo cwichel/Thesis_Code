@@ -3,8 +3,14 @@
 # Modules
 # =============================================================================
 import os
+import platform
 from psychopy import visual, core
 from psychopy.iohub import (ioHubExperimentRuntime, getCurrentDateTimeString)
+
+if any(platform.win32_ver()):
+    fold = u'\\'
+else:
+    fold = u'/'
 
 
 # =============================================================================
@@ -14,95 +20,99 @@ class ExperimentHandler(object):
     # =================================
     def __init__(self):
         self.__database = None
-        self.__mas_data = None
-        self.__exp_data = None
-        self.__exp_exec = {}
-        self.__exp_path = u''
+        self.__master = None
+        self.__experiment = None
+        # ==================
         self.__base_path = u''
-        self.__timestamp = u''
+        self.__exp_path = u''
+        self.__exp_version_path = u''
+        # ==================
+        self.__execution_parameters = dict()
+        self.__execution_timestamp = u''
+        # ==================
         self.__is_loaded = False
         self.__is_ready = False
 
     # =================================
-    def load_experiment(self, db, mas, exp):
+    def load_configuration(self, db, master, experiment):
         import time
         from saccadeApp import SaccadeDB, Master, Experiment
-        # -----------------------
+        # ===================
         if not self.__is_loaded:
             if isinstance(db, SaccadeDB):
-                self.__mas_data = Master()
-                self.__mas_data.set_database(db=db)
-                mas_check = self.__mas_data.load(name=mas)
-                # -------------------
-                self.__exp_data = Experiment()
-                self.__exp_data.set_database(db=db)
-                exp_check = self.__exp_data.load(code=exp)
-                # -------------------
-                if mas_check and exp_check:
+                self.__master = Master()
+                self.__master.set_database(db=db)
+                is_master = self.__master.load(name=master)
+                # ===========
+                self.__experiment = Experiment()
+                self.__experiment.set_database(db=db)
+                is_experiment = self.__experiment.load(code=experiment)
+                # ===========
+                if is_master and is_experiment:
                     self.__is_loaded = True
-                    self.__timestamp = unicode(int(time.time()))
-                    # ---------------
-                    self.__base_path = self.__mas_data.get_experiment_path()
-                    self.__exp_path = self.__base_path + u'\\' + self.__exp_data.get_name()
-                # -------------------
+                    self.__execution_timestamp = unicode(int(time.time()))
+                    self.__base_path = self.__master.get_experiment_path()
+                    self.__exp_path = self.__base_path + u'\\' + self.__experiment.get_name()
                 return self.__is_loaded
         else:
             return self.__is_loaded
 
-    def save_parameters(self):
+    def save_parameters(self, save_frame=False):
         import yaml
         import codecs
-        # -------------------
+        # ===================
         if self.__is_loaded and not self.__is_ready:
-            exp_code = self.__exp_data.get_code()
-            exp_version = self.__exp_data.get_version()
-            # ---------------
-            exp_version_path = self.__exp_path + u'\\' + u'['+exp_version+u']['+exp_code+u']'
-            exp_version_log_path = exp_version_path + u'\\logs'
-            exp_version_cfg_path = exp_version_path + u'\\config'
-            # ---------------
+            experiment_code = self.__experiment.get_code()
+            experiment_version = self.__experiment.get_version()
+            # ===============
+            self.__exp_version_path = self.__exp_path + fold + u'['+experiment_version+u']['+experiment_code+u']'
+            log_files_path = self.__exp_version_path + fold + u'logs'
+            cfg_files_path = self.__exp_version_path + fold + u'config'
+            # ===============
             if not os.path.exists(self.__base_path):
                 os.makedirs(self.__base_path)
             if not os.path.exists(self.__exp_path):
                 os.makedirs(self.__exp_path)
-            if not os.path.exists(exp_version_path):
-                os.makedirs(exp_version_path)
-            if not os.path.exists(exp_version_log_path):
-                os.makedirs(exp_version_log_path)
-            if not os.path.exists(exp_version_cfg_path):
-                os.makedirs(exp_version_cfg_path)
+            if not os.path.exists(self.__exp_version_path):
+                os.makedirs(self.__exp_version_path)
+            if not os.path.exists(log_files_path):
+                os.makedirs(log_files_path)
+            if not os.path.exists(cfg_files_path):
+                os.makedirs(cfg_files_path)
+            # ===============
+            cfg_experiment = u'['+experiment_code+u']['+self.__execution_timestamp+u']experiment_config.yaml'
+            cfg_iohub = u'['+experiment_code+u']['+self.__execution_timestamp+u']iohub_config.yaml'
+            log_data = u'['+experiment_code+u']['+self.__execution_timestamp+u']config_log.yaml'
+            # ===============
+            cfg_exp_data = self.__experiment.get_iohub()
+            cfg_exp_data[u'ioHub'][u'config'] = cfg_files_path + fold + cfg_iohub
+            cfg_exp_data[u'session_defaults'][u'code'] = self.__execution_timestamp
             # ---------------
-            exp_logfile_config = u'['+exp_code+u']['+self.__timestamp+u']log_experiment_config.yaml'
-            exp_logfile_master = u'['+exp_code+u']['+self.__timestamp+u']log_master_config.yaml'
-            exp_cfgfile_config = u'['+exp_code+u']['+self.__timestamp+u']experiment_config.yaml'
-            exp_cfgfile_iohub = u'[' + exp_code + u'][' + self.__timestamp + u']iohub_config.yaml'
-            # ---------------
-            mas_config = self.__mas_data.get_iohub()
-            mas_config[u'data_store'][u'filename'] = exp_version_path + u'\\' + u'[' + exp_code + u']events_data'
-            filepath = exp_version_cfg_path + u'\\' + exp_cfgfile_iohub
+            filepath = cfg_files_path + fold + cfg_experiment
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
-                yaml.safe_dump(mas_config, outfile, default_flow_style=None, indent=4)
+                yaml.safe_dump(cfg_exp_data, outfile, default_flow_style=None, indent=4)
+            # ===============
+            cfg_mas_data = self.__master.get_iohub()
+            cfg_mas_data[u'data_store'][u'filename'] = self.__exp_version_path + fold +\
+                                                       u'['+experiment_code+u']events_data'
             # ---------------
-            mas_log = self.__mas_data.get_configuration()
-            filepath = exp_version_log_path + u'\\' + exp_logfile_master
+            filepath = cfg_files_path + fold + cfg_iohub
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
-                yaml.safe_dump(mas_log, outfile, default_flow_style=False, indent=4)
+                yaml.safe_dump(cfg_mas_data, outfile, default_flow_style=None, indent=4)
+            # ===============
+            execution_log = dict()
+            execution_log[u'experiment'] = self.__experiment.get_configuration()
+            execution_log[u'master'] = self.__master.get_configuration()
             # ---------------
-            exp_config = self.__exp_data.get_iohub(unixstamp=self.__timestamp)
-            exp_config[u'ioHub'][u'config'] = exp_version_cfg_path + u'\\' + exp_cfgfile_iohub
-            filepath = exp_version_cfg_path + u'\\' + exp_cfgfile_config
+            filepath = log_files_path + fold + log_data
             with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
-                yaml.safe_dump(exp_config, outfile, default_flow_style=None, indent=4)
-            # ---------------
-            exp_log = self.__exp_data.get_configuration()
-            filepath = exp_version_log_path + u'\\' + exp_logfile_config
-            with codecs.open(filename=filepath, mode=u'w', encoding=u'utf-8') as outfile:
-                yaml.safe_dump(exp_log, outfile, default_flow_style=False, indent=4)
-            # ---------------
-            self.__exp_exec[u'experiment_config_path'] = exp_version_cfg_path
-            self.__exp_exec[u'experiment_config_file'] = exp_cfgfile_config
-            self.__exp_exec[u'experiment_data'] = self.__exp_data
-            # -------------------
+                yaml.safe_dump(execution_log, outfile, default_flow_style=False, indent=4)
+            # ===============
+            self.__execution_parameters[u'execution_configuration_path'] = cfg_files_path
+            self.__execution_parameters[u'execution_configuration_file'] = cfg_experiment
+            self.__execution_parameters[u'execution_base_path'] = self.__exp_version_path
+            self.__execution_parameters[u'experiment'] = self.__experiment
+            self.__execution_parameters[u'save_frame'] = save_frame
             self.__is_ready = True
             return self.__is_ready
         else:
@@ -110,7 +120,7 @@ class ExperimentHandler(object):
 
     def execute_experiment(self):
         if self.__is_loaded and self.__is_ready:
-            runtime = ExperimentRuntime(self.__exp_exec)
+            runtime = ExperimentRuntime(execution_parameters=self.__execution_parameters)
             runtime.start()
             # ---------------
             return True
@@ -122,15 +132,24 @@ class ExperimentHandler(object):
 # Script
 # =============================================================================
 class ExperimentRuntime(ioHubExperimentRuntime):
-    def __init__(self, exp_cfg_dict):
-        super(ExperimentRuntime, self).__init__(configFilePath=exp_cfg_dict[u'experiment_config_path'],
-                                                configFile=exp_cfg_dict[u'experiment_config_file'])
-        self.__experiment = exp_cfg_dict[u'experiment_data']
+    # =================================
+    def __init__(self, execution_parameters):
+        super(ExperimentRuntime, self).__init__(configFilePath=execution_parameters[u'execution_configuration_path'],
+                                                configFile=execution_parameters[u'execution_configuration_file'])
+        self.__experiment = execution_parameters[u'experiment']
+        self.__save_frame = execution_parameters[u'save_frame']
+        if self.__save_frame:
+            self.__frame_path = execution_parameters[u'execution_base_path'] + fold + u'frames'
+            if not os.path.isdir(self.__frame_path):
+                os.mkdir(self.__frame_path)
+        else:
+            self.__frame_path = None
 
+    # =================================
     def run(self, *args):
-        # =======================================
+        # =============================
         # Prepare Hardware
-        # =======================================
+        # =============================
         try:
             tracker = self.hub.devices.tracker
             tracker.runSetupProcedure()
@@ -138,20 +157,20 @@ class ExperimentRuntime(ioHubExperimentRuntime):
         except Exception:
             from psychopy.iohub.util import MessageDialog
             md = MessageDialog(title=u"No Eye Tracker Configuration Found",
-                               msg=u"No eyetracker selected/found. Check the" 
+                               msg=u"No eyetracker selected/found. Check the"
                                    u"experiment settings.",
                                showButtons=MessageDialog.OK_BUTTON,
                                dialogType=MessageDialog.ERROR_DIALOG,
                                allowCancel=False, display_index=0)
             md.show()
             return 1
-        # -------------------
+        # ===================
         display = self.hub.devices.display
         kb = self.hub.devices.keyboard
 
-        # =======================================
+        # =============================
         # Get experiment
-        # =======================================
+        # =============================
         # Prepare Window
         resolution = display.getPixelResolution()
         coordinate = display.getCoordinateType()
@@ -159,15 +178,14 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                                fullscr=True, allowGUI=False, screen=display.getIndex())
 
         # Get experiment content
-        exp_data = self.__experiment.get_execution(win=window)
+        execution = self.__experiment.get_execution(win=window)
 
         # Show instructions
         instruction_screen = visual.TextStim(window, text=u'', pos=(0, 0), height=24, color=u'white',
                                              alignHoriz=u'center', alignVert=u'center', wrapWidth=window.size[0] * 0.9)
-        instruction_screen.setText(exp_data[u'instruction'] + u"\n\nPress Any Key to Start Experiment.")
+        instruction_screen.setText(execution[u'instruction'] + u"\n\nPress Any Key to Start Experiment.")
         instruction_screen.draw()
         flip_time = window.flip()
-        # -------------------
         self.hub.sendMessageEvent(text=u"=== EXPERIMENT START ===", sec_time=flip_time)
         self.hub.sendMessageEvent(text=u"========= INFO =========")
         self.hub.sendMessageEvent(text=u"Date:          {0}".format(getCurrentDateTimeString()))
@@ -179,53 +197,46 @@ class ExperimentRuntime(ioHubExperimentRuntime):
             *display.getPixelsPerDegree()))
         self.hub.sendMessageEvent(text=u"======= END INFO =======")
         self.hub.clearEvents(u'all')
-        # -------------------
         kb.waitForPresses()
 
-        # =======================================
+        # =============================
         # Experiment presentation
-        # =======================================
+        # =============================
         self.hub.sendMessageEvent(text=u"== TESTS SECUENCE START ==")
         # -------------------
         test_count = 0
-        for test_index in exp_data[u'test_secuence'][:, 0]:
-            test = exp_data[u'test_data'][test_index]
+        for test_index in execution[u'test_secuence'][:, 0]:
+            test = execution[u'test_data'][test_index]
             # ===================================
-            if exp_data[u'rest_active'] and test_count > 0 and test_count % exp_data[u'rest_period'] == 0:
+            if execution[u'rest_active'] and test_count > 0 and test_count % execution[u'rest_period'] == 0:
                 instruction_screen.setText(u"Rest time.")
                 instruction_screen.draw()
                 flip_time = window.flip()
-                # -----------
                 self.hub.sendMessageEvent(text=u"Rest time started...")
-                core.wait(exp_data[u'rest_time'])
+                core.wait(execution[u'rest_time'])
                 self.hub.sendMessageEvent(text=u"Rest time finished.")
-            # ---------------
-            if exp_data[u'space_start']:
+            if execution[u'space_start']:
                 instruction_screen.setText(u"Test: "+test[u'name']+u"\n\nPress Space to Start Experiment.")
                 instruction_screen.draw()
                 flip_time = window.flip()
-                # -----------
                 self.hub.sendMessageEvent(text=u"Waiting user input to start Test (ID:{0} , Name: {1})".format(
                     test_index, test[u'name']))
                 self.hub.clearEvents(u'all')
                 kb.waitForPresses(keys=[u' ', ])
             # ===================================
             timer = core.Clock()
-            # ---------------
             frames = test[u'frames']
             frame_index = 0
             frame_buffer_index = -1
             frame_total = len(frames)
-            # ---------------
             state = u'buffer'
             frame = None
             frame_buffer = None
             is_last_frame = False
             is_first_frame = True
             is_test_finish = False
-            # ---------------
+            # ===================================
             self.hub.sendMessageEvent(text=u"Starting Test (ID:{0} , Name: {1})".format(test_index, test[u'name']))
-            # ---------------
             tracker.setRecordingState(True)
             while not is_test_finish:
                 with Switch(state) as case:
@@ -233,7 +244,6 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                         frame_buffer_index += 1
                         if frame_buffer_index < frame_total:
                             self.hub.sendMessageEvent(text=u"Loading Frame (ID: {0})".format(frame_buffer_index))
-                            # ---------
                             frame_buffer = frames[frame_buffer_index]
                             frame_buffer[u'background'].draw()
                             if frame_buffer[u'components'] is not None:
@@ -255,7 +265,6 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                         else:
                             frame = frame_buffer
                             frame_index = frame_buffer_index
-                            # ---------
                             if frame[u'is_task']:
                                 self.hub.sendMessageEvent(
                                     text=u"Frame Started (ID: {0}, Type: Task, Time: User dependent.)"
@@ -264,10 +273,15 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                                 self.hub.sendMessageEvent(
                                     text=u"Frame Started (ID: {0}, Type: Timed, Time: {1}.)"
                                     .format(frame_index, frame[u'time']))
-                            # ---------
+                            # =========
                             flip_time = window.flip()
                             timer.reset()
                             state = u'buffer'
+                            # =========
+                            if self.__save_frame:
+                                frame_name = u"test{0}_frame{1}.png".format(test_index, frame_index)
+                                window.getMovieFrame()
+                                window.saveMovieFrames(self.__frame_path + fold + frame_name)
 
                     elif case(u'loop'):
                         if frame[u'is_task']:                           # is a selection frame
