@@ -1,38 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>sacaddeApp</class>
- <widget class="QMainWindow" name="sacaddeApp">
+ <class>dlg_saccadeapp</class>
+ <widget class="QMainWindow" name="dlg_saccadeapp">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>380</width>
-    <height>372</height>
+    <width>530</width>
+    <height>350</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>530</width>
+    <height>350</height>
+   </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>700</width>
-    <height>600</height>
+    <width>530</width>
+    <height>850</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>saccadeApp</string>
   </property>
-  <widget class="QWidget" name="layvert_main">
+  <widget class="QWidget" name="vly_01">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QTabWidget" name="tab_widget">
-      <property name="currentIndex">
-       <number>1</number>
+     <widget class="QTabWidget" name="tab_main">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
       </property>
-      <widget class="QWidget" name="tab_experiment">
+      <property name="currentIndex">
+       <number>2</number>
+      </property>
+      <widget class="QWidget" name="wdg_experiment">
        <attribute name="title">
         <string>Experiments</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QTreeView" name="trview_experiment">
+         <widget class="QTreeView" name="trv_experiment">
           <property name="minimumSize">
            <size>
             <width>250</width>
@@ -45,12 +57,12 @@
          </widget>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="tab_btn_experiment">
+         <layout class="QVBoxLayout" name="vly_02">
           <property name="spacing">
            <number>3</number>
           </property>
           <item>
-           <widget class="QPushButton" name="btn_new_experiment">
+           <widget class="QPushButton" name="pbt_experiment_new">
             <property name="minimumSize">
              <size>
               <width>80</width>
@@ -69,7 +81,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btn_edit_experiment">
+           <widget class="QPushButton" name="pbt_experiment_edit">
             <property name="minimumSize">
              <size>
               <width>80</width>
@@ -88,7 +100,26 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btn_remove_experiment">
+           <widget class="QPushButton" name="pbt_experiment_copy">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Copy</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbt_experiment_remove">
             <property name="minimumSize">
              <size>
               <width>80</width>
@@ -107,7 +138,7 @@
            </widget>
           </item>
           <item>
-           <spacer name="spavert_01">
+           <spacer name="vsp_01">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
@@ -123,13 +154,13 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_configuration">
+      <widget class="QWidget" name="wdg_configuration">
        <attribute name="title">
         <string>Configuration</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QGroupBox" name="gbox_basic">
+         <widget class="QGroupBox" name="gbx_configuration_basic">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -147,7 +178,7 @@
             <number>3</number>
            </property>
            <item row="0" column="0">
-            <widget class="QLabel" name="lbl_database">
+            <widget class="QLabel" name="lbl_path_database">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -166,7 +197,7 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="lbl_monitors">
+            <widget class="QLabel" name="lbl_monitor_center">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -185,7 +216,7 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLineEdit" name="txtline_database">
+            <widget class="QLineEdit" name="led_path_database">
              <property name="minimumSize">
               <size>
                <width>150</width>
@@ -204,7 +235,7 @@
             </widget>
            </item>
            <item row="0" column="2">
-            <widget class="QPushButton" name="btn_database">
+            <widget class="QPushButton" name="pbt_path_database">
              <property name="minimumSize">
               <size>
                <width>80</width>
@@ -223,7 +254,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="pbt_monitor_center">
              <property name="minimumSize">
               <size>
                <width>150</width>
@@ -245,7 +276,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="gbox_profile">
+         <widget class="QGroupBox" name="gbx_configuration_profile">
           <property name="title">
            <string>Configuration Profiles</string>
           </property>
@@ -254,7 +285,7 @@
             <number>5</number>
            </property>
            <item>
-            <widget class="QListView" name="lstview_profile">
+            <widget class="QListView" name="lsv_configuration">
              <property name="minimumSize">
               <size>
                <width>230</width>
@@ -267,12 +298,12 @@
             </widget>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="tab_btn_profile">
+            <layout class="QVBoxLayout" name="vly_03">
              <property name="spacing">
               <number>3</number>
              </property>
              <item>
-              <widget class="QPushButton" name="btn_new_profile">
+              <widget class="QPushButton" name="pbt_configuration_new">
                <property name="minimumSize">
                 <size>
                  <width>80</width>
@@ -291,7 +322,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_edit_profile">
+              <widget class="QPushButton" name="pbt_configuration_edit">
                <property name="minimumSize">
                 <size>
                  <width>80</width>
@@ -310,7 +341,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_remove_profile">
+              <widget class="QPushButton" name="pbt_configuration_remove">
                <property name="minimumSize">
                 <size>
                  <width>80</width>
@@ -329,7 +360,7 @@
               </widget>
              </item>
              <item>
-              <spacer name="spavert_02">
+              <spacer name="vsp_02">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
                </property>
@@ -348,13 +379,13 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_execution">
+      <widget class="QWidget" name="wdg_execution">
        <attribute name="title">
         <string>Execution</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <spacer name="spavert_04">
+         <spacer name="vsp_03">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -367,9 +398,9 @@
          </spacer>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="layhor_execution">
+         <layout class="QHBoxLayout" name="hly_01">
           <item>
-           <spacer name="spahor_01">
+           <spacer name="hsp_01">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -382,7 +413,19 @@
            </spacer>
           </item>
           <item>
-           <widget class="QGroupBox" name="layver_execution">
+           <widget class="QGroupBox" name="gbx_execution">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>160</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>160</height>
+             </size>
+            </property>
             <property name="layoutDirection">
              <enum>Qt::LeftToRight</enum>
             </property>
@@ -397,7 +440,7 @@
               <number>5</number>
              </property>
              <item>
-              <layout class="QFormLayout" name="layform_execution">
+              <layout class="QFormLayout" name="fly_01">
                <property name="labelAlignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
@@ -408,7 +451,7 @@
                 <number>3</number>
                </property>
                <item row="0" column="0">
-                <widget class="QLabel" name="lbl_execute_experiment">
+                <widget class="QLabel" name="lbl_execution_experiment">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -430,7 +473,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QComboBox" name="cobox_execute_experiment">
+                <widget class="QComboBox" name="cmb_execution_experiment">
                  <property name="minimumSize">
                   <size>
                    <width>200</width>
@@ -446,7 +489,7 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="lbl_execute_configuration">
+                <widget class="QLabel" name="lbl_execution_profile">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -468,7 +511,7 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QComboBox" name="cobox_execute_configuration">
+                <widget class="QComboBox" name="cmb_execution_profile">
                  <property name="minimumSize">
                   <size>
                    <width>200</width>
@@ -484,7 +527,7 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QCheckBox" name="ckbox_execute_frames">
+                <widget class="QCheckBox" name="cbt_execution_save">
                  <property name="text">
                   <string>Save experiment frames</string>
                  </property>
@@ -493,12 +536,12 @@
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="layhor_btn_execute">
+              <layout class="QHBoxLayout" name="hly_02">
                <property name="spacing">
                 <number>0</number>
                </property>
                <item>
-                <widget class="QPushButton" name="btn_execute">
+                <widget class="QPushButton" name="pbt_execute">
                  <property name="minimumSize">
                   <size>
                    <width>80</width>
@@ -522,7 +565,7 @@
            </widget>
           </item>
           <item>
-           <spacer name="spahor_02">
+           <spacer name="hsp_02">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -537,7 +580,7 @@
          </layout>
         </item>
         <item>
-         <spacer name="spavert_05">
+         <spacer name="vsp_04">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -555,43 +598,43 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar_main">
+  <widget class="QMenuBar" name="mbr_menu">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>380</width>
+     <width>530</width>
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_file">
+   <widget class="QMenu" name="mnu_file">
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="item_exit"/>
+    <addaction name="mac_exit"/>
    </widget>
-   <widget class="QMenu" name="menu_help">
+   <widget class="QMenu" name="mnu_help">
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="item_documentation"/>
+    <addaction name="mac_documentation"/>
     <addaction name="separator"/>
-    <addaction name="item_about"/>
+    <addaction name="mac_about"/>
    </widget>
-   <addaction name="menu_file"/>
-   <addaction name="menu_help"/>
+   <addaction name="mnu_file"/>
+   <addaction name="mnu_help"/>
   </widget>
-  <action name="item_exit">
+  <action name="mac_exit">
    <property name="text">
     <string>Exit</string>
    </property>
   </action>
-  <action name="item_documentation">
+  <action name="mac_documentation">
    <property name="text">
     <string>Documentation</string>
    </property>
   </action>
-  <action name="item_about">
+  <action name="mac_about">
    <property name="text">
     <string>About</string>
    </property>

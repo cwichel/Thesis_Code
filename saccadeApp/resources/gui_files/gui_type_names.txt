@@ -1,0 +1,36 @@
+dialog				dlg
+mainwindow			mwd
+
+groupbox			gbx
+tabwidget			tab
+widget				wdg
+
+horizontallayout	hly
+verticallayout		vly
+formlayout			fly
+
+menubar				mbr
+menu 				mnu
+action 				mac
+
+line 				lne
+horizontalspacer 	hsp
+verticalspacer 		vsp
+
+label 				lbl
+lineedit 			led
+plaintextedit 		ted
+spinbox 			isb
+doublespinbox  		dsb
+combobox			cmb
+
+checkbox			cbt
+radiobutton 		rbt	
+
+pushbutton 			pbt
+buttonbox 			bbt
+buttongroup			gbt
+
+listview 			lsv
+tableview 			tbv
+treeview 			trv
