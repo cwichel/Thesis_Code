@@ -170,90 +170,30 @@
           <property name="title">
            <string>Basic Configuration</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_2">
-           <property name="horizontalSpacing">
-            <number>5</number>
-           </property>
-           <property name="verticalSpacing">
-            <number>3</number>
-           </property>
-           <item row="0" column="0">
-            <widget class="QLabel" name="lbl_path_database">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Database file:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
             <widget class="QLabel" name="lbl_monitor_center">
              <property name="minimumSize">
               <size>
-               <width>0</width>
+               <width>80</width>
                <height>25</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>16777215</width>
+               <width>80</width>
                <height>25</height>
               </size>
              </property>
              <property name="text">
               <string>Monitor Center:</string>
              </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLineEdit" name="led_path_database">
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="pbt_path_database">
-             <property name="minimumSize">
-              <size>
-               <width>80</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>80</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Browse...</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
+           <item>
             <widget class="QPushButton" name="pbt_monitor_center">
              <property name="minimumSize">
               <size>
@@ -337,6 +277,25 @@
                </property>
                <property name="text">
                 <string>Edit</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbt_configuration_copy">
+               <property name="minimumSize">
+                <size>
+                 <width>80</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Copy</string>
                </property>
               </widget>
              </item>

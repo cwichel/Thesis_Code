@@ -23,14 +23,14 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_dlg_experiment_copy(object):
-    def setupUi(self):
-        self.setObjectName(_fromUtf8("dlg_experiment_copy"))
-        self.resize(400, 140)
-        self.setMinimumSize(QtCore.QSize(400, 140))
-        self.setMaximumSize(QtCore.QSize(400, 140))
-        self.verticalLayout = QtGui.QVBoxLayout(self)
+    def setupUi(self, dlg_experiment_copy):
+        dlg_experiment_copy.setObjectName(_fromUtf8("dlg_experiment_copy"))
+        dlg_experiment_copy.resize(400, 140)
+        dlg_experiment_copy.setMinimumSize(QtCore.QSize(400, 140))
+        dlg_experiment_copy.setMaximumSize(QtCore.QSize(400, 140))
+        self.verticalLayout = QtGui.QVBoxLayout(dlg_experiment_copy)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.gbx_copy = QtGui.QGroupBox(self)
+        self.gbx_copy = QtGui.QGroupBox(dlg_experiment_copy)
         self.gbx_copy.setObjectName(_fromUtf8("gbx_copy"))
         self.formLayout = QtGui.QFormLayout(self.gbx_copy)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
@@ -59,19 +59,19 @@ class Ui_dlg_experiment_copy(object):
         self.led_version.setObjectName(_fromUtf8("led_version"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.led_version)
         self.verticalLayout.addWidget(self.gbx_copy)
-        self.bbt_dialog = QtGui.QDialogButtonBox(self)
+        self.bbt_dialog = QtGui.QDialogButtonBox(dlg_experiment_copy)
         self.bbt_dialog.setOrientation(QtCore.Qt.Horizontal)
         self.bbt_dialog.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.bbt_dialog.setObjectName(_fromUtf8("bbt_dialog"))
         self.verticalLayout.addWidget(self.bbt_dialog)
 
-        self.retranslateUi()
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        self.retranslateUi(dlg_experiment_copy)
+        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("accepted()")), dlg_experiment_copy.accept)
+        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("rejected()")), dlg_experiment_copy.reject)
+        QtCore.QMetaObject.connectSlotsByName(dlg_experiment_copy)
 
-    def retranslateUi(self):
-        self.setWindowTitle(_translate("dlg_experiment_copy", "Copy", None))
+    def retranslateUi(self, dlg_experiment_copy):
+        dlg_experiment_copy.setWindowTitle(_translate("dlg_experiment_copy", "Copy", None))
         self.gbx_copy.setTitle(_translate("dlg_experiment_copy", "Experiment copy...", None))
         self.lbl_code.setText(_translate("dlg_experiment_copy", "New Code:", None))
         self.lbl_version.setText(_translate("dlg_experiment_copy", "New Version:", None))

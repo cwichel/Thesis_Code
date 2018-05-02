@@ -367,7 +367,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="lbl_orientation">
         <property name="text">
-         <string>Orientation:</string>
+         <string>Rotation:</string>
         </property>
        </widget>
       </item>
@@ -729,7 +729,6 @@
   </layout>
   <zorder>bbt_save</zorder>
   <zorder>gbx_component</zorder>
-  <zorder>horizontalLayoutWidget</zorder>
  </widget>
  <resources/>
  <connections>

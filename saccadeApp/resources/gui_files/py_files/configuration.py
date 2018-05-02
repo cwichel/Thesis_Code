@@ -23,14 +23,14 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_dlg_configuration(object):
-    def setupUi(self):
-        self.setObjectName(_fromUtf8("dlg_configuration"))
-        self.resize(530, 230)
-        self.setMinimumSize(QtCore.QSize(530, 230))
-        self.setMaximumSize(QtCore.QSize(530, 230))
-        self.verticalLayout = QtGui.QVBoxLayout(self)
+    def setupUi(self, dlg_configuration):
+        dlg_configuration.setObjectName(_fromUtf8("dlg_configuration"))
+        dlg_configuration.resize(530, 230)
+        dlg_configuration.setMinimumSize(QtCore.QSize(530, 230))
+        dlg_configuration.setMaximumSize(QtCore.QSize(530, 230))
+        self.verticalLayout = QtGui.QVBoxLayout(dlg_configuration)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.gbox_configuration = QtGui.QGroupBox(self)
+        self.gbox_configuration = QtGui.QGroupBox(dlg_configuration)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -124,7 +124,7 @@ class Ui_dlg_configuration(object):
         self.hly_01.addWidget(self.pbt_path_browse)
         self.formLayout_2.setLayout(1, QtGui.QFormLayout.FieldRole, self.hly_01)
         self.verticalLayout.addWidget(self.gbox_configuration)
-        self.bbt_save = QtGui.QDialogButtonBox(self)
+        self.bbt_save = QtGui.QDialogButtonBox(dlg_configuration)
         self.bbt_save.setMinimumSize(QtCore.QSize(0, 25))
         self.bbt_save.setMaximumSize(QtCore.QSize(16777215, 25))
         self.bbt_save.setOrientation(QtCore.Qt.Horizontal)
@@ -132,13 +132,13 @@ class Ui_dlg_configuration(object):
         self.bbt_save.setObjectName(_fromUtf8("bbt_save"))
         self.verticalLayout.addWidget(self.bbt_save)
 
-        self.retranslateUi()
-        QtCore.QObject.connect(self.bbt_save, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
-        QtCore.QObject.connect(self.bbt_save, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        self.retranslateUi(dlg_configuration)
+        QtCore.QObject.connect(self.bbt_save, QtCore.SIGNAL(_fromUtf8("accepted()")), dlg_configuration.accept)
+        QtCore.QObject.connect(self.bbt_save, QtCore.SIGNAL(_fromUtf8("rejected()")), dlg_configuration.reject)
+        QtCore.QMetaObject.connectSlotsByName(dlg_configuration)
 
-    def retranslateUi(self):
-        self.setWindowTitle(_translate("dlg_configuration", "Configuration Profile", None))
+    def retranslateUi(self, dlg_configuration):
+        dlg_configuration.setWindowTitle(_translate("dlg_configuration", "Configuration Profile", None))
         self.gbox_configuration.setTitle(_translate("dlg_configuration", "Configuration Profile", None))
         self.lbl_name.setText(_translate("dlg_configuration", "Name:", None))
         self.lbl_screen.setText(_translate("dlg_configuration", "Screen:", None))

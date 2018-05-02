@@ -23,14 +23,14 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_dlg_test_copy(object):
-    def setupUi(self):
-        self.setObjectName(_fromUtf8("dlg_test_copy"))
-        self.resize(400, 200)
-        self.setMinimumSize(QtCore.QSize(400, 200))
-        self.setMaximumSize(QtCore.QSize(400, 200))
-        self.verticalLayout = QtGui.QVBoxLayout(self)
+    def setupUi(self, dlg_test_copy):
+        dlg_test_copy.setObjectName(_fromUtf8("dlg_test_copy"))
+        dlg_test_copy.resize(400, 200)
+        dlg_test_copy.setMinimumSize(QtCore.QSize(400, 200))
+        dlg_test_copy.setMaximumSize(QtCore.QSize(400, 200))
+        self.verticalLayout = QtGui.QVBoxLayout(dlg_test_copy)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.gbx_copy = QtGui.QGroupBox(self)
+        self.gbx_copy = QtGui.QGroupBox(dlg_test_copy)
         self.gbx_copy.setObjectName(_fromUtf8("gbx_copy"))
         self.formLayout = QtGui.QFormLayout(self.gbx_copy)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
@@ -57,7 +57,7 @@ class Ui_dlg_test_copy(object):
         self.rbt_selection.setMaximumSize(QtCore.QSize(16777215, 25))
         self.rbt_selection.setChecked(True)
         self.rbt_selection.setObjectName(_fromUtf8("rbt_selection"))
-        self.gbt_copy_from = QtGui.QButtonGroup(self)
+        self.gbt_copy_from = QtGui.QButtonGroup(dlg_test_copy)
         self.gbt_copy_from.setObjectName(_fromUtf8("gbt_copy_from"))
         self.gbt_copy_from.addButton(self.rbt_selection)
         self.hly_01.addWidget(self.rbt_selection)
@@ -91,19 +91,19 @@ class Ui_dlg_test_copy(object):
         self.lbl_test.setObjectName(_fromUtf8("lbl_test"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.lbl_test)
         self.verticalLayout.addWidget(self.gbx_copy)
-        self.bbt_dialog = QtGui.QDialogButtonBox(self)
+        self.bbt_dialog = QtGui.QDialogButtonBox(dlg_test_copy)
         self.bbt_dialog.setOrientation(QtCore.Qt.Horizontal)
         self.bbt_dialog.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.bbt_dialog.setObjectName(_fromUtf8("bbt_dialog"))
         self.verticalLayout.addWidget(self.bbt_dialog)
 
-        self.retranslateUi()
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        self.retranslateUi(dlg_test_copy)
+        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("accepted()")), dlg_test_copy.accept)
+        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("rejected()")), dlg_test_copy.reject)
+        QtCore.QMetaObject.connectSlotsByName(dlg_test_copy)
 
-    def retranslateUi(self):
-        self.setWindowTitle(_translate("dlg_test_copy", "Copy", None))
+    def retranslateUi(self, dlg_test_copy):
+        dlg_test_copy.setWindowTitle(_translate("dlg_test_copy", "Copy", None))
         self.gbx_copy.setTitle(_translate("dlg_test_copy", "Copy", None))
         self.lbl_name.setText(_translate("dlg_test_copy", "New Name:", None))
         self.lbl_copy_from.setText(_translate("dlg_test_copy", "Copy from: ", None))

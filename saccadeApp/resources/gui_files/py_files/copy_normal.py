@@ -23,14 +23,14 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_dlg_copy(object):
-    def setupUi(self):
-        self.setObjectName(_fromUtf8("dlg_copy"))
-        self.resize(400, 115)
-        self.setMinimumSize(QtCore.QSize(400, 115))
-        self.setMaximumSize(QtCore.QSize(400, 115))
-        self.verticalLayout = QtGui.QVBoxLayout(self)
+    def setupUi(self, dlg_copy):
+        dlg_copy.setObjectName(_fromUtf8("dlg_copy"))
+        dlg_copy.resize(400, 115)
+        dlg_copy.setMinimumSize(QtCore.QSize(400, 115))
+        dlg_copy.setMaximumSize(QtCore.QSize(400, 115))
+        self.verticalLayout = QtGui.QVBoxLayout(dlg_copy)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.gbx_copy = QtGui.QGroupBox(self)
+        self.gbx_copy = QtGui.QGroupBox(dlg_copy)
         self.gbx_copy.setObjectName(_fromUtf8("gbx_copy"))
         self.formLayout = QtGui.QFormLayout(self.gbx_copy)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
@@ -46,19 +46,19 @@ class Ui_dlg_copy(object):
         self.led_name.setObjectName(_fromUtf8("led_name"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.led_name)
         self.verticalLayout.addWidget(self.gbx_copy)
-        self.bbt_dialog = QtGui.QDialogButtonBox(self)
+        self.bbt_dialog = QtGui.QDialogButtonBox(dlg_copy)
         self.bbt_dialog.setOrientation(QtCore.Qt.Horizontal)
         self.bbt_dialog.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.bbt_dialog.setObjectName(_fromUtf8("bbt_dialog"))
         self.verticalLayout.addWidget(self.bbt_dialog)
 
-        self.retranslateUi()
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        self.retranslateUi(dlg_copy)
+        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("accepted()")), dlg_copy.accept)
+        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_fromUtf8("rejected()")), dlg_copy.reject)
+        QtCore.QMetaObject.connectSlotsByName(dlg_copy)
 
-    def retranslateUi(self):
-        self.setWindowTitle(_translate("dlg_copy", "Copy", None))
+    def retranslateUi(self, dlg_copy):
+        dlg_copy.setWindowTitle(_translate("dlg_copy", "Copy", None))
         self.gbx_copy.setTitle(_translate("dlg_copy", "Copy", None))
         self.lbl_name.setText(_translate("dlg_copy", "New Name:", None))
 

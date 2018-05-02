@@ -648,7 +648,7 @@ tests.</string>
              </size>
             </property>
             <property name="text">
-             <string>ask age</string>
+             <string>Ask age</string>
             </property>
            </widget>
           </item>
@@ -667,7 +667,7 @@ tests.</string>
              </size>
             </property>
             <property name="text">
-             <string>ask gender</string>
+             <string>Ask gender</string>
             </property>
            </widget>
           </item>
@@ -686,7 +686,7 @@ tests.</string>
              </size>
             </property>
             <property name="text">
-             <string>ask glasses</string>
+             <string>Ask glasses</string>
             </property>
            </widget>
           </item>
@@ -705,7 +705,7 @@ tests.</string>
              </size>
             </property>
             <property name="text">
-             <string>ask eye color</string>
+             <string>Ask eye color</string>
             </property>
            </widget>
           </item>
