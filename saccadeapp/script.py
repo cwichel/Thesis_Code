@@ -36,7 +36,7 @@ class ExperimentHandler(object):
     # =================================
     def load_configuration(self, db, master, experiment):
         import time
-        from saccadeApp import SaccadeDB, Master, Experiment
+        from saccadeapp import SaccadeDB, Master, Experiment
         # ===================
         if not self.__is_loaded:
             if isinstance(db, SaccadeDB):

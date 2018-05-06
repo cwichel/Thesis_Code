@@ -3,11 +3,14 @@
 # Modules
 # =============================================================================
 import sys
-import platform as pt
-import ConfigParser as cp
-from PyQt4 import QtCore, QtGui
-from saccadeApp.core import *
-from saccadeApp.script import *
+from PyQt4 import QtGui
+
+# ===========================
+# Internal:
+# ===========================
+from gui_models import *
+from saccadeapp.core import *
+from saccadeapp.script import *
 
 # =============================================================================
 # Qt Encoding
@@ -29,23 +32,25 @@ except AttributeError:
 
 
 # =============================================================================
-# Main App Class: SaccadeApp
+# Main App Class: saccadeapp
 # =============================================================================
 class SaccadeApp(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.__setup_ui()
-        # ==============
+        # -------------------
         self.database = SaccadeDB()
-        # ==============
+        self.model_experiment = ListModel([], header=u"Experiment")
+        self.model_configuration = ListModel([], header=u"Profile")
+        # -------------------
         self.__setup_menu()
-        self.__setup_execution()
-        self.__setup_experiment()
         self.__setup_configuration()
+        self.__setup_experiment()
+        self.__setup_execution()
 
     # =================================
     def __setup_ui(self):
-        self.setObjectName(_from_utf8("SaccadeApp"))
+        self.setObjectName(_from_utf8("saccadeapp"))
         self.resize(530, 350)
         self.setMinimumSize(QtCore.QSize(530, 350))
         self.setMaximumSize(QtCore.QSize(530, 850))
@@ -253,32 +258,32 @@ class SaccadeApp(QtGui.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def __retranslate_ui(self):
-        self.setWindowTitle(_translate("SaccadeApp", "saccadeApp", None))
-        self.pbt_experiment_new.setText(_translate("SaccadeApp", "New", None))
-        self.pbt_experiment_edit.setText(_translate("SaccadeApp", "Edit", None))
-        self.pbt_experiment_copy.setText(_translate("SaccadeApp", "Copy", None))
-        self.pbt_experiment_remove.setText(_translate("SaccadeApp", "Remove", None))
-        self.tab_main.setTabText(self.tab_main.indexOf(self.wdg_experiment), _translate("SaccadeApp", "Experiments", None))
-        self.gbx_configuration_basic.setTitle(_translate("SaccadeApp", "Basic Configuration", None))
-        self.lbl_monitor_center.setText(_translate("SaccadeApp", "Monitor Center:", None))
-        self.pbt_monitor_center.setText(_translate("SaccadeApp", "Open", None))
-        self.gbx_configuration_profile.setTitle(_translate("SaccadeApp", "Configuration Profiles", None))
-        self.pbt_configuration_new.setText(_translate("SaccadeApp", "New", None))
-        self.pbt_configuration_edit.setText(_translate("SaccadeApp", "Edit", None))
-        self.pbt_configuration_copy.setText(_translate("SaccadeApp", "Copy", None))
-        self.pbt_configuration_remove.setText(_translate("SaccadeApp", "Remove", None))
-        self.tab_main.setTabText(self.tab_main.indexOf(self.wdg_configuration), _translate("SaccadeApp", "Configuration", None))
-        self.lbl_execution_experiment.setText(_translate("SaccadeApp", "Experiment:", None))
-        self.lbl_execution_profile.setText(_translate("SaccadeApp", "Configuration:", None))
-        self.cbt_execution_save.setText(_translate("SaccadeApp", "Save experiment frames", None))
-        self.pbt_execute.setText(_translate("SaccadeApp", "Execute", None))
-        self.tab_main.setTabText(self.tab_main.indexOf(self.wdg_execution), _translate("SaccadeApp", "Execution", None))
-        self.mnu_file.setTitle(_translate("SaccadeApp", "File", None))
-        self.mnu_help.setTitle(_translate("SaccadeApp", "Help", None))
-        self.mac_exit.setText(_translate("SaccadeApp", "Exit", None))
-        self.mac_documentation.setText(_translate("SaccadeApp", "Documentation", None))
-        self.mac_about.setText(_translate("SaccadeApp", "About", None))
-        self.actionSome_shit.setText(_translate("SaccadeApp", "Some shit", None))
+        self.setWindowTitle(_translate("saccadeapp", "saccadeapp", None))
+        self.pbt_experiment_new.setText(_translate("saccadeapp", "New", None))
+        self.pbt_experiment_edit.setText(_translate("saccadeapp", "Edit", None))
+        self.pbt_experiment_copy.setText(_translate("saccadeapp", "Copy", None))
+        self.pbt_experiment_remove.setText(_translate("saccadeapp", "Remove", None))
+        self.tab_main.setTabText(self.tab_main.indexOf(self.wdg_experiment), _translate("saccadeapp", "Experiments", None))
+        self.gbx_configuration_basic.setTitle(_translate("saccadeapp", "Basic Configuration", None))
+        self.lbl_monitor_center.setText(_translate("saccadeapp", "Monitor Center:", None))
+        self.pbt_monitor_center.setText(_translate("saccadeapp", "Open", None))
+        self.gbx_configuration_profile.setTitle(_translate("saccadeapp", "Configuration Profiles", None))
+        self.pbt_configuration_new.setText(_translate("saccadeapp", "New", None))
+        self.pbt_configuration_edit.setText(_translate("saccadeapp", "Edit", None))
+        self.pbt_configuration_copy.setText(_translate("saccadeapp", "Copy", None))
+        self.pbt_configuration_remove.setText(_translate("saccadeapp", "Remove", None))
+        self.tab_main.setTabText(self.tab_main.indexOf(self.wdg_configuration), _translate("saccadeapp", "Configuration", None))
+        self.lbl_execution_experiment.setText(_translate("saccadeapp", "Experiment:", None))
+        self.lbl_execution_profile.setText(_translate("saccadeapp", "Configuration:", None))
+        self.cbt_execution_save.setText(_translate("saccadeapp", "Save experiment frames", None))
+        self.pbt_execute.setText(_translate("saccadeapp", "Execute", None))
+        self.tab_main.setTabText(self.tab_main.indexOf(self.wdg_execution), _translate("saccadeapp", "Execution", None))
+        self.mnu_file.setTitle(_translate("saccadeapp", "File", None))
+        self.mnu_help.setTitle(_translate("saccadeapp", "Help", None))
+        self.mac_exit.setText(_translate("saccadeapp", "Exit", None))
+        self.mac_documentation.setText(_translate("saccadeapp", "Documentation", None))
+        self.mac_about.setText(_translate("saccadeapp", "About", None))
+        self.actionSome_shit.setText(_translate("saccadeapp", "Some shit", None))
 
     # =================================
     def __setup_menu(self):
@@ -289,11 +294,11 @@ class SaccadeApp(QtGui.QMainWindow):
     @staticmethod
     def __app_documentation():
         import os
-        from saccadeApp.core import Utils
+        from saccadeapp.core import Utils
         # -------------------
-        print u"Opening documentation file..."
+        print u"Opening docs file..."
         path_base = os.path.split(os.path.realpath(__file__))[0]
-        path_docu = Utils.format_path(u'/resources/documentation/')
+        path_docu = Utils.format_path(u'/../docs/')
         os.startfile(path_base + path_docu + u'saccadeApp_docu.pdf')
 
     @staticmethod
@@ -310,13 +315,12 @@ class SaccadeApp(QtGui.QMainWindow):
     # =================================
     def __setup_execution(self):
         self.pbt_execute.clicked.connect(self.__handle_execute_experiment)
-        self.execution_combobox_update()
+
+        self.cmb_execution_profile.setModel(self.model_configuration)
+        self.cmb_execution_experiment.setModel(self.model_experiment)
 
     def __handle_execute_experiment(self):
         print u"Executing the selected experiment..."
-
-    def execution_combobox_update(self):
-        print u"Updating execution combobox... "
 
     # =================================
     def __setup_experiment(self):
@@ -343,6 +347,9 @@ class SaccadeApp(QtGui.QMainWindow):
     def __handle_experiment_remove(self):
         print u"Removing experiment..."
 
+    def update_experiment_view(self):
+        pass
+
     # =================================
     def __setup_configuration(self):
         self.pbt_monitor_center.clicked.connect(self.__handle_monitor_center)
@@ -351,18 +358,27 @@ class SaccadeApp(QtGui.QMainWindow):
         self.pbt_configuration_copy.clicked.connect(self.__handle_configuration_copy)
         self.pbt_configuration_remove.clicked.connect(self.__handle_configuration_remove)
 
+        self.lsv_configuration.setModel(self.model_configuration)
+        self.update_configuration_view()
+        if self.model_configuration.has_items():
+            self.lsv_configuration.setCurrentIndex(self.model_configuration.index(0, 0))
+
     def __handle_monitor_center(self):
         Master.open_psychopy_monitor_center()
 
     def __handle_configuration_new(self):
         print u"Creating configuration profile..."
-        dialog = ConfigurationApp(parent=self)
+        dialog = ConfigurationApp(parent=self, itemid=-1)
         dialog.exec_()
 
     def __handle_configuration_edit(self):
         print u"Editing configuration profile..."
-        dialog = ConfigurationApp(parent=self)
-        dialog.exec_()
+        items = self.model_configuration.rowCount()
+        index = self.lsv_configuration.currentIndex().row()
+
+        if items is not 0 and index is not -1:
+            dialog = ConfigurationApp(parent=self, itemid=index)
+            dialog.exec_()
 
     def __handle_configuration_copy(self):
         print u"Copying configuration profile..."
@@ -371,6 +387,25 @@ class SaccadeApp(QtGui.QMainWindow):
 
     def __handle_configuration_remove(self):
         print u"Removing configuration profile..."
+        items = self.model_configuration.rowCount()
+        index = self.lsv_configuration.currentIndex().row()
+
+        if items is not 0 and index is not -1:
+            profile = self.model_configuration.get_item_by_id(index)
+            master = Master()
+            master.set_database(db=self.database)
+            master.load(profile)
+            master.remove()
+
+        self.update_configuration_view()
+
+    def update_configuration_view(self):
+        conf_list = Master.get_list(self.database)
+        if conf_list is not None:
+            conf_list = [item[0] for item in conf_list]
+            self.model_configuration.update_items(items=conf_list)
+        else:
+            self.model_configuration.update_items(items=[])
 
 
 # =============================================================================
@@ -1165,11 +1200,11 @@ class FrameApp(QtGui.QDialog):
         self.gbx_components.setObjectName(_from_utf8("gbx_components"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.gbx_components)
         self.horizontalLayout.setObjectName(_from_utf8("horizontalLayout"))
-        self.tbv = QtGui.QTableView(self.gbx_components)
-        self.tbv.setMinimumSize(QtCore.QSize(380, 120))
-        self.tbv.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.tbv.setObjectName(_from_utf8("tbv"))
-        self.horizontalLayout.addWidget(self.tbv)
+        self.tbv_component = QtGui.QTableView(self.gbx_components)
+        self.tbv_component.setMinimumSize(QtCore.QSize(380, 120))
+        self.tbv_component.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.tbv_component.setObjectName(_from_utf8("tbv_component"))
+        self.horizontalLayout.addWidget(self.tbv_component)
         self.vly_01 = QtGui.QVBoxLayout()
         self.vly_01.setSpacing(3)
         self.vly_01.setObjectName(_from_utf8("vly_01"))
@@ -1611,13 +1646,23 @@ class ComponentApp(QtGui.QDialog):
 # Configuration related Class: ConfigurationApp
 # =============================================================================
 class ConfigurationApp(QtGui.QDialog):
-    def __init__(self, parent=SaccadeApp):
+    def __init__(self, parent=SaccadeApp, itemid=-1):
         QtGui.QDialog.__init__(self)
         self.__setup_ui()
-        # ==============
-        self.parent = parent
-        # ==============
+        # -------------------
+        self.__name = None
+        self.__itemid = itemid
+        self.__is_edit = False
+        # -------------------
+        self.__parent = parent
+        self.__master = Master()
+        self.__master.set_database(db=parent.database)
+        self.__model_tracker = ListModel(Master.get_available_trackers())
+        self.__model_monitor = ListModel(Master.get_available_monitors())
+        self.__model_screen = ListModel(Master.get_available_screens())
+        # -------------------
         self.__setup_dialog()
+        self.__check_itemid()
 
     # =================================
     def __setup_ui(self):
@@ -1749,19 +1794,102 @@ class ConfigurationApp(QtGui.QDialog):
         self.bbt_save.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.__handle_save_action)
         self.bbt_save.button(QtGui.QDialogButtonBox.Close).clicked.connect(self.__handle_close_action)
         self.pbt_path_browse.clicked.connect(self.__handle_path_browse)
-        self.__configuration_combobox_update()
+
+        self.cmb_tracker.setModel(self.__model_tracker)
+        self.cmb_monitor.setModel(self.__model_monitor)
+        self.cmb_screen.setModel(self.__model_screen)
 
     def __handle_save_action(self):
         print u"Saving configuration profile..."
+        self.__master.set_experiment_path(unicode(self.led_path.text()))
+        self.__master.set_monitor(self.cmb_monitor.currentText())
+        self.__master.set_tracker(self.cmb_tracker.currentText())
+        self.__master.set_screen(self.cmb_screen.currentIndex())
+
+        is_name_used = False
+        new_name = unicode(self.led_name.text())
+        is_name_ok = self.__master.set_name(new_name)
+
+        if self.__is_edit:
+            if new_name == self.__name:   # Edit maintain name
+                self.__master.save()
+            elif is_name_ok:                  # Edit and change name
+                self.__remove_master(self.__name)
+                self.__master.save()
+            else:                           # Use another profile name
+                is_name_used = True
+        else:
+            if is_name_ok:                  # New profile
+                self.__master.save()
+            else:                           # Use another profile name
+                is_name_used = True
+
+        if is_name_used:
+            print u"Error: Name already used..."
+            err_msg = u"Name already used. Do you want to overwrite?"
+            err_res = QtGui.QMessageBox.question(None, u"Error", err_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            if err_res == QtGui.QMessageBox.Yes:
+                print u"Configuration profile overwritten!"
+                if self.__is_edit:
+                    self.__remove_master(self.__name)
+                self.__remove_master(new_name)
+                self.__master.set_name(new_name)
+                self.__master.save()
+            else:
+                print u"Waiting for new name..."
+                is_ready = False
+                while not is_ready:
+                    new_name, is_ok = QtGui.QInputDialog.getText(None, u'New profile name', u'New name:', text=new_name)
+                    new_name = unicode(new_name)
+                    if is_ok:
+                        is_ready = self.__master.set_name(new_name)
+                        if is_ready:
+                            print u"New name defined. Saving profile..."
+                            self.__master.save()
+                    else:
+                        print u"Operation canceled..."
+                        new_name = None
+                        is_ready = True
+
+        if new_name is not None:
+            self.__parent.update_configuration_view()
+            index = self.__parent.model_configuration.get_id_by_item(new_name)
+            self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(index, 0))
 
     def __handle_close_action(self):
-        print u"Cancel operation..."
+        print u"Operation canceled..."
 
     def __handle_path_browse(self):
         print u"Browsing for new events folder..."
+        title = u"Select events save directory..."
+        folder = QtGui.QFileDialog.getExistingDirectory(None, title, self.led_path.text(), QtGui.QFileDialog.ShowDirsOnly)
+        if folder:
+            print u"Folder selected."
+            self.led_path.setText(unicode(folder))
+        else:
+            print u"Operation canceled..."
 
-    def __configuration_combobox_update(self):
-        pass
+    def __remove_master(self, name):
+        master_temp = Master()
+        master_temp.set_database(self.__parent.database)
+        master_temp.load(unicode(name))
+        master_temp.remove()
+
+    def __check_itemid(self):
+        if self.__itemid is not -1:
+            self.__is_edit = True
+            self.__name = self.__parent.model_configuration.get_item_by_id(self.__itemid)
+
+            self.__master.load(self.__name)
+            screen_index = self.cmb_screen.findText(self.__master.get_screen(), QtCore.Qt.MatchFixedString)
+            monitor_index = self.cmb_monitor.findText(self.__master.get_monitor(), QtCore.Qt.MatchFixedString)
+            tracker_index = self.cmb_tracker.findText(self.__master.get_tracker_name(), QtCore.Qt.MatchFixedString)
+            self.cmb_screen.setCurrentIndex(screen_index)
+            self.cmb_monitor.setCurrentIndex(monitor_index)
+            self.cmb_tracker.setCurrentIndex(tracker_index)
+
+        self.led_name.setText(self.__master.get_name())
+        self.led_path.setText(self.__master.get_experiment_path())
 
 
 # =============================================================================
@@ -2112,7 +2240,7 @@ class AboutApp(QtGui.QDialog):
 
     def _retranslate_ui(self):
         self.setWindowTitle(_translate("AboutApp", "About", None))
-        self.lbl_app_name.setText(_translate("AboutApp", "saccadeApp", None))
+        self.lbl_app_name.setText(_translate("AboutApp", "saccadeapp", None))
         self.lbl_app_version.setText(_translate("AboutApp", "v1.0", None))
         self.lbl_author.setText(_translate("AboutApp", "Author:", None))
         self.lbl_author_dat.setText(_translate("AboutApp", "Christian Wiche", None))

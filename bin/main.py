@@ -4,7 +4,7 @@
 # =============================================================================
 import sys
 from PyQt4 import QtGui
-from saccadeApp import SaccadeApp
+from saccadeapp import SaccadeApp
 
 # =============================================================================
 # Main: Use example

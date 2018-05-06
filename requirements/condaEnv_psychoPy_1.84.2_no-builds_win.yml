@@ -3,7 +3,7 @@ channels:
   - menpo
   - jlaforet
   - cogsci
-  - conda-forge
+  - requirements-forge
   - defaults
 dependencies:
   - pygame=1.9.2a0

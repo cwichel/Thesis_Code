@@ -494,7 +494,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QTableView" name="tbv">
+       <widget class="QTableView" name="tbv_component">
         <property name="minimumSize">
          <size>
           <width>380</width>

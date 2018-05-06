@@ -106,7 +106,7 @@ class Ui_dlg_about(object):
 
     def retranslateUi(self, dlg_about):
         dlg_about.setWindowTitle(_translate("dlg_about", "About", None))
-        self.lbl_app_name.setText(_translate("dlg_about", "saccadeApp", None))
+        self.lbl_app_name.setText(_translate("dlg_about", "saccadeapp", None))
         self.lbl_app_version.setText(_translate("dlg_about", "v1.0", None))
         self.lbl_author.setText(_translate("dlg_about", "Author:", None))
         self.lbl_author_dat.setText(_translate("dlg_about", "Christian Wiche", None))

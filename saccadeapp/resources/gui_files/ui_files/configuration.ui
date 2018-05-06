@@ -197,6 +197,9 @@
           <height>25</height>
          </size>
         </property>
+        <property name="inputMethodHints">
+         <set>Qt::ImhNone</set>
+        </property>
        </widget>
       </item>
       <item row="1" column="0">

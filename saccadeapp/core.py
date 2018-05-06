@@ -67,7 +67,7 @@ class Utils(object):
         # -------------------
         path = Utils.format_text(path)
         is_win = any(platform.win32_ver())
-        # -------------------
+
         path = path.replace(u'\\', u'#').replace(u'/', u'#')
         return path.replace(u'#', u'\\') if is_win else path.replace(u'#', u'/')
 
@@ -85,6 +85,15 @@ class Utils(object):
             return unicode(date.astimezone(cltc).strftime(u'%Y-%m-%d %H:%M:%S'))
         except ValueError:
             return u'No disponible'
+
+    @staticmethod
+    def get_colors():
+        import collections
+        # -------------------
+        color_dict = colors.colorsHex
+        color_dict = collections.OrderedDict(sorted(color_dict.items()))
+        color_arr = [[unicode(item), color_dict[item]] for item in color_dict]
+        return color_arr
 
 
 # =============================================================================
@@ -163,7 +172,7 @@ class Master(object):
         self.__in_db = False
         self.__database = None
         # -------------------
-        self.__name = u'Unnamed'
+        self.__name = u'unnamed'
         self.__screen = 0
         self.__tracker = u'none'
         self.__monitor = u'default'
@@ -212,7 +221,7 @@ class Master(object):
         path_base = os.path.split(os.path.realpath(__file__))[0]
         path_conf = Utils.format_path(u'/resources/eyetrackers/')
         path_full = path_base + path_conf
-        # -------------------
+
         return [os.path.basename(item).replace(u'_config.yaml', u'') for item in gl.glob(path_full+u'*.yaml')]
 
     @staticmethod
@@ -221,13 +230,13 @@ class Master(object):
         # -------------------
         display = pyglet.window.Display()
         screens = display.get_screens()
-        # -------------------
+
         scr_num = 1
         scr_lst = []
         for screen in screens:
             scr_lst.append(u"monitor %d: (w=%s, h=%s)" % (scr_num, screen.width, screen.height))
             scr_num += 1
-        # -------------------
+
         return scr_lst
 
     @staticmethod
@@ -264,7 +273,7 @@ class Master(object):
         if self.__database is not None and name != u'':
             sql = u"select * from master where mas_name='%s';" % name
             mas_res = self.__database.pull_query(query=sql)
-            # ---------------
+
             if mas_res is None:
                 self.__name = name
                 return True
@@ -350,17 +359,17 @@ class Master(object):
             where mas_name='%s';
             """ % name
             mas_res = self.__database.pull_query(query=sql)
-            # ---------------
+
             if mas_res is not None:
                 self.__in_db = True
                 self.__name = name
                 print u"Configuration profile %s loaded." % name
-                # -----------
+
                 self.__screen = int(mas_res[0, 0])
                 self.__monitor = unicode(mas_res[0, 1])
                 self.__tracker = unicode(mas_res[0, 2])
                 self.__path = unicode(mas_res[0, 3])
-                # -----------
+
                 return True
             else:
                 print u"Configuration profile %s doesn't exists." % name
@@ -377,7 +386,7 @@ class Master(object):
             values ('%s', '%d', '%s', '%s', '%s')
             """ % (self.__name, self.__screen, self.__tracker, self.__monitor, self.__path)
             mas_res = self.__database.push_query(query=sql)
-            # ---------------
+
             if mas_res:
                 print u"Configuration profile %s saved." % self.__name
             else:
@@ -390,12 +399,12 @@ class Master(object):
 
     def copy(self, name):
         new_mas = copy.deepcopy(self)
-        # -------------------
+
         new_mas.set_database(db=self.__database)
         new_mas.__in_db = False
-        # -------------------
+
         name_check = new_mas.set_name(name=name)
-        # -------------------
+
         if name_check:
             return new_mas
         else:
@@ -403,9 +412,10 @@ class Master(object):
 
     def remove(self):
         if self.__in_db:
+            print u"Removing configuration profile %s." % self.__name
             sql = u"delete from master where mas_name='%s';" % self.__name
             mas_res = self.__database.push_query(query=sql)
-            # ---------------
+
             self.__in_db = not mas_res
             return mas_res
         else:
@@ -440,11 +450,11 @@ class Master(object):
                     u'enable':      True,
                 }
             }
-            # -------------------
+
             tracker_path = self.get_tracker_conf_path()
             tracker = yaml.load(open(tracker_path, u'r'))[u'monitor_devices'][0]
             configuration[u'monitor_devices'].append(tracker)
-            # -------------------
+
             return configuration
         else:
             return None
@@ -543,7 +553,7 @@ class ItemList(object):
 class Component(object):
     # =================================
     def __init__(self):
-        self.__name = u'Unnamed'
+        self.__name = u'unnamed'
         self.__units = u'deg'
         self.__pos = (0.0, 0.0)
         self.__ori = 0.0
@@ -673,7 +683,7 @@ class Component(object):
         if coded != u'':
             img_buff = BytesIO()
             img_buff.write(coded.decode(u'base64'))
-            # -----------
+
             self.__shape = u'image'
             self.__image = Image.open(img_buff)
         else:
@@ -698,10 +708,10 @@ class Component(object):
         where exp_code='%s' and tes_index='%d' and fra_index='%d' and com_index='%d';
         """ % (exp, tes, fra, com)
         com_res = db.pull_query(query=sql)
-        # -------------------
+
         if com_res is not None:
             print u"Exp %s, Tes %d, Fra %d: Component %d loaded." % (exp, tes, fra, com)
-            # ---------------
+
             self.__name = unicode(com_res[0, 0])
             self.__units = unicode(com_res[0, 1])
             self.__pos = (float(com_res[0, 2]),
@@ -710,9 +720,9 @@ class Component(object):
             self.__size = float(com_res[0, 5])
             self.__shape = unicode(com_res[0, 7])
             self.__color = unicode(com_res[0, 8])
-            # ---------------
+
             self.__decode_image(unicode(com_res[0, 6]))
-            # ---------------
+
             return True
         else:
             print u"Exp %s, Tes %d, Fra %d: Component %d doesn't exists." % (exp, tes, fra, com)
@@ -731,12 +741,12 @@ class Component(object):
             self.__encode_image(), self.__shape, self.__color
         )
         com_res = db.push_query(query=sql)
-        # ---------------
+
         if com_res:
             print u"Exp %s, Tes %d, Fra %d: Component %d saved." % (exp, tes, fra, com)
         else:
             print u"Exp %s, Tes %d, Fra %d: Component %d not saved." % (exp, tes, fra, com)
-        # ---------------
+
         return com_res
 
     def copy(self):
@@ -783,7 +793,7 @@ class Frame(ItemList):
     def __init__(self):
         super(Frame, self).__init__(itemclass=Component)
         # -------------------
-        self.__name = u'Unnamed'
+        self.__name = u'unnamed'
         self.__color = u'black'
         self.__is_task = False
         self.__keys_allowed = u''
@@ -872,7 +882,7 @@ class Frame(ItemList):
         if self.__is_task and self.__keys_allowed != u'' and keys != u'':
             keys_alw = self.__keys_allowed.split(u',')
             keys_sel = keys.split(u',')
-            # ---------------
+
             match = [key for key in keys_sel if key in keys_alw]
             if len(match) == len(keys_sel):
                 self.__keys_selected = keys
@@ -921,19 +931,19 @@ class Frame(ItemList):
         where exp_code='%s' and tes_index='%d' and fra_index='%d';
         """ % (exp, tes, fra)
         fra_res = db.pull_query(query=sql)
-        # -------------------
+
         if fra_res is not None:
             print u"Exp %s, Tes %d: Frame %d loaded." % (exp, tes, fra)
-            # ---------------
+
             self.__name = unicode(fra_res[0, 0])
             self.__color = unicode(fra_res[0, 1])
             self.__is_task = bool(int(fra_res[0, 2]))
             self.__time = float(fra_res[0, 3])
             self.__keys_allowed = unicode(fra_res[0, 4])
             self.__keys_selected = unicode(fra_res[0, 5])
-            # ---------------
+
             self.__load_components(db=db, exp=exp, tes=tes, fra=fra)
-            # ---------------
+
             return True
         else:
             print u"Exp %s, Tes %d: Frame %d doesn't exists." % (exp, tes, fra)
@@ -950,13 +960,13 @@ class Frame(ItemList):
             self.__name, self.__color, self.__is_task, self.__time, self.__keys_allowed, self.__keys_selected
         )
         fra_res = db.push_query(query=sql)
-        # -------------------
+
         if fra_res:
             print u"Exp %s, Tes %d: Frame %d saved. Saving components..." % (exp, tes, fra)
             self.__save_components(db=db, exp=exp, tes=tes, fra=fra)
         else:
             print u"Exp %s, Tes %d: Frame %d not saved." % (exp, tes, fra)
-        # -------------------
+
         return fra_res
 
     def copy(self):
@@ -989,10 +999,10 @@ class Frame(ItemList):
                 components = [component.get_execution(win=win) for component in self.component_get_all()]
             else:
                 components = None
-            # ---------------
+
             back = visual.Rect(win=win, width=win.size[0], height=win.size[1], units=u'pix',
                                lineColor=self.__color, fillColor=self.__color)
-            # ---------------
+
             frame = {
                 u'is_task':             self.__is_task,
                 u'time':                self.__time,
@@ -1002,7 +1012,7 @@ class Frame(ItemList):
                 u'background':          back,
                 u'components':          components
             }
-            # ---------------
+
             return frame
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
@@ -1014,7 +1024,7 @@ class Frame(ItemList):
             components = [component.get_configuration() for component in self.component_get_all()]
         else:
             components = None
-        # ---------------
+
         frame = {
             u'is_task':         self.__is_task,
             u'time':            self.__time,
@@ -1023,7 +1033,7 @@ class Frame(ItemList):
             u'background':      self.__color,
             u'components':      components,
         }
-        # ---------------
+
         return frame
 
 
@@ -1034,8 +1044,8 @@ class Test(ItemList):
     # =================================
     def __init__(self):
         super(Test, self).__init__(itemclass=Frame)
-        # -------------------
-        self.__name = u'Unnamed'
+
+        self.__name = u'unnamed'
         self.__description = u''
         self.__quantity = 1
 
@@ -1062,7 +1072,6 @@ class Test(ItemList):
     def get_name(self):
         return self.__name
 
-    # -----------------------
     def set_description(self, text):
         text = Utils.format_text(text, lmin=10)
         if text != u'':
@@ -1074,7 +1083,6 @@ class Test(ItemList):
     def get_description(self):
         return self.__description
 
-    # -----------------------
     def set_quantity(self, value):
         value = Utils.format_int(value, vmin=1)
         if value is not None:
@@ -1120,16 +1128,16 @@ class Test(ItemList):
         where exp_code='%s' and tes_index='%d';
         """ % (exp, tes)
         tes_res = db.pull_query(query=sql)
-        # -------------------
+
         if tes_res is not None:
             print u"Exp %s: Test %d loaded." % (exp, tes)
-            # ---------------
+
             self.__name = unicode(tes_res[0, 0])
             self.__description = unicode(tes_res[0, 1])
             self.__quantity = int(tes_res[0, 2])
-            # ---------------
+
             self.__load_frames(db=db, exp=exp, tes=tes)
-            # ---------------
+
             return True
         else:
             print u"Exp %s: Test %d doesn't exists." % (exp, tes)
@@ -1145,13 +1153,13 @@ class Test(ItemList):
             self.__name, self.__description, self.__quantity
         )
         tes_res = db.push_query(query=sql)
-        # -------------------
+
         if tes_res:
             print u"Exp %s: Test %d saved. Saving frames..." % (exp, tes)
             self.__save_frames(db=db, exp=exp, tes=tes)
         else:
             print u"Exp %s: Test %d not saved." % (exp, tes)
-        # -------------------
+
         return tes_res
 
     def copy(self):
@@ -1190,7 +1198,6 @@ class Test(ItemList):
                 return test
             else:
                 return None
-            # ---------------
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
             return None
@@ -1222,7 +1229,7 @@ class Experiment(ItemList):
         self.__database = None
         # -------------------
         self.__code = u''
-        self.__name = u'Unnamed'
+        self.__name = u'unnamed'
         self.__version = u''
         self.__description = u''
         self.__instructions = u''
@@ -1273,7 +1280,7 @@ class Experiment(ItemList):
         if self.__database is not None and code != u'':
             sql = u"select * from experiment where exp_code='%s';" % code
             exp_res = self.__database.pull_query(query=sql)
-            # ---------------
+
             if exp_res is None:
                 self.__code = code
                 return True
@@ -1292,7 +1299,6 @@ class Experiment(ItemList):
         if self.__database is not None and name != u'' and version != u'':
             sql = u"select * from experiment where exp_name='%s' and exp_version='%s';" % (name, version)
             exp_res = self.__database.pull_query(query=sql)
-            # ---------------
             if exp_res is None:
                 self.__name = name
                 self.__version = version
@@ -1444,12 +1450,12 @@ class Experiment(ItemList):
             where exp.exp_code='%s';
             """ % code
             exp_res = self.__database.pull_query(query=sql)
-            # ---------------
+
             if exp_res is not None:
                 self.__in_db = True
                 self.__code = code
                 print u"Experiment %s loaded." % self.__code
-                # -----------
+
                 self.__name = unicode(exp_res[0, 0])
                 self.__version = unicode(exp_res[0, 1])
                 self.__description = unicode(exp_res[0, 2])
@@ -1467,9 +1473,9 @@ class Experiment(ItemList):
                 self.__con_is_rest = bool(int(exp_res[0, 14]))
                 self.__con_rest_period = int(exp_res[0, 15])
                 self.__con_rest_time = float(exp_res[0, 16])
-                # -----------
+
                 self.__load_tests()
-                # -----------
+
                 return True
             else:
                 print u"Experiment %s doesn't exists." % self.__code
@@ -1515,13 +1521,13 @@ class Experiment(ItemList):
                     self.__con_is_random, self.__con_is_rest, self.__con_rest_period, self.__con_rest_time
                 )
             exp_res = self.__database.push_query(query=sql)
-            # ---------------
+
             if exp_res:
                 print u"Experiment %s saved. Saving tests..." % self.__code
                 self.__save_tests()
             else:
                 print u"Experiment %s not saved." % self.__code
-            # ---------------
+
             self.__in_db = exp_res
             return exp_res
         else:
@@ -1530,13 +1536,13 @@ class Experiment(ItemList):
 
     def copy(self, code, version):
         new_exp = copy.deepcopy(self)
-        # -------------------
+
         new_exp.set_database(db=self.__database)
         new_exp.__in_db = False
-        # -------------------
+
         code_check = new_exp.set_code(code=code)
         info_check = new_exp.set_info(name=self.__name, version=version)
-        # -------------------
+
         if code_check and info_check:
             return new_exp
         else:
@@ -1544,9 +1550,10 @@ class Experiment(ItemList):
 
     def remove(self):
         if self.__in_db:
+            print u"Removing expriment with code %s." % self.__code
             sql = u"delete from experiment where exp_code='%s';" % self.__code
             exp_res = self.__database.push_query(query=sql)
-            # ---------------
+
             self.__in_db = not exp_res
             return exp_res
         else:
@@ -1566,7 +1573,7 @@ class Experiment(ItemList):
     def __save_tests(self):
         sql = u"delete from test where exp_code='%s';" % self.__code
         self.__database.push_query(query=sql)
-        # -------------------
+
         tes_num = self.test_number()
         if tes_num is not None:
             for index in range(tes_num):
@@ -1583,7 +1590,6 @@ class Experiment(ItemList):
                 u'version':         self.__version,
                 u'description':     self.__description,
                 u'display_experiment_dialog': True,
-                # -----------
                 u'session_defaults': {
                     u'name':        u'Session...',
                     u'code':        0,
@@ -1591,7 +1597,6 @@ class Experiment(ItemList):
                 },
                 u'display_session_dialog': True,
                 u'session_variable_order': [u'name', u'code', u'comments'],
-                # -----------
                 u'ioHub': {
                     u'enable':  True,
                 },
@@ -1633,11 +1638,11 @@ class Experiment(ItemList):
                             u'name':    test[u'name'],
                             u'frames':  test[u'frames']
                         })
-                # -----------
+
                 test_list = np.concatenate(test_list)
                 if self.__con_is_random:
                     np.random.shuffle(test_list)
-                # -----------
+
                 experiment = {
                     u'instruction':     self.__instructions,
                     u'space_start':     self.__con_need_space,
@@ -1647,7 +1652,7 @@ class Experiment(ItemList):
                     u'test_secuence':   test_list,
                     u'test_data':       test_data,
                 }
-                # -----------
+
                 return experiment
             else:
                 return None
@@ -1664,7 +1669,7 @@ class Experiment(ItemList):
                 tests = [test.get_configuration() for test in self.test_get_all()]
             else:
                 tests = None
-            # ---------------
+
             configuration = {
                 u'title':           self.__name,
                 u'code':            self.__code,
@@ -1690,7 +1695,7 @@ class Experiment(ItemList):
                 },
                 u'tests': tests
             }
-            # ---------------
+
             return configuration
 
         else:

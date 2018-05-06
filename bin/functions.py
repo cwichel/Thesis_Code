@@ -4,8 +4,8 @@
 def configure_experiment():
     # =======================
     import os
-    from saccadeApp import SaccadeDB
-    from saccadeApp import Experiment, Test, Frame, Component
+    from saccadeapp import SaccadeDB
+    from saccadeapp import Experiment, Test, Frame, Component
 
     # =======================
     base_dir = u'C:\\Experiments'
@@ -82,9 +82,9 @@ def configure_experiment():
 def execute_experiment():
     # =======================
     import os
-    from saccadeApp import SaccadeDB
-    from saccadeApp import Master
-    from saccadeApp import ExperimentHandler
+    from saccadeapp import SaccadeDB
+    from saccadeapp import Master
+    from saccadeapp import ExperimentHandler
 
     # =======================
     base_dir = u'C:\\Experiments'

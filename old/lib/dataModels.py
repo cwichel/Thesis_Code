@@ -11,7 +11,7 @@ from PyQt4 import QtGui, QtCore, uic
 # View Models
 # =============================================================================
 # =============================================== List-like
-class listModel(QtCore.QAbstractListModel):
+class ListModel(QtCore.QAbstractListModel):
     def __init__(self, data=[], header=u'Empty', parent=None):
         QtCore.QAbstractListModel.__init__(self, parent)
         # ==============

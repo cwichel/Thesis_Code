@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_files\saccadeApp.ui'
+# Form implementation generated from reading ui file 'ui_files\saccadeapp.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -231,7 +231,7 @@ class Ui_dlg_saccadeapp(object):
         QtCore.QMetaObject.connectSlotsByName(dlg_saccadeapp)
 
     def retranslateUi(self, dlg_saccadeapp):
-        dlg_saccadeapp.setWindowTitle(_translate("dlg_saccadeapp", "saccadeApp", None))
+        dlg_saccadeapp.setWindowTitle(_translate("dlg_saccadeapp", "saccadeapp", None))
         self.pbt_experiment_new.setText(_translate("dlg_saccadeapp", "New", None))
         self.pbt_experiment_edit.setText(_translate("dlg_saccadeapp", "Edit", None))
         self.pbt_experiment_copy.setText(_translate("dlg_saccadeapp", "Copy", None))
