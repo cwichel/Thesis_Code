@@ -297,9 +297,8 @@ class SaccadeApp(QtGui.QMainWindow):
         from saccadeapp.core import Utils
         # -------------------
         print u"Opening docs file..."
-        path_base = os.path.split(os.path.realpath(__file__))[0]
-        path_docu = Utils.format_path(u'/../docs/')
-        os.startfile(path_base + path_docu + u'saccadeApp_docu.pdf')
+        path_docu = Utils.format_path(Utils.get_main_path()+u'/../docs/saccadeApp_docu.pdf')
+        os.startfile(path_docu)
 
     @staticmethod
     def __app_about():
@@ -357,50 +356,67 @@ class SaccadeApp(QtGui.QMainWindow):
         self.pbt_configuration_edit.clicked.connect(self.__handle_configuration_edit)
         self.pbt_configuration_copy.clicked.connect(self.__handle_configuration_copy)
         self.pbt_configuration_remove.clicked.connect(self.__handle_configuration_remove)
-
         self.lsv_configuration.setModel(self.model_configuration)
         self.update_configuration_view()
-        if self.model_configuration.has_items():
+        if self.model_configuration.rowCount() > 0:
             self.lsv_configuration.setCurrentIndex(self.model_configuration.index(0, 0))
 
     def __handle_monitor_center(self):
-        Master.open_psychopy_monitor_center()
+        Utils.open_psychopy_monitor_center()
 
     def __handle_configuration_new(self):
         print u"Creating configuration profile..."
-        dialog = ConfigurationApp(parent=self, itemid=-1)
+        dialog = ConfigurationApp(parent=self, item_id=-1)
         dialog.exec_()
 
     def __handle_configuration_edit(self):
-        print u"Editing configuration profile..."
         items = self.model_configuration.rowCount()
         index = self.lsv_configuration.currentIndex().row()
-
         if items is not 0 and index is not -1:
-            dialog = ConfigurationApp(parent=self, itemid=index)
+            print u"Editing configuration profile..."
+            dialog = ConfigurationApp(parent=self, item_id=index)
             dialog.exec_()
 
     def __handle_configuration_copy(self):
-        print u"Copying configuration profile..."
-        dialog = CopyApp(parent=self)
-        dialog.exec_()
+        items = self.model_configuration.rowCount()
+        index = self.lsv_configuration.currentIndex().row()
+        if items is not 0 and index is not -1:
+            print u"Copying configuration profile..."
+            name = self.model_configuration.get_item(index=index)
+            profile_base = Configuration(db=self.database, name=name)
+            profile_copy = None
+            is_ready = False
+            while not is_ready:
+                name, is_ok = QtGui.QInputDialog.getText(None, u'Copying profile...', u'New name:', text=name)
+                name = unicode(name)
+                if is_ok:
+                    profile_copy = profile_base.copy(name=name)
+                    if profile_copy is not None:
+                        profile_copy.save()
+                        is_ready = True
+                    else:
+                        QtGui.QMessageBox.warning(self, u'Error', u'Name already used!\nTry again.')
+                else:
+                    is_ready = True
+            if profile_copy is not None:
+                self.update_configuration_view()
+                index = self.model_configuration.get_index(item=name)
+                self.lsv_configuration.setCurrentIndex(self.model_configuration.index(index, 0))
 
     def __handle_configuration_remove(self):
         print u"Removing configuration profile..."
         items = self.model_configuration.rowCount()
         index = self.lsv_configuration.currentIndex().row()
-
         if items is not 0 and index is not -1:
-            profile = self.model_configuration.get_item_by_id(index)
-            master = Master()
-            master.set_database(db=self.database)
-            master.load(profile)
-            master.remove()
-
-        self.update_configuration_view()
+            name = self.model_configuration.get_item(index=index)
+            profile = Configuration(db=self.database, name=name)
+            profile.remove()
+            self.update_configuration_view()
+            index = index-1 if index > 0 else 0
+            self.lsv_configuration.setCurrentIndex(self.model_configuration.index(index, 0))
 
     def update_configuration_view(self):
-        conf_list = Master.get_list(self.database)
+        conf_list = Configuration.get_list(db=self.database)
         if conf_list is not None:
             conf_list = [item[0] for item in conf_list]
             self.model_configuration.update_items(items=conf_list)
@@ -1007,8 +1023,6 @@ class TestApp(QtGui.QDialog):
 
     def __handle_frame_copy(self):
         print u"Copying frame..."
-        dialog = CopyApp(parent=self)
-        dialog.exec_()
 
     def __handle_frame_remove(self):
         print u"Removing frame..."
@@ -1322,8 +1336,6 @@ class FrameApp(QtGui.QDialog):
 
     def __handle_component_copy(self):
         print u"Copying component..."
-        dialog = CopyApp(parent=self)
-        dialog.exec_()
 
     def __handle_component_remove(self):
         print u"Removing component..."
@@ -1646,20 +1658,18 @@ class ComponentApp(QtGui.QDialog):
 # Configuration related Class: ConfigurationApp
 # =============================================================================
 class ConfigurationApp(QtGui.QDialog):
-    def __init__(self, parent=SaccadeApp, itemid=-1):
+    def __init__(self, parent=SaccadeApp, item_id=-1):
         QtGui.QDialog.__init__(self)
         self.__setup_ui()
         # -------------------
-        self.__name = None
-        self.__itemid = itemid
         self.__is_edit = False
+        self.__item_id = item_id
         # -------------------
         self.__parent = parent
-        self.__master = Master()
-        self.__master.set_database(db=parent.database)
-        self.__model_tracker = ListModel(Master.get_available_trackers())
-        self.__model_monitor = ListModel(Master.get_available_monitors())
-        self.__model_screen = ListModel(Master.get_available_screens())
+        self.__profile = Configuration(db=parent.database)
+        self.__model_tracker = ListModel(Utils.get_available_trackers())
+        self.__model_monitor = ListModel(Utils.get_available_monitors())
+        self.__model_screen = ListModel(Utils.get_available_screens())
         # -------------------
         self.__setup_dialog()
         self.__check_itemid()
@@ -1794,102 +1804,91 @@ class ConfigurationApp(QtGui.QDialog):
         self.bbt_save.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.__handle_save_action)
         self.bbt_save.button(QtGui.QDialogButtonBox.Close).clicked.connect(self.__handle_close_action)
         self.pbt_path_browse.clicked.connect(self.__handle_path_browse)
-
         self.cmb_tracker.setModel(self.__model_tracker)
         self.cmb_monitor.setModel(self.__model_monitor)
         self.cmb_screen.setModel(self.__model_screen)
 
     def __handle_save_action(self):
         print u"Saving configuration profile..."
-        self.__master.set_experiment_path(unicode(self.led_path.text()))
-        self.__master.set_monitor(self.cmb_monitor.currentText())
-        self.__master.set_tracker(self.cmb_tracker.currentText())
-        self.__master.set_screen(self.cmb_screen.currentIndex())
+        self.__profile.set_experiment_path(unicode(self.led_path.text()))
+        self.__profile.set_monitor(self.cmb_monitor.currentText())
+        self.__profile.set_tracker(self.cmb_tracker.currentText())
+        self.__profile.set_screen(self.cmb_screen.currentIndex())
 
-        is_name_used = False
+        old_name = self.__profile.get_name()
         new_name = unicode(self.led_name.text())
-        is_name_ok = self.__master.set_name(new_name)
-
+        is_name_ok = self.__profile.set_name(new_name)
         if self.__is_edit:
-            if new_name == self.__name:   # Edit maintain name
-                self.__master.save()
-            elif is_name_ok:                  # Edit and change name
-                self.__remove_master(self.__name)
-                self.__master.save()
-            else:                           # Use another profile name
-                is_name_used = True
-        else:
-            if is_name_ok:                  # New profile
-                self.__master.save()
-            else:                           # Use another profile name
-                is_name_used = True
+            if old_name == new_name:            # Edit maintain name
+                self.__profile.save()
+            elif is_name_ok:                    # Edit and change name
+                self.__remove_profile(old_name)
+                self.__profile.save()
+        elif is_name_ok:                        # New profile and name is not used
+            self.__profile.save()
 
-        if is_name_used:
+        if not self.__profile.is_on_database(): # Profile already exists...
             print u"Error: Name already used..."
             err_msg = u"Name already used. Do you want to overwrite?"
-            err_res = QtGui.QMessageBox.question(None, u"Error", err_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-            if err_res == QtGui.QMessageBox.Yes:
+            err_res = QtGui.QMessageBox.question(self, u"Error", err_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            if err_res == QtGui.QMessageBox.Yes:                # Overwrite!
                 print u"Configuration profile overwritten!"
                 if self.__is_edit:
-                    self.__remove_master(self.__name)
-                self.__remove_master(new_name)
-                self.__master.set_name(new_name)
-                self.__master.save()
-            else:
+                    self.__remove_profile(old_name)
+                self.__remove_profile(new_name)
+                self.__profile.set_name(new_name)
+                self.__profile.save()
+            else:                                               # Find new name!
                 print u"Waiting for new name..."
                 is_ready = False
                 while not is_ready:
                     new_name, is_ok = QtGui.QInputDialog.getText(None, u'New profile name', u'New name:', text=new_name)
                     new_name = unicode(new_name)
                     if is_ok:
-                        is_ready = self.__master.set_name(new_name)
-                        if is_ready:
+                        if self.__profile.set_name(new_name):
                             print u"New name defined. Saving profile..."
-                            self.__master.save()
+                            self.__profile.save()
                     else:
                         print u"Operation canceled..."
                         new_name = None
                         is_ready = True
-
-        if new_name is not None:
+        if self.__profile.is_on_database():
             self.__parent.update_configuration_view()
-            index = self.__parent.model_configuration.get_id_by_item(new_name)
+            index = self.__parent.model_configuration.get_index(new_name)
             self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(index, 0))
 
     def __handle_close_action(self):
         print u"Operation canceled..."
+        if self.__is_edit:
+            self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(self.__item_id, 0))
 
     def __handle_path_browse(self):
         print u"Browsing for new events folder..."
         title = u"Select events save directory..."
-        folder = QtGui.QFileDialog.getExistingDirectory(None, title, self.led_path.text(), QtGui.QFileDialog.ShowDirsOnly)
+        folder = QtGui.QFileDialog.getExistingDirectory(self, title, self.led_path.text(),
+                                                        QtGui.QFileDialog.ShowDirsOnly)
         if folder:
             print u"Folder selected."
             self.led_path.setText(unicode(folder))
         else:
             print u"Operation canceled..."
 
-    def __remove_master(self, name):
-        master_temp = Master()
-        master_temp.set_database(self.__parent.database)
-        master_temp.load(unicode(name))
-        master_temp.remove()
-
     def __check_itemid(self):
-        if self.__itemid is not -1:
+        if self.__item_id is not -1:
             self.__is_edit = True
-            self.__name = self.__parent.model_configuration.get_item_by_id(self.__itemid)
-
-            self.__master.load(self.__name)
-            screen_index = self.cmb_screen.findText(self.__master.get_screen(), QtCore.Qt.MatchFixedString)
-            monitor_index = self.cmb_monitor.findText(self.__master.get_monitor(), QtCore.Qt.MatchFixedString)
-            tracker_index = self.cmb_tracker.findText(self.__master.get_tracker_name(), QtCore.Qt.MatchFixedString)
+            self.__profile.load(self.__parent.model_configuration.get_item(index=self.__item_id))
+            screen_index = self.cmb_screen.findText(self.__profile.get_screen(), QtCore.Qt.MatchFixedString)
+            monitor_index = self.cmb_monitor.findText(self.__profile.get_monitor(), QtCore.Qt.MatchFixedString)
+            tracker_index = self.cmb_tracker.findText(self.__profile.get_tracker_name(), QtCore.Qt.MatchFixedString)
             self.cmb_screen.setCurrentIndex(screen_index)
             self.cmb_monitor.setCurrentIndex(monitor_index)
             self.cmb_tracker.setCurrentIndex(tracker_index)
+        self.led_name.setText(self.__profile.get_name())
+        self.led_path.setText(self.__profile.get_experiment_path())
 
-        self.led_name.setText(self.__master.get_name())
-        self.led_path.setText(self.__master.get_experiment_path())
+    def __remove_profile(self, name):
+        profile = Configuration(db=self.__parent.database, name=name)
+        profile.remove()
 
 
 # =============================================================================
@@ -2073,69 +2072,6 @@ class TestCopyApp(QtGui.QDialog):
         self.rbt_experiment.setText(_translate("TestCopyApp", "Experiment...", None))
         self.lbl_experiment.setText(_translate("TestCopyApp", "Experiment:", None))
         self.lbl_test.setText(_translate("TestCopyApp", "Test:", None))
-
-    # =================================
-    def __setup_copy(self):
-        self.bbt_dialog.clicked.connect(self.__handle_ok_box)
-
-    def __handle_ok_box(self):
-        if self.bbt_dialog.Ok:
-            pass
-        if self.bbt_dialog.Cancel:
-            pass
-
-
-# ===============================================
-# Class: CopyApp
-# ===============================================
-class CopyApp(QtGui.QDialog):
-    def __init__(self, parent):
-        QtGui.QDialog.__init__(self)
-        self.__setup_ui()
-        # ==============
-        self.parent = parent
-        # ==============
-        self.__setup_copy()
-
-    # =================================
-    def __setup_ui(self):
-        self.setObjectName(_from_utf8("CopyApp"))
-        self.resize(400, 115)
-        self.setMinimumSize(QtCore.QSize(400, 115))
-        self.setMaximumSize(QtCore.QSize(400, 115))
-        self.verticalLayout = QtGui.QVBoxLayout(self)
-        self.verticalLayout.setObjectName(_from_utf8("verticalLayout"))
-        self.gbx_copy = QtGui.QGroupBox(self)
-        self.gbx_copy.setObjectName(_from_utf8("gbx_copy"))
-        self.formLayout = QtGui.QFormLayout(self.gbx_copy)
-        self.formLayout.setObjectName(_from_utf8("formLayout"))
-        self.lbl_name = QtGui.QLabel(self.gbx_copy)
-        self.lbl_name.setMinimumSize(QtCore.QSize(70, 25))
-        self.lbl_name.setMaximumSize(QtCore.QSize(70, 25))
-        self.lbl_name.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.lbl_name.setObjectName(_from_utf8("lbl_name"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.lbl_name)
-        self.led_name = QtGui.QLineEdit(self.gbx_copy)
-        self.led_name.setMinimumSize(QtCore.QSize(0, 25))
-        self.led_name.setMaximumSize(QtCore.QSize(16777215, 25))
-        self.led_name.setObjectName(_from_utf8("led_name"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.led_name)
-        self.verticalLayout.addWidget(self.gbx_copy)
-        self.bbt_dialog = QtGui.QDialogButtonBox(self)
-        self.bbt_dialog.setOrientation(QtCore.Qt.Horizontal)
-        self.bbt_dialog.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.bbt_dialog.setObjectName(_from_utf8("bbt_dialog"))
-        self.verticalLayout.addWidget(self.bbt_dialog)
-
-        self.__retranslate_ui()
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_from_utf8("accepted()")), self.accept)
-        QtCore.QObject.connect(self.bbt_dialog, QtCore.SIGNAL(_from_utf8("rejected()")), self.reject)
-        QtCore.QMetaObject.connectSlotsByName(self)
-
-    def __retranslate_ui(self):
-        self.setWindowTitle(_translate("CopyApp", "Copy", None))
-        self.gbx_copy.setTitle(_translate("CopyApp", "Copy", None))
-        self.lbl_name.setText(_translate("CopyApp", "New Name:", None))
 
     # =================================
     def __setup_copy(self):

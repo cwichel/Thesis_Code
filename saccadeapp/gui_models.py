@@ -49,7 +49,7 @@ class ColorListModel(QtCore.QAbstractListModel):
     def __get_colors(self):
         from saccadeapp.core import Utils
         # -------------------
-        self.__colors = Utils.get_colors()
+        self.__colors = Utils.get_available_colors()
 
     def __get_color_icon(self, row):
         value = self.__colors[row][1]
@@ -59,13 +59,13 @@ class ColorListModel(QtCore.QAbstractListModel):
         icon = QtGui.QIcon(pmap)
         return icon
 
-    def get_item_by_id(self, index):
+    def get_item(self, index):
         if 0 <= index < self.rowCount():
             return self.__items[index]
         else:
             return None
 
-    def get_id_by_item(self, item):
+    def get_index(self, item):
         try:
             return self.__items.index(item)
         except:
@@ -77,13 +77,12 @@ class ColorListModel(QtCore.QAbstractListModel):
 # items: list: [item_value]
 # =============================================================================
 class ListModel(QtCore.QAbstractListModel):
-    def __init__(self, items, parent=None, header=u"Empty"):
+    def __init__(self, items, header=u"Empty", parent=None):
         QtCore.QAbstractListModel.__init__(self, parent)
         # -------------------
-        self.__items = None
         self.__tooltip = header + u": "
         self.__header = header
-        self.__has_items = False
+        self.__items = []
         # -------------------
         self.update_items(items)
 
@@ -92,7 +91,7 @@ class ListModel(QtCore.QAbstractListModel):
         return 1
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return len(self.__items) if self.__has_items else 0
+        return len(self.__items)
 
     def data(self, index, role=None):
         if role == QtCore.Qt.ToolTipRole:
@@ -135,31 +134,25 @@ class ListModel(QtCore.QAbstractListModel):
         return True
 
     def flags(self, index):
-        if self.__has_items:
+        if self.__items:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
     # =================================
     def update_items(self, items):
         if items is not []:
-            self.__has_items = True
             self.__items = sorted(items, key=lambda v: v.upper())
         else:
-            self.__has_items = False
-            self.__items = None
+            self.__items = []
         self.reset()
 
-    def get_item_by_id(self, index):
+    def get_item(self, index):
         if 0 <= index < self.rowCount():
             return self.__items[index]
         else:
             return None
 
-    def get_id_by_item(self, item):
+    def get_index(self, item):
         try:
             return self.__items.index(item)
         except:
             return -1
-
-    def has_items(self):
-        return self.__has_items
-

@@ -2,12 +2,9 @@
 # =============================================================================
 # Modules
 # =============================================================================
-import os
 import copy
 import numpy as np
 import sqlite3 as lite
-import threading as thread
-import subprocess as subproc
 from psychopy import visual, colors
 
 
@@ -61,21 +58,11 @@ class Utils(object):
         except ValueError:
             return default
 
-    @staticmethod
-    def format_path(path):
-        import platform
-        # -------------------
-        path = Utils.format_text(path)
-        is_win = any(platform.win32_ver())
-
-        path = path.replace(u'\\', u'#').replace(u'/', u'#')
-        return path.replace(u'#', u'\\') if is_win else path.replace(u'#', u'/')
-
+    # =================================
     @staticmethod
     def get_time(date):
         import pytz
         from datetime import datetime as dt
-        # -------------------
         try:
             gmt0 = pytz.timezone(u"GMT+0")
             cltc = pytz.timezone(u"Chile/Continental")
@@ -86,14 +73,80 @@ class Utils(object):
         except ValueError:
             return u'No disponible'
 
+    # =================================
     @staticmethod
-    def get_colors():
+    def get_main_path():
+        import sys
+        from os import path
+        return path.dirname(path.realpath(sys.argv[0]))
+
+    @staticmethod
+    def get_file_path():
+        from os import path
+        return path.split(path.realpath(__file__))[0]
+
+    @staticmethod
+    def format_path(path):
+        import platform
+        path = Utils.format_text(path)
+        is_win = any(platform.win32_ver())
+        path = path.replace(u'\\', u'#').replace(u'/', u'#')
+        return path.replace(u'#', u'\\') if is_win else path.replace(u'#', u'/')
+
+    # =================================
+    @staticmethod
+    def get_available_colors():
         import collections
-        # -------------------
         color_dict = colors.colorsHex
         color_dict = collections.OrderedDict(sorted(color_dict.items()))
         color_arr = [[unicode(item), color_dict[item]] for item in color_dict]
         return color_arr
+
+    @staticmethod
+    def get_available_trackers():
+        import glob as gl
+        from os import path
+        trackers_path = Utils.format_path(Utils.get_file_path()+u'/resources/eyetrackers/')
+        return [path.basename(item).replace(u'_config.yaml', u'') for item in gl.glob(trackers_path + u'*.yaml')]
+
+    @staticmethod
+    def get_available_screens():
+        import pyglet
+        display = pyglet.window.Display()
+        screens = display.get_screens()
+        scr_num = 1
+        scr_lst = []
+        for screen in screens:
+            scr_lst.append(u"monitor %d: (w=%s, h=%s)" % (scr_num, screen.width, screen.height))
+            scr_num += 1
+
+        return scr_lst
+
+    @staticmethod
+    def get_available_monitors():
+        from psychopy import monitors
+        return monitors.getAllMonitors()
+
+    # =================================
+    @staticmethod
+    def open_psychopy_monitor_center():
+        import threading as thread
+        import subprocess as subproc
+        is_open = False
+        threads = thread.enumerate()
+        for proccess in threads:
+            if proccess.getName() == u'MonitorCenter':
+                is_open = True
+        if not is_open:
+            print u'Opening Monitor Center...'
+            monitor_path = Utils.format_path(Utils.get_file_path()+u'/resources/monitors/monitorCenter.py')
+            monitor_thread = thread.Thread(target=lambda: subproc.call(u'python ' + monitor_path))
+            monitor_thread.setName(u'MonitorCenter')
+            monitor_thread.start()
+            return True
+        else:
+            print u'Error: Monitor Center is already open'
+            return False
 
 
 # =============================================================================
@@ -102,23 +155,16 @@ class Utils(object):
 class SaccadeDB(object):
     # =================================
     def __init__(self, filepath=u'saccadedb.sqlite3'):
+        self.__db_script = Utils.format_path(Utils.get_file_path()+u'/resources/database/saccadedb_sqlite.sql')
         self.__db_connection = None
         self.__db_file = filepath
-        self.__db_script = self.__get_script_path()
-        # -------------------
         self.connect()
 
     # =================================
-    @staticmethod
-    def __get_script_path():
-        path_base = os.path.split(os.path.realpath(__file__))[0]
-        path_conf = Utils.format_path(u'/resources/database/')
-        return path_base + path_conf + u'saccadedb_sqlite.sql'
-
-    # =================================
     def connect(self):
+        from os import path
         print u"Connecting to DB... "
-        if os.path.isfile(self.__db_file):
+        if path.isfile(self.__db_file):
             self.__db_connection = lite.connect(self.__db_file)
             self.__db_connection.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
             print u'Connected!'
@@ -167,91 +213,31 @@ class SaccadeDB(object):
 # =============================================================================
 # Class: Utils
 # =============================================================================
-class Master(object):
-    def __init__(self):
+class Configuration(object):
+    def __init__(self, db=None, name=u''):
         self.__in_db = False
         self.__database = None
-        # -------------------
         self.__name = u'unnamed'
         self.__screen = 0
         self.__tracker = u'none'
         self.__monitor = u'default'
-        self.__path = self.__get_base_path()
+        self.__path = Utils.format_path(Utils.get_main_path()+u'/events/')
+        # -------------------
+        if self.set_database(db=db):
+            self.load(name=name)
 
     # =================================
     @classmethod
     def get_list(cls, db):
         if isinstance(db, SaccadeDB):
             sql = u"""
-            select mas_name
-            from master
-            order by mas_name asc;
+            select con_name
+            from configuration
+            order by con_name asc;
             """
             return db.pull_query(query=sql)
         else:
             return None
-
-    # =================================
-    @staticmethod
-    def open_psychopy_monitor_center():
-        is_open = False
-        threads = thread.enumerate()
-        # ===================
-        for proccess in threads:
-            if proccess.getName() == u'MonitorCenter':
-                is_open = True
-        # ===================
-        if not is_open:
-            print u'Opening Monitor Center...'
-            path_base = os.path.split(os.path.realpath(__file__))[0]
-            path_conf = Utils.format_path(u'/resources/monitors/')
-            command = u'python ' + path_base + path_conf + u'monitorCenter.py'
-            monitor_thread = thread.Thread(target=lambda: subproc.call(command))
-            monitor_thread.setName(u'MonitorCenter')
-            monitor_thread.start()
-            return True
-        else:
-            print u'Error: Monitor Center is already open'
-            return False
-
-    @staticmethod
-    def get_available_trackers():
-        import glob as gl
-        # -------------------
-        path_base = os.path.split(os.path.realpath(__file__))[0]
-        path_conf = Utils.format_path(u'/resources/eyetrackers/')
-        path_full = path_base + path_conf
-
-        return [os.path.basename(item).replace(u'_config.yaml', u'') for item in gl.glob(path_full+u'*.yaml')]
-
-    @staticmethod
-    def get_available_screens():
-        import pyglet
-        # -------------------
-        display = pyglet.window.Display()
-        screens = display.get_screens()
-
-        scr_num = 1
-        scr_lst = []
-        for screen in screens:
-            scr_lst.append(u"monitor %d: (w=%s, h=%s)" % (scr_num, screen.width, screen.height))
-            scr_num += 1
-
-        return scr_lst
-
-    @staticmethod
-    def get_available_monitors():
-        from psychopy import monitors
-        # -------------------
-        return monitors.getAllMonitors()
-
-    @staticmethod
-    def __get_base_path():
-        import sys
-        # -------------------
-        path_base = os.path.dirname(os.path.realpath(sys.argv[0]))
-        path_fold = Utils.format_path(u'/events')
-        return path_base + path_fold
 
     # =================================
     def set_database(self, db):
@@ -271,7 +257,7 @@ class Master(object):
     def set_name(self, name):
         name = Utils.format_text(name, lmin=3, lmax=50)
         if self.__database is not None and name != u'':
-            sql = u"select * from master where mas_name='%s';" % name
+            sql = u"select * from configuration where con_name='%s';" % name
             mas_res = self.__database.pull_query(query=sql)
 
             if mas_res is None:
@@ -288,7 +274,7 @@ class Master(object):
     # -----------------------
     def set_screen(self, screen):
         screen = Utils.format_int(screen, default=0)
-        if 0 <= screen < len(self.get_available_screens()):
+        if 0 <= screen < len(Utils.get_available_screens()):
             self.__screen = screen
             return True
         else:
@@ -296,14 +282,14 @@ class Master(object):
 
     def get_screen(self):
         try:
-            return self.get_available_screens()[self.__screen]
+            return Utils.get_available_screens()[self.__screen]
         except:
-            return self.get_available_screens()[0]
+            return Utils.get_available_screens()[0]
 
     # -----------------------
     def set_monitor(self, monitor):
         monitor = Utils.format_text(monitor)
-        if monitor in self.get_available_monitors():
+        if monitor in Utils.get_available_monitors():
             self.__monitor = monitor
             return True
         else:
@@ -315,7 +301,7 @@ class Master(object):
     # -----------------------
     def set_tracker(self, tracker):
         tracker = Utils.format_text(tracker)
-        if tracker in self.get_available_trackers():
+        if tracker in Utils.get_available_trackers():
             self.__tracker = tracker
             return True
         else:
@@ -325,22 +311,17 @@ class Master(object):
         return self.__tracker
 
     def get_tracker_conf_path(self):
-        if self.__tracker in self.get_available_trackers():
-            path_base = os.path.split(os.path.realpath(__file__))[0]
-            path_conf = Utils.format_path(u'/resources/eyetrackers/')
-            return path_base + path_conf + self.__tracker + u'_config.yaml'
+        if self.__tracker in Utils.get_available_trackers():
+            return Utils.format_path(Utils.get_file_path()+u'/resources/eyetrackers/'+self.__tracker+u'_config.yaml')
         else:
             return u''
 
     # -----------------------
-    def set_experiment_path(self, path):
-        # import sys
-        # -------------------
-        exp_path = Utils.format_text(path, lmin=0, lmax=200)
-        if os.path.isdir(exp_path):
-            # base_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-            # self.__path = os.path.relpath(exp_path, base_path)
-            self.__path = exp_path
+    def set_experiment_path(self, experiment_path):
+        from os import path
+        experiment_path = Utils.format_path(experiment_path)
+        if path.isdir(experiment_path):
+            self.__path = experiment_path
             return True
         else:
             return False
@@ -354,22 +335,19 @@ class Master(object):
         if self.__database is not None and name != u'':
             sql = u"""
             select 
-            mas_screen, mas_monitor, mas_tracker, mas_path
-            from master
-            where mas_name='%s';
+            con_screen, con_monitor, con_tracker, con_path
+            from configuration
+            where con_name='%s';
             """ % name
-            mas_res = self.__database.pull_query(query=sql)
-
-            if mas_res is not None:
+            con_res = self.__database.pull_query(query=sql)
+            if con_res is not None:
                 self.__in_db = True
                 self.__name = name
                 print u"Configuration profile %s loaded." % name
-
-                self.__screen = int(mas_res[0, 0])
-                self.__monitor = unicode(mas_res[0, 1])
-                self.__tracker = unicode(mas_res[0, 2])
-                self.__path = unicode(mas_res[0, 3])
-
+                self.__screen = int(con_res[0, 0])
+                self.__monitor = unicode(con_res[0, 1])
+                self.__tracker = unicode(con_res[0, 2])
+                self.__path = unicode(con_res[0, 3])
                 return True
             else:
                 print u"Configuration profile %s doesn't exists." % name
@@ -381,43 +359,38 @@ class Master(object):
     def save(self):
         if self.__database is not None and self.__name != u'' and self.__tracker != u'none':
             sql = u"""
-            insert or replace into master
-            (mas_name, mas_screen, mas_tracker, mas_monitor, mas_path)
+            insert or replace into configuration
+            (con_name, con_screen, con_tracker, con_monitor, con_path)
             values ('%s', '%d', '%s', '%s', '%s')
             """ % (self.__name, self.__screen, self.__tracker, self.__monitor, self.__path)
-            mas_res = self.__database.push_query(query=sql)
-
-            if mas_res:
+            con_res = self.__database.push_query(query=sql)
+            if con_res:
                 print u"Configuration profile %s saved." % self.__name
             else:
                 print u"Configuration profile %s not saved." % self.__name
-            self.__in_db = mas_res
-            return mas_res
+            self.__in_db = con_res
+            return con_res
         else:
             print u"Error: Database or configuration profile identifiers not configured!"
             return False
 
     def copy(self, name):
-        new_mas = copy.deepcopy(self)
-
-        new_mas.set_database(db=self.__database)
-        new_mas.__in_db = False
-
-        name_check = new_mas.set_name(name=name)
-
+        new_con = copy.deepcopy(self)
+        new_con.set_database(db=self.__database)
+        new_con.__in_db = False
+        name_check = new_con.set_name(name=name)
         if name_check:
-            return new_mas
+            return new_con
         else:
             return None
 
     def remove(self):
         if self.__in_db:
             print u"Removing configuration profile %s." % self.__name
-            sql = u"delete from master where mas_name='%s';" % self.__name
-            mas_res = self.__database.push_query(query=sql)
-
-            self.__in_db = not mas_res
-            return mas_res
+            sql = u"delete from configuration where con_name='%s';" % self.__name
+            con_res = self.__database.push_query(query=sql)
+            self.__in_db = not con_res
+            return con_res
         else:
             return False
 
@@ -450,11 +423,9 @@ class Master(object):
                     u'enable':      True,
                 }
             }
-
             tracker_path = self.get_tracker_conf_path()
             tracker = yaml.load(open(tracker_path, u'r'))[u'monitor_devices'][0]
             configuration[u'monitor_devices'].append(tracker)
-
             return configuration
         else:
             return None
@@ -478,8 +449,8 @@ class Master(object):
 # =============================================================================
 class ItemList(object):
     # =================================
-    def __init__(self, itemclass):
-        self.__item_class = itemclass
+    def __init__(self, item_class):
+        self.__item_class = item_class
         self.__item_array = None
 
     # =================================
@@ -636,13 +607,13 @@ class Component(object):
         return self.__size
 
     # -----------------------
-    def set_image(self, imagepath):
+    def set_image(self, image_path):
+        from os import path
         from PIL import Image
-        # -------------------
-        imagepath = Utils.format_text(imagepath)
-        if imagepath is not u'' and os.path.isfile(imagepath):
+        image_path = Utils.format_path(image_path)
+        if image_path is not u'' and path.isfile(image_path):
+            self.__image = Image.open(image_path)
             self.__shape = u'image'
-            self.__image = Image.open(imagepath)
             return True
         else:
             return False
@@ -678,12 +649,10 @@ class Component(object):
     def __decode_image(self, encimg):
         from PIL import Image
         from io import BytesIO
-        # -------------------
         coded = Utils.format_text(encimg)
         if coded != u'':
             img_buff = BytesIO()
             img_buff.write(coded.decode(u'base64'))
-
             self.__shape = u'image'
             self.__image = Image.open(img_buff)
         else:
@@ -691,7 +660,6 @@ class Component(object):
 
     def __encode_image(self):
         from io import BytesIO
-        # -------------------
         if self.__image is not None:
             img_buff = BytesIO()
             self.__image.save(img_buff, u'PNG')
@@ -708,10 +676,8 @@ class Component(object):
         where exp_code='%s' and tes_index='%d' and fra_index='%d' and com_index='%d';
         """ % (exp, tes, fra, com)
         com_res = db.pull_query(query=sql)
-
         if com_res is not None:
             print u"Exp %s, Tes %d, Fra %d: Component %d loaded." % (exp, tes, fra, com)
-
             self.__name = unicode(com_res[0, 0])
             self.__units = unicode(com_res[0, 1])
             self.__pos = (float(com_res[0, 2]),
@@ -720,9 +686,7 @@ class Component(object):
             self.__size = float(com_res[0, 5])
             self.__shape = unicode(com_res[0, 7])
             self.__color = unicode(com_res[0, 8])
-
             self.__decode_image(unicode(com_res[0, 6]))
-
             return True
         else:
             print u"Exp %s, Tes %d, Fra %d: Component %d doesn't exists." % (exp, tes, fra, com)
@@ -741,12 +705,10 @@ class Component(object):
             self.__encode_image(), self.__shape, self.__color
         )
         com_res = db.push_query(query=sql)
-
         if com_res:
             print u"Exp %s, Tes %d, Fra %d: Component %d saved." % (exp, tes, fra, com)
         else:
             print u"Exp %s, Tes %d, Fra %d: Component %d not saved." % (exp, tes, fra, com)
-
         return com_res
 
     def copy(self):
@@ -791,7 +753,7 @@ class Component(object):
 class Frame(ItemList):
     # =================================
     def __init__(self):
-        super(Frame, self).__init__(itemclass=Component)
+        super(Frame, self).__init__(item_class=Component)
         # -------------------
         self.__name = u'unnamed'
         self.__color = u'black'
@@ -931,19 +893,15 @@ class Frame(ItemList):
         where exp_code='%s' and tes_index='%d' and fra_index='%d';
         """ % (exp, tes, fra)
         fra_res = db.pull_query(query=sql)
-
         if fra_res is not None:
             print u"Exp %s, Tes %d: Frame %d loaded." % (exp, tes, fra)
-
             self.__name = unicode(fra_res[0, 0])
             self.__color = unicode(fra_res[0, 1])
             self.__is_task = bool(int(fra_res[0, 2]))
             self.__time = float(fra_res[0, 3])
             self.__keys_allowed = unicode(fra_res[0, 4])
             self.__keys_selected = unicode(fra_res[0, 5])
-
             self.__load_components(db=db, exp=exp, tes=tes, fra=fra)
-
             return True
         else:
             print u"Exp %s, Tes %d: Frame %d doesn't exists." % (exp, tes, fra)
@@ -960,13 +918,11 @@ class Frame(ItemList):
             self.__name, self.__color, self.__is_task, self.__time, self.__keys_allowed, self.__keys_selected
         )
         fra_res = db.push_query(query=sql)
-
         if fra_res:
             print u"Exp %s, Tes %d: Frame %d saved. Saving components..." % (exp, tes, fra)
             self.__save_components(db=db, exp=exp, tes=tes, fra=fra)
         else:
             print u"Exp %s, Tes %d: Frame %d not saved." % (exp, tes, fra)
-
         return fra_res
 
     def copy(self):
@@ -999,10 +955,8 @@ class Frame(ItemList):
                 components = [component.get_execution(win=win) for component in self.component_get_all()]
             else:
                 components = None
-
             back = visual.Rect(win=win, width=win.size[0], height=win.size[1], units=u'pix',
                                lineColor=self.__color, fillColor=self.__color)
-
             frame = {
                 u'is_task':             self.__is_task,
                 u'time':                self.__time,
@@ -1012,7 +966,6 @@ class Frame(ItemList):
                 u'background':          back,
                 u'components':          components
             }
-
             return frame
         else:
             print u"Error: 'win' must be a psychopy visual.Window instance."
@@ -1024,7 +977,6 @@ class Frame(ItemList):
             components = [component.get_configuration() for component in self.component_get_all()]
         else:
             components = None
-
         frame = {
             u'is_task':         self.__is_task,
             u'time':            self.__time,
@@ -1033,7 +985,6 @@ class Frame(ItemList):
             u'background':      self.__color,
             u'components':      components,
         }
-
         return frame
 
 
@@ -1043,8 +994,7 @@ class Frame(ItemList):
 class Test(ItemList):
     # =================================
     def __init__(self):
-        super(Test, self).__init__(itemclass=Frame)
-
+        super(Test, self).__init__(item_class=Frame)
         self.__name = u'unnamed'
         self.__description = u''
         self.__quantity = 1
@@ -1128,16 +1078,12 @@ class Test(ItemList):
         where exp_code='%s' and tes_index='%d';
         """ % (exp, tes)
         tes_res = db.pull_query(query=sql)
-
         if tes_res is not None:
             print u"Exp %s: Test %d loaded." % (exp, tes)
-
             self.__name = unicode(tes_res[0, 0])
             self.__description = unicode(tes_res[0, 1])
             self.__quantity = int(tes_res[0, 2])
-
             self.__load_frames(db=db, exp=exp, tes=tes)
-
             return True
         else:
             print u"Exp %s: Test %d doesn't exists." % (exp, tes)
@@ -1153,13 +1099,11 @@ class Test(ItemList):
             self.__name, self.__description, self.__quantity
         )
         tes_res = db.push_query(query=sql)
-
         if tes_res:
             print u"Exp %s: Test %d saved. Saving frames..." % (exp, tes)
             self.__save_frames(db=db, exp=exp, tes=tes)
         else:
             print u"Exp %s: Test %d not saved." % (exp, tes)
-
         return tes_res
 
     def copy(self):
@@ -1222,33 +1166,31 @@ class Test(ItemList):
 # =============================================================================
 class Experiment(ItemList):
     # =================================
-    def __init__(self):
-        super(Experiment, self).__init__(itemclass=Test)
-        # -------------------
+    def __init__(self, db=None, code=u''):
+        super(Experiment, self).__init__(item_class=Test)
         self.__in_db = False
         self.__database = None
-        # -------------------
         self.__code = u''
         self.__name = u'unnamed'
         self.__version = u''
         self.__description = u''
         self.__instructions = u''
         self.__comments = u''
-        # -------------------
         self.__date_created = u'Not available'
         self.__date_updated = u'Not available'
-        # -------------------
         self.__dia_is_active = True
         self.__dia_ask_age = True
         self.__dia_ask_gender = True
         self.__dia_ask_glasses = True
         self.__dia_ask_eye_color = True
-        # -------------------
         self.__con_need_space = False
         self.__con_is_random = False
         self.__con_is_rest = False
         self.__con_rest_time = 0.0
         self.__con_rest_period = 0
+        # -------------------
+        if self.set_database(db=db):
+            self.load(code=code)
 
     # =================================
     @classmethod
@@ -1280,7 +1222,6 @@ class Experiment(ItemList):
         if self.__database is not None and code != u'':
             sql = u"select * from experiment where exp_code='%s';" % code
             exp_res = self.__database.pull_query(query=sql)
-
             if exp_res is None:
                 self.__code = code
                 return True
@@ -1473,9 +1414,7 @@ class Experiment(ItemList):
                 self.__con_is_rest = bool(int(exp_res[0, 14]))
                 self.__con_rest_period = int(exp_res[0, 15])
                 self.__con_rest_time = float(exp_res[0, 16])
-
                 self.__load_tests()
-
                 return True
             else:
                 print u"Experiment %s doesn't exists." % self.__code
@@ -1521,13 +1460,11 @@ class Experiment(ItemList):
                     self.__con_is_random, self.__con_is_rest, self.__con_rest_period, self.__con_rest_time
                 )
             exp_res = self.__database.push_query(query=sql)
-
             if exp_res:
                 print u"Experiment %s saved. Saving tests..." % self.__code
                 self.__save_tests()
             else:
                 print u"Experiment %s not saved." % self.__code
-
             self.__in_db = exp_res
             return exp_res
         else:
@@ -1536,13 +1473,10 @@ class Experiment(ItemList):
 
     def copy(self, code, version):
         new_exp = copy.deepcopy(self)
-
         new_exp.set_database(db=self.__database)
         new_exp.__in_db = False
-
         code_check = new_exp.set_code(code=code)
         info_check = new_exp.set_info(name=self.__name, version=version)
-
         if code_check and info_check:
             return new_exp
         else:
@@ -1553,7 +1487,6 @@ class Experiment(ItemList):
             print u"Removing expriment with code %s." % self.__code
             sql = u"delete from experiment where exp_code='%s';" % self.__code
             exp_res = self.__database.push_query(query=sql)
-
             self.__in_db = not exp_res
             return exp_res
         else:
@@ -1573,7 +1506,6 @@ class Experiment(ItemList):
     def __save_tests(self):
         sql = u"delete from test where exp_code='%s';" % self.__code
         self.__database.push_query(query=sql)
-
         tes_num = self.test_number()
         if tes_num is not None:
             for index in range(tes_num):
@@ -1617,7 +1549,6 @@ class Experiment(ItemList):
                 if self.__dia_ask_eye_color:
                     experiment[u'session_defaults'][u'user_variables'][u'eye_color'] = u'Unknown'
                     experiment[u'session_variable_order'].append(u'eye_color')
-
             return experiment
         else:
             print u"Error: To execute a experiment you need to ensure that the experiment is saved on the DB."
@@ -1638,11 +1569,9 @@ class Experiment(ItemList):
                             u'name':    test[u'name'],
                             u'frames':  test[u'frames']
                         })
-
                 test_list = np.concatenate(test_list)
                 if self.__con_is_random:
                     np.random.shuffle(test_list)
-
                 experiment = {
                     u'instruction':     self.__instructions,
                     u'space_start':     self.__con_need_space,
@@ -1652,7 +1581,6 @@ class Experiment(ItemList):
                     u'test_secuence':   test_list,
                     u'test_data':       test_data,
                 }
-
                 return experiment
             else:
                 return None
@@ -1669,7 +1597,6 @@ class Experiment(ItemList):
                 tests = [test.get_configuration() for test in self.test_get_all()]
             else:
                 tests = None
-
             configuration = {
                 u'title':           self.__name,
                 u'code':            self.__code,
@@ -1695,8 +1622,6 @@ class Experiment(ItemList):
                 },
                 u'tests': tests
             }
-
             return configuration
-
         else:
             return None

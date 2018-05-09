@@ -11,13 +11,13 @@ pragma foreign_keys=1;
 --===============================================
 -- MAIN CONFIG TABLE
 --===============================================
-create table if not exists master (
-  	mas_name    		varchar(50) 	not null,
-	mas_screen  		int				not null 	default 0,
-	mas_tracker 		varchar(20)		not null	default 'None',
-	mas_monitor 		varchar(50)		not null	default 'default',
-	mas_path    		varchar(200)	not null	default './events',
-	primary key (mas_name)
+create table if not exists configuration (
+  	con_name    		varchar(50) 	not null,
+	con_screen  		int				not null 	default 0,
+	con_tracker 		varchar(20)		not null	default 'None',
+	con_monitor 		varchar(50)		not null	default 'default',
+	con_path    		varchar(200)	not null	default './events',
+	primary key (con_name)
 );
 
 --===============================================
