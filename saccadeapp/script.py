@@ -147,7 +147,7 @@ class ExperimentRuntime(ioHubExperimentRuntime):
 
     # =================================
     def run(self, *args):
-        from switch import Switch
+        from utils import Switch
         # =============================
         # Prepare Hardware
         # =============================

@@ -4,215 +4,8 @@
 # =============================================================================
 import copy
 import numpy as np
-import sqlite3 as lite
-from psychopy import visual, colors
-
-
-# =============================================================================
-# Class: Utils
-# =============================================================================
-class Utils(object):
-    # =================================
-    def __init__(self):
-        pass
-
-    # =================================
-    @staticmethod
-    def format_text(word, lmin=0, lmax=-1):
-        try:
-            temp = unicode(word)
-            if lmax <= lmin <= len(temp) or lmin <= len(temp) <= lmax:
-                return temp
-            else:
-                return u''
-        except ValueError:
-            return u''
-
-    @staticmethod
-    def format_int(value, vmin=0, default=None):
-        try:
-            temp = int(value)
-            if temp >= vmin:
-                return temp
-            else:
-                return default
-        except ValueError:
-            return default
-
-    @staticmethod
-    def format_float(value, vmin=0.0, default=None):
-        try:
-            temp = float(value)
-            if temp >= vmin:
-                return temp
-            else:
-                return default
-        except ValueError:
-            return default
-
-    @staticmethod
-    def format_bool(state, default=False):
-        try:
-            temp = bool(state)
-            return temp
-        except ValueError:
-            return default
-
-    # =================================
-    @staticmethod
-    def get_time(date):
-        import pytz
-        from datetime import datetime as dt
-        try:
-            gmt0 = pytz.timezone(u"GMT+0")
-            cltc = pytz.timezone(u"Chile/Continental")
-            date = Utils.format_text(date)
-            date = dt.strptime(date, u'%Y-%m-%d %H:%M:%S')
-            date = date.replace(tzinfo=gmt0)
-            return unicode(date.astimezone(cltc).strftime(u'%Y-%m-%d %H:%M:%S'))
-        except ValueError:
-            return u'No disponible'
-
-    # =================================
-    @staticmethod
-    def get_main_path():
-        import sys
-        from os import path
-        return path.dirname(path.realpath(sys.argv[0]))
-
-    @staticmethod
-    def get_file_path():
-        from os import path
-        return path.split(path.realpath(__file__))[0]
-
-    @staticmethod
-    def format_path(path):
-        import platform
-        path = Utils.format_text(path)
-        is_win = any(platform.win32_ver())
-        path = path.replace(u'\\', u'#').replace(u'/', u'#')
-        return path.replace(u'#', u'\\') if is_win else path.replace(u'#', u'/')
-
-    # =================================
-    @staticmethod
-    def get_available_colors():
-        import collections
-        color_dict = colors.colorsHex
-        color_dict = collections.OrderedDict(sorted(color_dict.items()))
-        color_arr = [[unicode(item), color_dict[item]] for item in color_dict]
-        return color_arr
-
-    @staticmethod
-    def get_available_trackers():
-        import glob as gl
-        from os import path
-        trackers_path = Utils.format_path(Utils.get_file_path()+u'/resources/eyetrackers/')
-        return [path.basename(item).replace(u'_config.yaml', u'') for item in gl.glob(trackers_path + u'*.yaml')]
-
-    @staticmethod
-    def get_available_screens():
-        import pyglet
-        display = pyglet.window.Display()
-        screens = display.get_screens()
-        scr_num = 1
-        scr_lst = []
-        for screen in screens:
-            scr_lst.append(u"monitor %d: (w=%s, h=%s)" % (scr_num, screen.width, screen.height))
-            scr_num += 1
-
-        return scr_lst
-
-    @staticmethod
-    def get_available_monitors():
-        from psychopy import monitors
-        return monitors.getAllMonitors()
-
-    # =================================
-    @staticmethod
-    def open_documentation():
-        import os
-        docu_path = Utils.format_path(Utils.get_main_path()+u"/../docs/saccadeApp_docu.pdf")
-        os.startfile(docu_path)
-
-    @staticmethod
-    def open_psychopy_monitor_center():
-        import threading as thread
-        import subprocess as subproc
-        is_open = False
-        threads = thread.enumerate()
-        for proccess in threads:
-            if proccess.getName() == u'MonitorCenter':
-                is_open = True
-        if not is_open:
-            print u'Opening Monitor Center...'
-            monitor_path = Utils.format_path(Utils.get_file_path()+u'/resources/monitors/monitorCenter.py')
-            monitor_thread = thread.Thread(target=lambda: subproc.call(u'python ' + monitor_path))
-            monitor_thread.setName(u'MonitorCenter')
-            monitor_thread.start()
-            return True
-        else:
-            print u'Error: Monitor Center is already open'
-            return False
-
-
-# =============================================================================
-# Class: SaccadeDB
-# =============================================================================
-class SaccadeDB(object):
-    # =================================
-    def __init__(self, filepath=u'saccadedb.sqlite3'):
-        self.__db_script = Utils.format_path(Utils.get_file_path()+u'/resources/database/saccadedb_sqlite.sql')
-        self.__db_connection = None
-        self.__db_file = filepath
-        self.connect()
-
-    # =================================
-    def connect(self):
-        from os import path
-        if path.isfile(self.__db_file):
-            self.__db_connection = lite.connect(self.__db_file)
-            self.__db_connection.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
-            print u'Connected!'
-        else:
-            sql = open(self.__db_script, u'r').read()
-            self.__db_connection = lite.connect(self.__db_file)
-            self.__db_connection.executescript(sql)
-            print u"Database not found. A new one was created."
-
-    def close(self):
-        try:
-            self.__db_connection.close()
-            print u"Disconnected!"
-            return True
-        except lite.Error, event:
-            print u"Error: %s" % event.args[0]
-            return False
-
-    # =================================
-    def push_query(self, query):       # insert, update, delete
-        try:
-            self.__db_connection.executescript(query)
-            self.__db_connection.commit()
-            return True
-        except lite.Error, event:
-            if self.__db_connection:
-                self.__db_connection.rollback()
-            print u"Error: %s" % event.args[0]
-            return False
-
-    def pull_query(self, query):       # select
-        try:
-            cursor = self.__db_connection.cursor()
-            cursor.execute(query)
-            result = cursor.fetchall()
-            result = np.array(result)
-            if result.shape[0] > 0:
-                return result
-            else:
-                return None
-        except lite.Error, event:
-            print u"Error: %s" % event.args[0]
-            return None
+from psychopy import visual
+from saccadeapp import Utils, SaccadeDB
 
 
 # =============================================================================
@@ -222,10 +15,11 @@ class Configuration(object):
     def __init__(self, db=None, name=u''):
         self.__in_db = False
         self.__database = None
-        self.__name = u'unnamed'
-        self.__screen = 0
-        self.__tracker = u'none'
+        # -------------------
+        self.__name = u'Unnamed'
+        self.__tracker = u'eyegaze'
         self.__monitor = u'default'
+        self.__screen = 0
         self.__path = Utils.format_path(Utils.get_main_path()+u'/events/')
         # -------------------
         if self.set_database(db=db):
@@ -241,21 +35,16 @@ class Configuration(object):
             order by con_name asc;
             """
             return db.pull_query(query=sql)
-        else:
-            return None
+        return None
 
     # =================================
     def set_database(self, db):
         if isinstance(db, SaccadeDB):
             self.__database = db
             return True
-        else:
-            return False
+        return False
 
-    def get_database(self):
-        return self.__database
-
-    def is_on_database(self):
+    def in_database(self):
         return self.__in_db
 
     # -----------------------
@@ -264,14 +53,10 @@ class Configuration(object):
         if self.__database is not None and name != u'':
             sql = u"select * from configuration where con_name='%s';" % name
             mas_res = self.__database.pull_query(query=sql)
-
             if mas_res is None:
                 self.__name = name
                 return True
-            else:
-                return False
-        else:
-            return False
+        return False
 
     def get_name(self):
         return self.__name
@@ -282,13 +67,12 @@ class Configuration(object):
         if 0 <= screen < len(Utils.get_available_screens()):
             self.__screen = screen
             return True
-        else:
-            return False
+        return False
 
     def get_screen(self):
         try:
             return Utils.get_available_screens()[self.__screen]
-        except:
+        except IndexError:
             return Utils.get_available_screens()[0]
 
     # -----------------------
@@ -297,8 +81,7 @@ class Configuration(object):
         if monitor in Utils.get_available_monitors():
             self.__monitor = monitor
             return True
-        else:
-            return False
+        return False
 
     def get_monitor(self):
         return self.__monitor
@@ -309,8 +92,7 @@ class Configuration(object):
         if tracker in Utils.get_available_trackers():
             self.__tracker = tracker
             return True
-        else:
-            return False
+        return False
 
     def get_tracker_name(self):
         return self.__tracker
@@ -318,20 +100,18 @@ class Configuration(object):
     def get_tracker_conf_path(self):
         if self.__tracker in Utils.get_available_trackers():
             return Utils.format_path(Utils.get_file_path()+u'/resources/eyetrackers/'+self.__tracker+u'_config.yaml')
-        else:
-            return u''
+        return u''
 
     # -----------------------
-    def set_experiment_path(self, experiment_path):
+    def set_events_path(self, experiment_path):
         from os import path
         experiment_path = Utils.format_path(experiment_path)
         if path.isdir(experiment_path):
             self.__path = experiment_path
             return True
-        else:
-            return False
+        return False
 
-    def get_experiment_path(self):
+    def get_events_path(self):
         return self.__path
 
     # =================================
@@ -437,63 +217,60 @@ class ItemList(object):
     # =================================
     def __init__(self, item_class):
         self.__item_class = item_class
-        self.__item_array = None
+        self.__list = None
 
     # =================================
     def _item_add(self, item):
         if isinstance(item, self.__item_class):
             itm_num = self._item_number()
             if itm_num is None:
-                self.__item_array = np.array([item], dtype=self.__item_class)
+                self.__list = np.array([item], dtype=self.__item_class)
             else:
-                self.__item_array = np.insert(arr=self.__item_array, obj=itm_num, values=[item], axis=0)
+                self.__list = np.insert(arr=self.__list, obj=itm_num, values=[item], axis=0)
             return True
         return False
 
     def _item_copy(self, index):
         itm_num = self._item_number()
         if itm_num is not None and 0 <= index < itm_num:
-            new_itm = self.__item_array[index].copy()
+            new_itm = self.__list[index].copy()
             return self._item_add(item=new_itm)
         return False
 
     def _item_delete(self, index):
         itm_num = self._item_number()
         if itm_num is not None and 0 <= index < itm_num:
-            self.__item_array = np.delete(arr=self.__item_array, obj=index, axis=0) if itm_num > 1 else None
+            self.__list = np.delete(arr=self.__list, obj=index, axis=0) if itm_num > 1 else None
+            return True
+        return False
+
+    def _item_swap(self, index1, index2):
+        itm_num = self._item_number()
+        if itm_num is not None and 0 <= index1 < itm_num and 0 <= index1 < itm_num:
+            temp = self.__list[index1]
+            self.__list[index1] = self.__list[index2]
+            self.__list[index2] = temp
             return True
         return False
 
     def _item_move_up(self, index):
-        itm_num = self._item_number()
-        if itm_num is not None and 0 < index < itm_num:
-            temp = self.__item_array[index - 1]
-            self.__item_array[index - 1] = self.__item_array[index]
-            self.__item_array[index] = temp
-            return True
-        return False
+        return self._item_swap(index, index-1)
 
     def _item_move_down(self, index):
-        itm_num = self._item_number()
-        if itm_num is not None and 0 <= index < itm_num-1:
-            temp = self.__item_array[index + 1]
-            self.__item_array[index + 1] = self.__item_array[index]
-            self.__item_array[index] = temp
-            return True
-        return False
+        return self._item_swap(index, index+1)
 
     def _item_get_all(self):
-        return self.__item_array
+        return self.__list
 
     def _item_get_by_index(self, index):
         itm_num = self._item_number()
         if itm_num is not None and 0 <= index < itm_num:
-            return self.__item_array[index]
+            return self.__list[index]
         return None
 
     def _item_number(self):
-        if self.__item_array is not None:
-            return len(self.__item_array)
+        if self.__list is not None:
+            return len(self.__list)
         return None
 
 
@@ -503,14 +280,14 @@ class ItemList(object):
 class Component(object):
     # =================================
     def __init__(self):
-        self.__name = u'unnamed'
+        self.__name = u'Unnamed'
         self.__units = u'deg'
         self.__pos = (0.0, 0.0)
         self.__ori = 0.0
         self.__size = 1.0
-        self.__image = None
         self.__shape = u'square'
         self.__color = u'white'
+        self.__image = None
 
     # =================================
     @classmethod
@@ -606,6 +383,7 @@ class Component(object):
 
     # -----------------------
     def set_color(self, color):
+        from psychopy import colors
         color = Utils.format_text(color, lmin=3, lmax=20)
         if colors.isValidColor(color):
             self.__color = color
@@ -678,7 +456,7 @@ class Component(object):
 
     # =================================
     def get_execution(self, win):
-        from switch import Switch
+        from utils import Switch
         if not isinstance(win, visual.Window):
             return None
         with Switch(self.__shape) as case:
@@ -717,12 +495,12 @@ class Frame(ItemList):
     def __init__(self):
         super(Frame, self).__init__(item_class=Component)
         # -------------------
-        self.__name = u'unnamed'
+        self.__name = u'Unnamed'
         self.__color = u'black'
         self.__is_task = False
         self.__keys_allowed = u''
         self.__keys_selected = u''
-        self.__time = 0.5
+        self.__time = 0.0
 
     # =================================
     @classmethod
@@ -748,6 +526,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_color(self, color):
+        from psychopy import colors
         color = Utils.format_text(color, lmin=3, lmax=20)
         if colors.isValidColor(color):
             self.__color = color
@@ -932,15 +711,14 @@ class Test(ItemList):
     # =================================
     def __init__(self):
         super(Test, self).__init__(item_class=Frame)
-        self.__name = u'unnamed'
+        self.__name = u'Unnamed'
         self.__description = u''
-        self.__quantity = 1
 
     # =================================
     @classmethod
     def get_list(cls, db, exp):
         sql = u"""
-        select tes_index, tes_name, tes_quantity
+        select tes_index, tes_name
         from test
         where exp_code='%s'
         order by tes_index asc;
@@ -967,16 +745,6 @@ class Test(ItemList):
 
     def get_description(self):
         return self.__description
-
-    def set_quantity(self, value):
-        value = Utils.format_int(value, vmin=1)
-        if value is not None:
-            self.__quantity = value
-            return True
-        return False
-
-    def get_quantity(self):
-        return self.__quantity
 
     # =================================
     def frame_add(self, item):
@@ -1089,13 +857,13 @@ class Experiment(ItemList):
         self.__in_db = False
         self.__database = None
         self.__code = u''
-        self.__name = u'unnamed'
-        self.__version = u''
+        self.__name = u'Unnamed'
+        self.__version = u'1.0'
         self.__description = u''
-        self.__instructions = u''
+        self.__instruction = u''
         self.__comments = u''
-        self.__date_created = u'Not available'
-        self.__date_updated = u'Not available'
+        self.__date_created = u''
+        self.__date_updated = u''
         self.__dia_is_active = True
         self.__dia_ask_age = True
         self.__dia_ask_gender = True
@@ -1192,12 +960,12 @@ class Experiment(ItemList):
     def set_instruction(self, text):
         text = Utils.format_text(text, lmin=10)
         if text != u'':
-            self.__instructions = text
+            self.__instruction = text
             return True
         return False
 
     def get_instruction(self):
-        return self.__instructions
+        return self.__instruction
 
     # -----------------------
     def set_dialog(self, status, askage=False, askgender=False, askglasses=False, askeyecolor=False):
@@ -1304,7 +1072,7 @@ class Experiment(ItemList):
                 self.__name = unicode(exp_res[0, 0])
                 self.__version = unicode(exp_res[0, 1])
                 self.__description = unicode(exp_res[0, 2])
-                self.__instructions = unicode(exp_res[0, 4])
+                self.__instruction = unicode(exp_res[0, 4])
                 self.__comments = unicode(exp_res[0, 3])
                 self.__date_created = Utils.get_time(exp_res[0, 5])
                 self.__date_updated = Utils.get_time(exp_res[0, 6])
@@ -1336,7 +1104,7 @@ class Experiment(ItemList):
                 con_need_space='%x', con_is_random='%x', con_is_rest='%x', con_rest_period='%d', con_rest_time='%f'
                 where exp_code='%s';
                 """ % (
-                    self.__name, self.__version, self.__description, self.__comments, self.__instructions, self.__code,
+                    self.__name, self.__version, self.__description, self.__comments, self.__instruction, self.__code,
                     self.__dia_is_active, self.__dia_ask_age, self.__dia_ask_gender, self.__dia_ask_glasses,
                     self.__dia_ask_eye_color, self.__code, self.__con_need_space, self.__con_is_random,
                     self.__con_is_rest, self.__con_rest_period, self.__con_rest_time, self.__code
@@ -1353,7 +1121,7 @@ class Experiment(ItemList):
                 (exp_code, con_need_space, con_is_random, con_is_rest, con_rest_period, con_rest_time)
                 values ('%s', '%x', '%x', '%x', '%d', '%f');
                 """ % (
-                    self.__code, self.__name, self.__version, self.__description, self.__comments, self.__instructions,
+                    self.__code, self.__name, self.__version, self.__description, self.__comments, self.__instruction,
                     self.__code, self.__dia_is_active, self.__dia_ask_age, self.__dia_ask_gender,
                     self.__dia_ask_glasses, self.__dia_ask_eye_color, self.__code, self.__con_need_space,
                     self.__con_is_random, self.__con_is_rest, self.__con_rest_period, self.__con_rest_time
@@ -1441,7 +1209,7 @@ class Experiment(ItemList):
     def get_execution(self, win):
         if isinstance(win, visual.Window) and self.__in_db:
             experiment = {
-                u'instruction':     self.__instructions,
+                u'instruction':     self.__instruction,
                 u'space_start':     self.__con_need_space,
                 u'rest_active':     self.__con_is_rest,
                 u'rest_period':     self.__con_rest_period,
@@ -1476,7 +1244,7 @@ class Experiment(ItemList):
                 u'code':                    self.__code,
                 u'version':                 self.__version,
                 u'description':             self.__description,
-                u'instruction':             self.__instructions,
+                u'instruction':             self.__instruction,
                 u'session_configuration': {
                     u'comments':            self.__comments,
                     u'space_start':         self.__con_need_space,

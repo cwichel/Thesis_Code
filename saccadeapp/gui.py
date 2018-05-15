@@ -1820,7 +1820,7 @@ class ConfigurationApp(QtGui.QDialog):
         self.cmb_screen.setModel(self.__model_screen)
 
     def __handle_save_action(self):
-        self.__profile.set_experiment_path(unicode(self.led_path.text()))
+        self.__profile.set_events_path(self.led_path.text())
         self.__profile.set_monitor(self.cmb_monitor.currentText())
         self.__profile.set_tracker(self.cmb_tracker.currentText())
         self.__profile.set_screen(self.cmb_screen.currentIndex())
@@ -1835,7 +1835,7 @@ class ConfigurationApp(QtGui.QDialog):
                 self.__profile.save()
         elif is_name_ok:                        # New profile and name is not used
             self.__profile.save()
-        if not self.__profile.is_on_database(): # Profile already exists...
+        if not self.__profile.in_database():    # Profile already exists...
             diag_tit = u"Error"
             diag_msg = u"Name already used. Do you want to overwrite?"
             diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
@@ -1863,7 +1863,7 @@ class ConfigurationApp(QtGui.QDialog):
                     else:
                         new_name = None
                         is_ready = True
-        if self.__profile.is_on_database():
+        if self.__profile.in_database():
             self.__parent.update_configuration_view()
             index = self.__parent.model_configuration.get_index(new_name)
             self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(index, 0))
@@ -1890,7 +1890,7 @@ class ConfigurationApp(QtGui.QDialog):
             self.cmb_monitor.setCurrentIndex(monitor_index)
             self.cmb_tracker.setCurrentIndex(tracker_index)
         self.led_name.setText(self.__profile.get_name())
-        self.led_path.setText(self.__profile.get_experiment_path())
+        self.led_path.setText(self.__profile.get_events_path())
 
     def __remove_profile(self, name):
         profile = Configuration(db=self.__parent.database, name=name)

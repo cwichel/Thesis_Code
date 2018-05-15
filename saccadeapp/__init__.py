@@ -2,7 +2,7 @@
 # =============================================================================
 # Modules
 # =============================================================================
-from saccadeapp.core import SaccadeDB, Configuration
-from saccadeapp.core import Experiment, Test, Frame, Component
+from saccadeapp.utils import SaccadeDB, Utils, Switch
+from saccadeapp.core import Configuration, Experiment, Test, Frame, Component
 from saccadeapp.script import ExperimentHandler
 from saccadeapp.gui import SaccadeApp
