@@ -40,8 +40,8 @@ class SaccadeApp(QtGui.QMainWindow):
         self.__setup_ui()
         # -------------------
         self.database = SaccadeDB()
-        self.model_experiment = ListModel([], header=u"Experiment")
-        self.model_configuration = ListModel([], header=u"Profile")
+        self.model_experiment = TreeModel(items=None, header=u"Experiment")
+        self.model_configuration = ListModel(items=[], header=u"Profile")
         # -------------------
         self.__setup_menu()
         self.__setup_configuration()
@@ -293,30 +293,21 @@ class SaccadeApp(QtGui.QMainWindow):
 
     @staticmethod
     def __app_documentation():
-        import os
-        from saccadeapp.core import Utils
-        # -------------------
-        print u"Opening docs file..."
-        path_docu = Utils.format_path(Utils.get_main_path()+u'/../docs/saccadeApp_docu.pdf')
-        os.startfile(path_docu)
+        Utils.open_documentation()
 
     @staticmethod
     def __app_about():
-        print u"Opening about window..."
         dialog = AboutApp()
         dialog.exec_()
 
     @staticmethod
     def __app_close():
-        print u"Closing the App..."
         sys.exit()
 
     # =================================
     def __setup_execution(self):
         self.pbt_execute.clicked.connect(self.__handle_execute_experiment)
-
         self.cmb_execution_profile.setModel(self.model_configuration)
-        self.cmb_execution_experiment.setModel(self.model_experiment)
 
     def __handle_execute_experiment(self):
         print u"Executing the selected experiment..."
@@ -327,27 +318,43 @@ class SaccadeApp(QtGui.QMainWindow):
         self.pbt_experiment_edit.clicked.connect(self.__handle_experiment_edit)
         self.pbt_experiment_copy.clicked.connect(self.__handle_experiment_copy)
         self.pbt_experiment_remove.clicked.connect(self.__handle_experiment_remove)
+        self.trv_experiment.setModel(self.model_experiment)
+        self.update_experiment_view()
+        if self.model_experiment.rowCount() > 0:
+            base_index = self.model_experiment.index(0, 0, QtCore.QModelIndex())
+            self.trv_experiment.setCurrentIndex(self.model_experiment.index(0, 0, base_index))
 
     def __handle_experiment_new(self):
-        print u"Creating experiment..."
         dialog = ExperimentApp(parent=self)
         dialog.exec_()
 
     def __handle_experiment_edit(self):
-        print u"Editing experiment..."
         dialog = ExperimentApp(parent=self)
         dialog.exec_()
 
     def __handle_experiment_copy(self):
-        print u"Copying experiment..."
-        dialog = ExperimentCopyApp(parent=self)
-        dialog.exec_()
+        self.trv_experiment.setCurrentIndex(self.__index)
 
     def __handle_experiment_remove(self):
-        print u"Removing experiment..."
+        index = self.trv_experiment.currentIndex()
+        print index
 
     def update_experiment_view(self):
-        pass
+        exp_list = Experiment.get_list(db=self.database)
+        if exp_list is not None:
+            root_node = TreeNode(mask=u"Experiments", value=None)
+            base_node = None
+            node_name = u""
+            for item in exp_list:
+                item_name = item[1]
+                if item_name != node_name:
+                    node_name = item_name
+                    base_node = TreeNode(mask=item_name, value=None, parent=root_node)
+                new_node = TreeNode(mask=u"V"+item[2], value=item[0], parent=base_node)
+            self.model_experiment.update_items(node=root_node)
+            self.trv_experiment.expandAll()
+        else:
+            self.model_experiment.update_items(node=None)
 
     # =================================
     def __setup_configuration(self):
@@ -365,7 +372,6 @@ class SaccadeApp(QtGui.QMainWindow):
         Utils.open_psychopy_monitor_center()
 
     def __handle_configuration_new(self):
-        print u"Creating configuration profile..."
         dialog = ConfigurationApp(parent=self, item_id=-1)
         dialog.exec_()
 
@@ -373,7 +379,6 @@ class SaccadeApp(QtGui.QMainWindow):
         items = self.model_configuration.rowCount()
         index = self.lsv_configuration.currentIndex().row()
         if items is not 0 and index is not -1:
-            print u"Editing configuration profile..."
             dialog = ConfigurationApp(parent=self, item_id=index)
             dialog.exec_()
 
@@ -381,13 +386,14 @@ class SaccadeApp(QtGui.QMainWindow):
         items = self.model_configuration.rowCount()
         index = self.lsv_configuration.currentIndex().row()
         if items is not 0 and index is not -1:
-            print u"Copying configuration profile..."
-            name = self.model_configuration.get_item(index=index)
-            profile_base = Configuration(db=self.database, name=name)
+            profile_name = self.model_configuration.get_item(index=index)
+            profile_base = Configuration(db=self.database, name=profile_name)
             profile_copy = None
             is_ready = False
             while not is_ready:
-                name, is_ok = QtGui.QInputDialog.getText(None, u'Copying profile...', u'New name:', text=name)
+                diag_tit = u"Copy"
+                diag_msg = u"Base profile: "+profile_name+u"\nCopy name:"
+                name, is_ok = QtGui.QInputDialog.getText(None, diag_tit, diag_msg, text=profile_name)
                 name = unicode(name)
                 if is_ok:
                     profile_copy = profile_base.copy(name=name)
@@ -395,7 +401,9 @@ class SaccadeApp(QtGui.QMainWindow):
                         profile_copy.save()
                         is_ready = True
                     else:
-                        QtGui.QMessageBox.warning(self, u'Error', u'Name already used!\nTry again.')
+                        diag_tit = u"Error"
+                        diag_msg = u"Name already used!\nTry again."
+                        QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
                 else:
                     is_ready = True
             if profile_copy is not None:
@@ -404,16 +412,19 @@ class SaccadeApp(QtGui.QMainWindow):
                 self.lsv_configuration.setCurrentIndex(self.model_configuration.index(index, 0))
 
     def __handle_configuration_remove(self):
-        print u"Removing configuration profile..."
         items = self.model_configuration.rowCount()
         index = self.lsv_configuration.currentIndex().row()
         if items is not 0 and index is not -1:
             name = self.model_configuration.get_item(index=index)
-            profile = Configuration(db=self.database, name=name)
-            profile.remove()
-            self.update_configuration_view()
-            index = index-1 if index > 0 else 0
-            self.lsv_configuration.setCurrentIndex(self.model_configuration.index(index, 0))
+            diag_tit = u"Remove"
+            diag_msg = u"Do you really want to remove this\nconfiguration profile ("+name+u")?"
+            diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            if diag_res == QtGui.QMessageBox.Yes:
+                profile = Configuration(db=self.database, name=name)
+                profile.remove()
+                self.update_configuration_view()
+                index = index-1 if index > 0 else 0
+                self.lsv_configuration.setCurrentIndex(self.model_configuration.index(index, 0))
 
     def update_configuration_view(self):
         conf_list = Configuration.get_list(db=self.database)
@@ -434,9 +445,9 @@ class ExperimentApp(QtGui.QDialog):
     def __init__(self, parent=SaccadeApp):
         QtGui.QDialog.__init__(self)
         self.__setup_ui()
-        # ==============
+        # -------------------
         self.parent = parent
-        # ==============
+        # -------------------
         self.__setup_experiment()
 
     # =================================
@@ -1809,12 +1820,10 @@ class ConfigurationApp(QtGui.QDialog):
         self.cmb_screen.setModel(self.__model_screen)
 
     def __handle_save_action(self):
-        print u"Saving configuration profile..."
         self.__profile.set_experiment_path(unicode(self.led_path.text()))
         self.__profile.set_monitor(self.cmb_monitor.currentText())
         self.__profile.set_tracker(self.cmb_tracker.currentText())
         self.__profile.set_screen(self.cmb_screen.currentIndex())
-
         old_name = self.__profile.get_name()
         new_name = unicode(self.led_name.text())
         is_name_ok = self.__profile.set_name(new_name)
@@ -1826,30 +1835,32 @@ class ConfigurationApp(QtGui.QDialog):
                 self.__profile.save()
         elif is_name_ok:                        # New profile and name is not used
             self.__profile.save()
-
         if not self.__profile.is_on_database(): # Profile already exists...
-            print u"Error: Name already used..."
-            err_msg = u"Name already used. Do you want to overwrite?"
-            err_res = QtGui.QMessageBox.question(self, u"Error", err_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-            if err_res == QtGui.QMessageBox.Yes:                # Overwrite!
-                print u"Configuration profile overwritten!"
+            diag_tit = u"Error"
+            diag_msg = u"Name already used. Do you want to overwrite?"
+            diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            if diag_res == QtGui.QMessageBox.Yes:                # Overwrite!
                 if self.__is_edit:
                     self.__remove_profile(old_name)
                 self.__remove_profile(new_name)
                 self.__profile.set_name(new_name)
                 self.__profile.save()
             else:                                               # Find new name!
-                print u"Waiting for new name..."
                 is_ready = False
                 while not is_ready:
-                    new_name, is_ok = QtGui.QInputDialog.getText(None, u'New profile name', u'New name:', text=new_name)
+                    diag_tit = u"New name"
+                    diag_msg = u"New profile name:"
+                    new_name, is_ok = QtGui.QInputDialog.getText(None, diag_tit, diag_msg, text=new_name)
                     new_name = unicode(new_name)
                     if is_ok:
                         if self.__profile.set_name(new_name):
-                            print u"New name defined. Saving profile..."
                             self.__profile.save()
+                            is_ready = True
+                        else:
+                            diag_tit = u"Error"
+                            diag_msg = u"This name already exists.\nTry another one."
+                            QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
                     else:
-                        print u"Operation canceled..."
                         new_name = None
                         is_ready = True
         if self.__profile.is_on_database():
@@ -1858,20 +1869,15 @@ class ConfigurationApp(QtGui.QDialog):
             self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(index, 0))
 
     def __handle_close_action(self):
-        print u"Operation canceled..."
         if self.__is_edit:
             self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(self.__item_id, 0))
 
     def __handle_path_browse(self):
-        print u"Browsing for new events folder..."
         title = u"Select events save directory..."
         folder = QtGui.QFileDialog.getExistingDirectory(self, title, self.led_path.text(),
                                                         QtGui.QFileDialog.ShowDirsOnly)
         if folder:
-            print u"Folder selected."
             self.led_path.setText(unicode(folder))
-        else:
-            print u"Operation canceled..."
 
     def __check_itemid(self):
         if self.__item_id is not -1:

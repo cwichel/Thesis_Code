@@ -147,6 +147,7 @@ class ExperimentRuntime(ioHubExperimentRuntime):
 
     # =================================
     def run(self, *args):
+        from switch import Switch
         # =============================
         # Prepare Hardware
         # =============================
@@ -167,7 +168,6 @@ class ExperimentRuntime(ioHubExperimentRuntime):
         # ===================
         display = self.hub.devices.display
         kb = self.hub.devices.keyboard
-
         # =============================
         # Get experiment
         # =============================
@@ -176,10 +176,8 @@ class ExperimentRuntime(ioHubExperimentRuntime):
         coordinate = display.getCoordinateType()
         window = visual.Window(size=resolution, monitor=display.getPsychopyMonitorName(), units=coordinate,
                                fullscr=True, allowGUI=False, screen=display.getIndex())
-
         # Get experiment content
         execution = self.__experiment.get_execution(win=window)
-
         # Show instructions
         instruction_screen = visual.TextStim(window, text=u'', pos=(0, 0), height=24, color=u'white',
                                              alignHoriz=u'center', alignVert=u'center', wrapWidth=window.size[0] * 0.9)
@@ -198,16 +196,13 @@ class ExperimentRuntime(ioHubExperimentRuntime):
         self.hub.sendMessageEvent(text=u"======= END INFO =======")
         self.hub.clearEvents(u'all')
         kb.waitForPresses()
-
         # =============================
         # Experiment presentation
         # =============================
         self.hub.sendMessageEvent(text=u"== TESTS SECUENCE START ==")
-        # -------------------
         test_count = 0
         for test_index in execution[u'test_secuence'][:, 0]:
             test = execution[u'test_data'][test_index]
-            # ===================================
             if execution[u'rest_active'] and test_count > 0 and test_count % execution[u'rest_period'] == 0:
                 instruction_screen.setText(u"Rest time.")
                 instruction_screen.draw()
@@ -223,7 +218,6 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                     test_index, test[u'name']))
                 self.hub.clearEvents(u'all')
                 kb.waitForPresses(keys=[u' ', ])
-            # ===================================
             timer = core.Clock()
             frames = test[u'frames']
             frame_index = 0
@@ -235,7 +229,6 @@ class ExperimentRuntime(ioHubExperimentRuntime):
             is_last_frame = False
             is_first_frame = True
             is_test_finish = False
-            # ===================================
             self.hub.sendMessageEvent(text=u"Starting Test (ID:{0} , Name: {1})".format(test_index, test[u'name']))
             tracker.setRecordingState(True)
             while not is_test_finish:
@@ -252,13 +245,11 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                         else:
                             self.hub.sendMessageEvent(text=u"No more frames to load...")
                             is_last_frame = True
-                        # -------------
                         if is_first_frame:
                             is_first_frame = False
                             state = u'flip'
                         else:
                             state = u'loop'
-
                     elif case(u'flip'):
                         if is_last_frame:
                             state = u'end'
@@ -273,57 +264,41 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                                 self.hub.sendMessageEvent(
                                     text=u"Frame Started (ID: {0}, Type: Timed, Time: {1}.)"
                                     .format(frame_index, frame[u'time']))
-                            # =========
                             flip_time = window.flip()
                             timer.reset()
                             state = u'buffer'
-                            # =========
                             if self.__save_frame:
                                 frame_name = u"test{0}_frame{1}.png".format(test_index, frame_index)
                                 window.getMovieFrame()
                                 window.saveMovieFrames(self.__frame_path + fold + frame_name)
-
                     elif case(u'loop'):
                         if frame[u'is_task']:                           # is a selection frame
                             pressed = kb.waitForPresses(keys=frame[u'allowed_keys'])
                             key = unicode(pressed[len(pressed)-1].key).replace(u' ', u'space')
-                            # ---------
                             self.hub.sendMessageEvent(
                                 text=u"Frame Ended (ID: {0}, Time:{1}, Selected key: {2}, Correct key: {3})"
                                 .format(frame_index, timer.getTime(), key, frame[u'correct_keys_str']))
-                            # ---------
                             state = u'flip'
-
                         elif timer.getTime() >= frame[u'time']:         # is a timed frame
                             self.hub.sendMessageEvent(
                                 text=u"Frame Ended (ID: {0}, Time:{1})"
                                 .format(frame_index, timer.getTime()))
-                            # ---------
                             state = u'flip'
-
-                        # -------------
                         if kb.getKeys(keys=[u'escape', u'q', ]):
                             self.hub.sendMessageEvent(text=u"== EXPERIMENT ENDED BY USER == ")
                             self.hub.quit()
                             window.close()
                             core.quit()
                             return 0
-
-                        # -------------
                         self.hub.clearEvents(u'all')
 
                     elif case(u'end'):
                         self.hub.sendMessageEvent(
                             text=u"Ending Test (ID:{0} , Name: {1})"
                             .format(test_index, test[u'name']))
-                        # ---------
                         is_test_finish = True
-
-            # ===================================
             tracker.setRecordingState(False)
-            # ---------------
             test_count += 1
-
         # =======================================
         # Experiment exit
         # =======================================
@@ -333,16 +308,5 @@ class ExperimentRuntime(ioHubExperimentRuntime):
 
 
 # =====================================
-class Switch:
-    def __init__(self, value):
-        self._val = value
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, swt_type, value, traceback):  # Allows traceback to occur
-        return False
-
-    def __call__(self, *mconds):
-        return self._val in mconds
 

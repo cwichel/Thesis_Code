@@ -129,6 +129,12 @@ class Utils(object):
 
     # =================================
     @staticmethod
+    def open_documentation():
+        import os
+        docu_path = Utils.format_path(Utils.get_main_path()+u"/../docs/saccadeApp_docu.pdf")
+        os.startfile(docu_path)
+
+    @staticmethod
     def open_psychopy_monitor_center():
         import threading as thread
         import subprocess as subproc
@@ -163,7 +169,6 @@ class SaccadeDB(object):
     # =================================
     def connect(self):
         from os import path
-        print u"Connecting to DB... "
         if path.isfile(self.__db_file):
             self.__db_connection = lite.connect(self.__db_file)
             self.__db_connection.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
@@ -343,18 +348,12 @@ class Configuration(object):
             if con_res is not None:
                 self.__in_db = True
                 self.__name = name
-                print u"Configuration profile %s loaded." % name
                 self.__screen = int(con_res[0, 0])
                 self.__monitor = unicode(con_res[0, 1])
                 self.__tracker = unicode(con_res[0, 2])
                 self.__path = unicode(con_res[0, 3])
                 return True
-            else:
-                print u"Configuration profile %s doesn't exists." % name
-                return False
-        else:
-            print u'Error: Database or configuration profile name not configured!'
-            return False
+        return False
 
     def save(self):
         if self.__database is not None and self.__name != u'' and self.__tracker != u'none':
@@ -363,36 +362,25 @@ class Configuration(object):
             (con_name, con_screen, con_tracker, con_monitor, con_path)
             values ('%s', '%d', '%s', '%s', '%s')
             """ % (self.__name, self.__screen, self.__tracker, self.__monitor, self.__path)
-            con_res = self.__database.push_query(query=sql)
-            if con_res:
-                print u"Configuration profile %s saved." % self.__name
-            else:
-                print u"Configuration profile %s not saved." % self.__name
-            self.__in_db = con_res
-            return con_res
-        else:
-            print u"Error: Database or configuration profile identifiers not configured!"
-            return False
+            operation_ok = self.__database.push_query(query=sql)
+            self.__in_db = operation_ok
+            return operation_ok
+        return False
 
     def copy(self, name):
         new_con = copy.deepcopy(self)
         new_con.set_database(db=self.__database)
         new_con.__in_db = False
         name_check = new_con.set_name(name=name)
-        if name_check:
-            return new_con
-        else:
-            return None
+        return new_con if name_check else None
 
     def remove(self):
         if self.__in_db:
-            print u"Removing configuration profile %s." % self.__name
             sql = u"delete from configuration where con_name='%s';" % self.__name
-            con_res = self.__database.push_query(query=sql)
-            self.__in_db = not con_res
-            return con_res
-        else:
-            return False
+            operation_ok = self.__database.push_query(query=sql)
+            self.__in_db = not operation_ok
+            return operation_ok
+        return False
 
     # =================================
     def get_iohub(self):
@@ -427,8 +415,7 @@ class Configuration(object):
             tracker = yaml.load(open(tracker_path, u'r'))[u'monitor_devices'][0]
             configuration[u'monitor_devices'].append(tracker)
             return configuration
-        else:
-            return None
+        return None
 
     def get_configuration(self):
         if self.__in_db:
@@ -440,8 +427,7 @@ class Configuration(object):
                 u'experiment_path': self.__path,
             }
             return configuration
-        else:
-            return None
+        return None
 
 
 # =============================================================================
@@ -462,24 +448,21 @@ class ItemList(object):
             else:
                 self.__item_array = np.insert(arr=self.__item_array, obj=itm_num, values=[item], axis=0)
             return True
-        else:
-            return False
+        return False
 
     def _item_copy(self, index):
         itm_num = self._item_number()
         if itm_num is not None and 0 <= index < itm_num:
             new_itm = self.__item_array[index].copy()
             return self._item_add(item=new_itm)
-        else:
-            return False
+        return False
 
     def _item_delete(self, index):
         itm_num = self._item_number()
         if itm_num is not None and 0 <= index < itm_num:
             self.__item_array = np.delete(arr=self.__item_array, obj=index, axis=0) if itm_num > 1 else None
             return True
-        else:
-            return False
+        return False
 
     def _item_move_up(self, index):
         itm_num = self._item_number()
@@ -488,8 +471,7 @@ class ItemList(object):
             self.__item_array[index - 1] = self.__item_array[index]
             self.__item_array[index] = temp
             return True
-        else:
-            return False
+        return False
 
     def _item_move_down(self, index):
         itm_num = self._item_number()
@@ -498,8 +480,7 @@ class ItemList(object):
             self.__item_array[index + 1] = self.__item_array[index]
             self.__item_array[index] = temp
             return True
-        else:
-            return False
+        return False
 
     def _item_get_all(self):
         return self.__item_array
@@ -508,14 +489,12 @@ class ItemList(object):
         itm_num = self._item_number()
         if itm_num is not None and 0 <= index < itm_num:
             return self.__item_array[index]
-        else:
-            return None
+        return None
 
     def _item_number(self):
         if self.__item_array is not None:
             return len(self.__item_array)
-        else:
-            return None
+        return None
 
 
 # =============================================================================
@@ -529,7 +508,6 @@ class Component(object):
         self.__pos = (0.0, 0.0)
         self.__ori = 0.0
         self.__size = 1.0
-        # -------------------
         self.__image = None
         self.__shape = u'square'
         self.__color = u'white'
@@ -551,8 +529,7 @@ class Component(object):
         if name != u'':
             self.__name = name
             return True
-        else:
-            return False
+        return False
 
     def get_name(self):
         return self.__name
@@ -563,8 +540,7 @@ class Component(object):
         if units in [u'norm', u'cm', u'deg', u'degFlat', u'degFlatPos', u'pix']:
             self.__units = units
             return True
-        else:
-            return False
+        return False
 
     def get_units(self):
         return self.__units
@@ -576,8 +552,7 @@ class Component(object):
         if posx is not None and posy is not None:
             self.__pos = (posx, posy)
             return True
-        else:
-            return False
+        return False
 
     def get_position(self):
         return self.__pos
@@ -588,8 +563,7 @@ class Component(object):
         if ori is not None:
             self.__ori = ori
             return True
-        else:
-            return False
+        return False
 
     def get_orientation(self):
         return self.__ori
@@ -600,8 +574,7 @@ class Component(object):
         if size is not None:
             self.__size = size
             return True
-        else:
-            return False
+        return False
 
     def get_size(self):
         return self.__size
@@ -615,8 +588,7 @@ class Component(object):
             self.__image = Image.open(image_path)
             self.__shape = u'image'
             return True
-        else:
-            return False
+        return False
 
     def get_image(self):
         return self.__image
@@ -627,8 +599,7 @@ class Component(object):
         if shape in [u'arrow', u'circle', u'cross', u'gauss', u'square']:
             self.__shape = shape
             return True
-        else:
-            return False
+        return False
 
     def get_shape(self):
         return self.__shape
@@ -639,8 +610,7 @@ class Component(object):
         if colors.isValidColor(color):
             self.__color = color
             return True
-        else:
-            return False
+        return False
 
     def get_color(self):
         return self.__color
@@ -650,22 +620,21 @@ class Component(object):
         from PIL import Image
         from io import BytesIO
         coded = Utils.format_text(encimg)
-        if coded != u'':
-            img_buff = BytesIO()
-            img_buff.write(coded.decode(u'base64'))
-            self.__shape = u'image'
-            self.__image = Image.open(img_buff)
-        else:
+        if coded == u'':
             self.__image = None
+            return
+        img_buff = BytesIO()
+        img_buff.write(coded.decode(u'base64'))
+        self.__shape = u'image'
+        self.__image = Image.open(img_buff)
 
     def __encode_image(self):
         from io import BytesIO
-        if self.__image is not None:
-            img_buff = BytesIO()
-            self.__image.save(img_buff, u'PNG')
-            return img_buff.getvalue().encode(u'base64')
-        else:
+        if self.__image is None:
             return u''
+        img_buff = BytesIO()
+        self.__image.save(img_buff, u'PNG')
+        return img_buff.getvalue().encode(u'base64')
 
     # =================================
     def load(self, db, exp, tes, fra, com):
@@ -677,7 +646,6 @@ class Component(object):
         """ % (exp, tes, fra, com)
         com_res = db.pull_query(query=sql)
         if com_res is not None:
-            print u"Exp %s, Tes %d, Fra %d: Component %d loaded." % (exp, tes, fra, com)
             self.__name = unicode(com_res[0, 0])
             self.__units = unicode(com_res[0, 1])
             self.__pos = (float(com_res[0, 2]),
@@ -688,9 +656,7 @@ class Component(object):
             self.__color = unicode(com_res[0, 8])
             self.__decode_image(unicode(com_res[0, 6]))
             return True
-        else:
-            print u"Exp %s, Tes %d, Fra %d: Component %d doesn't exists." % (exp, tes, fra, com)
-            return False
+        return False
 
     def save(self, db, exp, tes, fra, com):
         sql = u"""
@@ -704,23 +670,22 @@ class Component(object):
             self.__name, self.__units, self.__pos[0], self.__pos[1], self.__ori, self.__size,
             self.__encode_image(), self.__shape, self.__color
         )
-        com_res = db.push_query(query=sql)
-        if com_res:
-            print u"Exp %s, Tes %d, Fra %d: Component %d saved." % (exp, tes, fra, com)
-        else:
-            print u"Exp %s, Tes %d, Fra %d: Component %d not saved." % (exp, tes, fra, com)
-        return com_res
+        operation_ok = db.push_query(query=sql)
+        return operation_ok
 
     def copy(self):
         return copy.deepcopy(self)
 
     # =================================
     def get_execution(self, win):
-        if isinstance(win, visual.Window):
-            if self.__shape == u'image':
+        from switch import Switch
+        if not isinstance(win, visual.Window):
+            return None
+        with Switch(self.__shape) as case:
+            if case(u'image'):
                 return visual.ImageStim(win=win, name=self.__name, image=self.__image,
                                         pos=self.__pos, ori=self.__ori, units=self.__units)
-            elif self.__shape == u'arrow':
+            elif case(u'arrow'):
                 return visual.ShapeStim(win=win, name=self.__name, lineColor=self.__color, fillColor=self.__color,
                                         size=self.__size, pos=self.__pos, ori=self.__ori, units=self.__units,
                                         vertices=((1.0, 0.0), (0.6667, 0.1667), (0.6667, 0.0667), (0.0, 0.0667),
@@ -729,9 +694,6 @@ class Component(object):
                 return visual.GratingStim(win=win, name=self.__name, color=self.__color, sf=0,
                                           mask=None if self.__shape == u'square' else self.__shape,
                                           size=self.__size, pos=self.__pos, ori=self.__ori, units=self.__units)
-        else:
-            print u"Error: 'win' must be a psychopy visual.Window instance."
-            return None
 
     def get_configuration(self):
         component = {
@@ -779,8 +741,7 @@ class Frame(ItemList):
         if name != u'':
             self.__name = name
             return True
-        else:
-            return False
+        return False
 
     def get_name(self):
         return self.__name
@@ -791,8 +752,7 @@ class Frame(ItemList):
         if colors.isValidColor(color):
             self.__color = color
             return True
-        else:
-            return False
+        return False
 
     def get_color(self):
         return self.__color
@@ -803,10 +763,9 @@ class Frame(ItemList):
         if self.__is_task:
             self.__time = 0.0
             return True
-        else:
-            self.__keys_allowed = u''
-            self.__keys_selected = u''
-            return False
+        self.__keys_allowed = u''
+        self.__keys_selected = u''
+        return False
 
     def get_state(self):
         return self.__is_task
@@ -817,9 +776,8 @@ class Frame(ItemList):
         if not self.__is_task and value is not None:
             self.__time = value
             return True
-        else:
-            self.__time = 0.0
-            return False
+        self.__time = 0.0
+        return False
 
     def get_time(self):
         return self.__time
@@ -830,9 +788,8 @@ class Frame(ItemList):
         if self.__is_task and keys != u'':
             self.__keys_allowed = keys
             return True
-        else:
-            self.__keys_allowed = u''
-            return False
+        self.__keys_allowed = u''
+        return False
 
     def get_keys_allowed(self):
         return self.__keys_allowed
@@ -844,17 +801,14 @@ class Frame(ItemList):
         if self.__is_task and self.__keys_allowed != u'' and keys != u'':
             keys_alw = self.__keys_allowed.split(u',')
             keys_sel = keys.split(u',')
-
             match = [key for key in keys_sel if key in keys_alw]
             if len(match) == len(keys_sel):
                 self.__keys_selected = keys
                 return True
-            else:
-                self.__keys_selected = u''
-                return True
-        else:
             self.__keys_selected = u''
-            return False
+            return True
+        self.__keys_selected = u''
+        return False
 
     def get_keys_selected(self):
         return self.__keys_selected
@@ -894,7 +848,6 @@ class Frame(ItemList):
         """ % (exp, tes, fra)
         fra_res = db.pull_query(query=sql)
         if fra_res is not None:
-            print u"Exp %s, Tes %d: Frame %d loaded." % (exp, tes, fra)
             self.__name = unicode(fra_res[0, 0])
             self.__color = unicode(fra_res[0, 1])
             self.__is_task = bool(int(fra_res[0, 2]))
@@ -903,9 +856,7 @@ class Frame(ItemList):
             self.__keys_selected = unicode(fra_res[0, 5])
             self.__load_components(db=db, exp=exp, tes=tes, fra=fra)
             return True
-        else:
-            print u"Exp %s, Tes %d: Frame %d doesn't exists." % (exp, tes, fra)
-            return False
+        return False
 
     def save(self, db, exp, tes, fra):
         sql = u"""
@@ -917,13 +868,10 @@ class Frame(ItemList):
             exp, tes, fra,
             self.__name, self.__color, self.__is_task, self.__time, self.__keys_allowed, self.__keys_selected
         )
-        fra_res = db.push_query(query=sql)
-        if fra_res:
-            print u"Exp %s, Tes %d: Frame %d saved. Saving components..." % (exp, tes, fra)
+        operation_ok = db.push_query(query=sql)
+        if operation_ok:
             self.__save_components(db=db, exp=exp, tes=tes, fra=fra)
-        else:
-            print u"Exp %s, Tes %d: Frame %d not saved." % (exp, tes, fra)
-        return fra_res
+        return operation_ok
 
     def copy(self):
         return copy.deepcopy(self)
@@ -936,55 +884,44 @@ class Frame(ItemList):
                 new_com = Component()
                 new_com.load(db=db, exp=exp, tes=int(tes), fra=int(fra), com=int(com[0]))
                 self.component_add(item=new_com)
-        else:
-            print u"Exp %s, Tes %d: Frame %d don't have any component saved on the DB." % (exp, tes, fra)
 
     def __save_components(self, db, exp, tes, fra):
         com_num = self.component_number()
         if com_num is not None:
             for index in range(com_num):
                 self.component_get_by_index(index=index).save(db=db, exp=exp, tes=tes, fra=fra, com=index)
-        else:
-            print u"Exp %s, Tes %d: Frame %d don't have any component to be saved." % (exp, tes, fra)
 
     # =================================
     def get_execution(self, win):
         if isinstance(win, visual.Window):
-            com_num = self.component_number()
-            if com_num is not None:
-                components = [component.get_execution(win=win) for component in self.component_get_all()]
-            else:
-                components = None
-            back = visual.Rect(win=win, width=win.size[0], height=win.size[1], units=u'pix',
-                               lineColor=self.__color, fillColor=self.__color)
             frame = {
                 u'is_task':             self.__is_task,
                 u'time':                self.__time,
                 u'allowed_keys':        self.__keys_allowed.replace(u'space', u' ').split(u','),
                 u'correct_keys':        self.__keys_selected.replace(u'space', u' ').split(u','),
                 u'correct_keys_str':    self.__keys_selected,
-                u'background':          back,
-                u'components':          components
+                u'background':          visual.Rect(win=win, width=win.size[0], height=win.size[1], units=u'pix',
+                                                    lineColor=self.__color, fillColor=self.__color),
+                u'components':          None
             }
+            com_num = self.component_number()
+            if com_num is not None:
+                frame[u'components'] = [component.get_execution(win=win) for component in self.component_get_all()]
             return frame
-        else:
-            print u"Error: 'win' must be a psychopy visual.Window instance."
-            return None
+        return None
 
     def get_configuration(self):
-        com_num = self.component_number()
-        if com_num is not None:
-            components = [component.get_configuration() for component in self.component_get_all()]
-        else:
-            components = None
         frame = {
             u'is_task':         self.__is_task,
             u'time':            self.__time,
             u'allowed_keys':    self.__keys_allowed,
             u'correct_keys':    self.__keys_selected,
             u'background':      self.__color,
-            u'components':      components,
+            u'components':      None
         }
+        com_num = self.component_number()
+        if com_num is not None:
+            frame[u'components'] = [component.get_configuration() for component in self.component_get_all()]
         return frame
 
 
@@ -1016,8 +953,7 @@ class Test(ItemList):
         if name != u'':
             self.__name = name
             return True
-        else:
-            return False
+        return False
 
     def get_name(self):
         return self.__name
@@ -1027,8 +963,7 @@ class Test(ItemList):
         if text != u'':
             self.__description = text
             return True
-        else:
-            return False
+        return False
 
     def get_description(self):
         return self.__description
@@ -1038,8 +973,7 @@ class Test(ItemList):
         if value is not None:
             self.__quantity = value
             return True
-        else:
-            return False
+        return False
 
     def get_quantity(self):
         return self.__quantity
@@ -1079,15 +1013,12 @@ class Test(ItemList):
         """ % (exp, tes)
         tes_res = db.pull_query(query=sql)
         if tes_res is not None:
-            print u"Exp %s: Test %d loaded." % (exp, tes)
             self.__name = unicode(tes_res[0, 0])
             self.__description = unicode(tes_res[0, 1])
             self.__quantity = int(tes_res[0, 2])
             self.__load_frames(db=db, exp=exp, tes=tes)
             return True
-        else:
-            print u"Exp %s: Test %d doesn't exists." % (exp, tes)
-            return False
+        return False
 
     def save(self, db, exp, tes):
         sql = u"""
@@ -1098,13 +1029,10 @@ class Test(ItemList):
             exp, tes,
             self.__name, self.__description, self.__quantity
         )
-        tes_res = db.push_query(query=sql)
-        if tes_res:
-            print u"Exp %s: Test %d saved. Saving frames..." % (exp, tes)
+        operation_ok = db.push_query(query=sql)
+        if operation_ok:
             self.__save_frames(db=db, exp=exp, tes=tes)
-        else:
-            print u"Exp %s: Test %d not saved." % (exp, tes)
-        return tes_res
+        return operation_ok
 
     def copy(self):
         return copy.deepcopy(self)
@@ -1117,48 +1045,38 @@ class Test(ItemList):
                 new_fra = Frame()
                 new_fra.load(db=db, exp=exp, tes=int(tes), fra=int(fra[0]))
                 self.frame_add(item=new_fra)
-        else:
-            print u"Exp %s: Test %d don't have any frame saved on the DB." % (exp, tes)
 
     def __save_frames(self, db, exp, tes):
         fra_num = self.frame_number()
         if fra_num is not None:
             for index in range(fra_num):
                 self.frame_get_by_index(index=index).save(db=db, exp=exp, tes=tes, fra=index)
-        else:
-            print u"Exp %s: Test %d don't have any frame to be saved." % (exp, tes)
 
     # =================================
     def get_execution(self, win):
         if isinstance(win, visual.Window):
+            test = {
+                u'name':        self.__name,
+                u'frames':      None,
+                u'secuence':    np.full(shape=(self.__quantity, 1), fill_value=1, dtype=int)
+            }
             fra_num = self.frame_number()
             if fra_num is not None:
-                frames = [frame.get_execution(win=win) for frame in self.frame_get_all()]
-                test = {
-                    u'name':        self.__name,
-                    u'secuence':    np.full(shape=(self.__quantity, 1), fill_value=1, dtype=int),
-                    u'frames':      frames
-                }
-                return test
-            else:
-                return None
-        else:
-            print u"Error: 'win' must be a psychopy visual.Window instance."
-            return None
+                test[u'frames'] = [frame.get_execution(win=win) for frame in self.frame_get_all()]
+            return test
+        return None
 
     def get_configuration(self):
+        test = {
+            u'name':        self.__name,
+            u'repetitions': self.__quantity,
+            u'description': self.__description,
+            u'frames':      None,
+        }
         fra_num = self.frame_number()
         if fra_num is not None:
-            frames = [frame.get_configuration() for frame in self.frame_get_all()]
-            test = {
-                u'name': self.__name,
-                u'repetitions': self.__quantity,
-                u'description': self.__description,
-                u'frames': frames,
-            }
-            return test
-        else:
-            return None
+            test[u'frames'] = [frame.get_configuration() for frame in self.frame_get_all()]
+        return test
 
 
 # =============================================================================
@@ -1194,11 +1112,11 @@ class Experiment(ItemList):
 
     # =================================
     @classmethod
-    def get_experiment_list(cls, db):
+    def get_list(cls, db):
         sql = u"""
         select exp_code, exp_name, exp_version
         from experiment
-        order by exp_name asc;
+        order by exp_name asc, exp_version asc;
         """
         return db.pull_query(query=sql)
 
@@ -1207,8 +1125,7 @@ class Experiment(ItemList):
         if isinstance(db, SaccadeDB):
             self.__database = db
             return True
-        else:
-            return False
+        return False
 
     def get_database(self):
         return self.__database
@@ -1221,14 +1138,11 @@ class Experiment(ItemList):
         code = Utils.format_text(code, lmin=3, lmax=10)
         if self.__database is not None and code != u'':
             sql = u"select * from experiment where exp_code='%s';" % code
-            exp_res = self.__database.pull_query(query=sql)
-            if exp_res is None:
+            operation_ok = self.__database.pull_query(query=sql)
+            if operation_ok is None:
                 self.__code = code
                 return True
-            else:
-                return False
-        else:
-            return False
+        return False
 
     def get_code(self):
         return self.__code
@@ -1239,15 +1153,12 @@ class Experiment(ItemList):
         version = Utils.format_text(version, lmin=3, lmax=10)
         if self.__database is not None and name != u'' and version != u'':
             sql = u"select * from experiment where exp_name='%s' and exp_version='%s';" % (name, version)
-            exp_res = self.__database.pull_query(query=sql)
-            if exp_res is None:
+            operation_ok = self.__database.pull_query(query=sql)
+            if operation_ok is None:
                 self.__name = name
                 self.__version = version
                 return True
-            else:
-                return False
-        else:
-            return False
+        return False
 
     def get_name(self):
         return self.__name
@@ -1261,8 +1172,7 @@ class Experiment(ItemList):
         if text != u'':
             self.__description = text
             return True
-        else:
-            return False
+        return False
 
     def get_description(self):
         return self.__description
@@ -1273,8 +1183,7 @@ class Experiment(ItemList):
         if text != u'':
             self.__comments = text
             return True
-        else:
-            return False
+        return False
 
     def get_comments(self):
         return self.__comments
@@ -1285,8 +1194,7 @@ class Experiment(ItemList):
         if text != u'':
             self.__instructions = text
             return True
-        else:
-            return False
+        return False
 
     def get_instruction(self):
         return self.__instructions
@@ -1338,8 +1246,7 @@ class Experiment(ItemList):
             self.__con_rest_period = period
             self.__con_rest_time = time
             return True
-        else:
-            return False
+        return False
 
     def is_rest(self):
         return self.__con_is_rest
@@ -1391,12 +1298,9 @@ class Experiment(ItemList):
             where exp.exp_code='%s';
             """ % code
             exp_res = self.__database.pull_query(query=sql)
-
             if exp_res is not None:
                 self.__in_db = True
                 self.__code = code
-                print u"Experiment %s loaded." % self.__code
-
                 self.__name = unicode(exp_res[0, 0])
                 self.__version = unicode(exp_res[0, 1])
                 self.__description = unicode(exp_res[0, 2])
@@ -1416,12 +1320,7 @@ class Experiment(ItemList):
                 self.__con_rest_time = float(exp_res[0, 16])
                 self.__load_tests()
                 return True
-            else:
-                print u"Experiment %s doesn't exists." % self.__code
-                return False
-        else:
-            print u'Error: Database or experiment code not configured!'
-            return False
+        return False
 
     def save(self):
         if self.__database is not None and self.__code != u'' and self.__name != u'':
@@ -1459,17 +1358,12 @@ class Experiment(ItemList):
                     self.__dia_ask_glasses, self.__dia_ask_eye_color, self.__code, self.__con_need_space,
                     self.__con_is_random, self.__con_is_rest, self.__con_rest_period, self.__con_rest_time
                 )
-            exp_res = self.__database.push_query(query=sql)
-            if exp_res:
-                print u"Experiment %s saved. Saving tests..." % self.__code
+            operation_ok = self.__database.push_query(query=sql)
+            self.__in_db = operation_ok
+            if operation_ok:
                 self.__save_tests()
-            else:
-                print u"Experiment %s not saved." % self.__code
-            self.__in_db = exp_res
-            return exp_res
-        else:
-            print u"Error: Database or experiment basic identifiers not configured!"
-            return False
+            return operation_ok
+        return False
 
     def copy(self, code, version):
         new_exp = copy.deepcopy(self)
@@ -1477,10 +1371,7 @@ class Experiment(ItemList):
         new_exp.__in_db = False
         code_check = new_exp.set_code(code=code)
         info_check = new_exp.set_info(name=self.__name, version=version)
-        if code_check and info_check:
-            return new_exp
-        else:
-            return None
+        return new_exp if code_check and info_check else None
 
     def remove(self):
         if self.__in_db:
@@ -1489,8 +1380,7 @@ class Experiment(ItemList):
             exp_res = self.__database.push_query(query=sql)
             self.__in_db = not exp_res
             return exp_res
-        else:
-            return False
+        return False
 
     # =================================
     def __load_tests(self):
@@ -1500,8 +1390,6 @@ class Experiment(ItemList):
                 new_tes = Test()
                 new_tes.load(db=self.__database, exp=self.__code, tes=int(tes[0]))
                 self.test_add(item=new_tes)
-        else:
-            print u"Experiment %s don't have any test saved on the DB." % self.__code
 
     def __save_tests(self):
         sql = u"delete from test where exp_code='%s';" % self.__code
@@ -1510,27 +1398,25 @@ class Experiment(ItemList):
         if tes_num is not None:
             for index in range(tes_num):
                 self.test_get_by_index(index=index).save(db=self.__database, exp=self.__code, tes=index)
-        else:
-            print u"Experiment %s don't have any test to be saved." % self.__code
 
     # =================================
     def get_iohub(self):
         if self.__in_db:
             experiment = {
-                u'title':           self.__name,
-                u'code':            self.__code,
-                u'version':         self.__version,
-                u'description':     self.__description,
-                u'display_experiment_dialog': True,
+                u'title':                       self.__name,
+                u'code':                        self.__code,
+                u'version':                     self.__version,
+                u'description':                 self.__description,
+                u'display_experiment_dialog':   True,
                 u'session_defaults': {
-                    u'name':        u'Session...',
-                    u'code':        0,
-                    u'comments':    self.__comments,
+                    u'name':                    u'Session...',
+                    u'code':                    0,
+                    u'comments':                self.__comments,
                 },
-                u'display_session_dialog': True,
-                u'session_variable_order': [u'name', u'code', u'comments'],
+                u'display_session_dialog':      True,
+                u'session_variable_order':      [u'name', u'code', u'comments'],
                 u'ioHub': {
-                    u'enable':  True,
+                    u'enable':                  True,
                 },
             }
             if self.__dia_is_active:
@@ -1550,67 +1436,55 @@ class Experiment(ItemList):
                     experiment[u'session_defaults'][u'user_variables'][u'eye_color'] = u'Unknown'
                     experiment[u'session_variable_order'].append(u'eye_color')
             return experiment
-        else:
-            print u"Error: To execute a experiment you need to ensure that the experiment is saved on the DB."
-            return None
+        return None
 
     def get_execution(self, win):
         if isinstance(win, visual.Window) and self.__in_db:
+            experiment = {
+                u'instruction':     self.__instructions,
+                u'space_start':     self.__con_need_space,
+                u'rest_active':     self.__con_is_rest,
+                u'rest_period':     self.__con_rest_period,
+                u'rest_time':       self.__con_rest_time,
+                u'test_data':       [],
+                u'test_secuence':   []
+            }
             tes_num = self.test_number()
             if tes_num is not None:
-                test_list = []
-                test_data = []
+                experiment[u'test_data'] = []
+                experiment[u'test_secuence'] = []
                 for index in range(tes_num):
                     test = self.test_get_by_index(index=index)
                     test = test.get_execution(win=win)
-                    if test is not None:
-                        test_list.append(index*test[u'secuence'])
-                        test_data.append({
+                    if test[u'frames'] is not None:
+                        experiment[u'test_secuence'].append(index*test[u'secuence'])
+                        experiment[u'test_data'].append({
                             u'name':    test[u'name'],
                             u'frames':  test[u'frames']
                         })
-                test_list = np.concatenate(test_list)
+                experiment[u'test_secuence'] = np.concatenate(experiment[u'test_secuence'])
                 if self.__con_is_random:
-                    np.random.shuffle(test_list)
-                experiment = {
-                    u'instruction':     self.__instructions,
-                    u'space_start':     self.__con_need_space,
-                    u'rest_active':     self.__con_is_rest,
-                    u'rest_period':     self.__con_rest_period,
-                    u'rest_time':       self.__con_rest_time,
-                    u'test_secuence':   test_list,
-                    u'test_data':       test_data,
-                }
+                    np.random.shuffle(experiment[u'test_secuence'])
+            if experiment[u'test_secuence']:
                 return experiment
-            else:
-                return None
-        else:
-            print u"Error: To execute a experiment you need to ensure that:" \
-                  u"\n\t- win is instance of pysychopy visual.Window." \
-                  u"\n\t- the experiment is saved on the DB."
-            return None
+        return None
 
     def get_configuration(self):
         if self.__in_db:
-            tes_num = self.test_number()
-            if tes_num is not None:
-                tests = [test.get_configuration() for test in self.test_get_all()]
-            else:
-                tests = None
-            configuration = {
-                u'title':           self.__name,
-                u'code':            self.__code,
-                u'version':         self.__version,
-                u'description':     self.__description,
-                u'instruction':     self.__instructions,
+            experiment = {
+                u'title':                   self.__name,
+                u'code':                    self.__code,
+                u'version':                 self.__version,
+                u'description':             self.__description,
+                u'instruction':             self.__instructions,
                 u'session_configuration': {
-                    u'comments':    self.__comments,
-                    u'space_start': self.__con_need_space,
-                    u'randomize':   self.__con_is_random,
+                    u'comments':            self.__comments,
+                    u'space_start':         self.__con_need_space,
+                    u'randomize':           self.__con_is_random,
                     u'rest': {
-                        u'active':  self.__con_is_rest,
-                        u'period':  self.__con_rest_period,
-                        u'time':    self.__con_rest_time,
+                        u'active':          self.__con_is_rest,
+                        u'period':          self.__con_rest_period,
+                        u'time':            self.__con_rest_time,
                     },
                     u'dialog': {
                         u'active':          self.__dia_is_active,
@@ -1620,8 +1494,10 @@ class Experiment(ItemList):
                         u'ask_eye_color':   self.__dia_ask_eye_color,
                     }
                 },
-                u'tests': tests
+                u'tests':                   None
             }
-            return configuration
-        else:
-            return None
+            tes_num = self.test_number()
+            if tes_num is not None:
+                experiment[u'tests'] = [test.get_configuration() for test in self.test_get_all()]
+            return experiment
+        return None
