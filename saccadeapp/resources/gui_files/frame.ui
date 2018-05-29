@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>530</width>
-    <height>500</height>
+    <width>360</width>
+    <height>550</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>530</width>
-    <height>380</height>
+    <width>360</width>
+    <height>550</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>530</width>
-    <height>850</height>
+    <width>360</width>
+    <height>550</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -37,13 +37,13 @@
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>120</height>
+       <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>120</height>
+       <height>16777215</height>
       </size>
      </property>
      <property name="title">
@@ -69,13 +69,13 @@
        <widget class="QLabel" name="lbl_name">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
@@ -122,13 +122,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
@@ -150,13 +150,13 @@
        <widget class="QComboBox" name="cmb_background">
         <property name="minimumSize">
          <size>
-          <width>0</width>
+          <width>150</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>200</width>
+          <width>150</width>
           <height>25</height>
          </size>
         </property>
@@ -166,13 +166,13 @@
        <widget class="QLabel" name="lbl_type">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
@@ -190,13 +190,13 @@
          <widget class="QRadioButton" name="rbt_time">
           <property name="minimumSize">
            <size>
-            <width>150</width>
+            <width>120</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>150</width>
+            <width>120</width>
             <height>25</height>
            </size>
           </property>
@@ -215,36 +215,23 @@
          <widget class="QRadioButton" name="rbt_task">
           <property name="minimumSize">
            <size>
-            <width>150</width>
+            <width>120</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>150</width>
+            <width>120</width>
             <height>25</height>
            </size>
           </property>
           <property name="text">
-           <string>User response / Task</string>
+           <string>User response/Task</string>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">gbt_frame_type</string>
           </attribute>
          </widget>
-        </item>
-        <item>
-         <spacer name="hsp_01">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </item>
@@ -252,241 +239,198 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="hly_02">
-     <property name="spacing">
-      <number>5</number>
+    <widget class="QGroupBox" name="gbx_timed">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SetFixedSize</enum>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
      </property>
-     <item>
-      <widget class="QGroupBox" name="gbx_timed">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>90</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>90</height>
-        </size>
-       </property>
-       <property name="title">
-        <string>Timed</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <spacer name="vsp_01">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <layout class="QFormLayout" name="fly_02">
-          <property name="sizeConstraint">
-           <enum>QLayout::SetFixedSize</enum>
-          </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="lbl_time">
-            <property name="minimumSize">
-             <size>
-              <width>60</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>50</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Frame time:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="dsb_time">
-            <property name="minimumSize">
-             <size>
-              <width>100</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="vsp_02">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="gbx_task">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>90</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>90</height>
-        </size>
-       </property>
-       <property name="title">
-        <string>Task</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <property name="spacing">
-         <number>5</number>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Timed</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="lbl_time">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Frame time:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="dsb_time">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>25</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="gbx_task">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Task</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <property name="spacing">
+       <number>5</number>
+      </property>
+      <property name="sizeConstraint">
+       <enum>QLayout::SetFixedSize</enum>
+      </property>
+      <item>
+       <layout class="QFormLayout" name="fly_03">
         <property name="sizeConstraint">
          <enum>QLayout::SetFixedSize</enum>
         </property>
-        <item>
-         <layout class="QFormLayout" name="fly_03">
-          <property name="sizeConstraint">
-           <enum>QLayout::SetFixedSize</enum>
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        </property>
+        <property name="verticalSpacing">
+         <number>6</number>
+        </property>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="led_keys_allowed">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>25</height>
+           </size>
           </property>
-          <property name="fieldGrowthPolicy">
-           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>25</height>
+           </size>
           </property>
-          <property name="verticalSpacing">
-           <number>6</number>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="led_keys_selected">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>25</height>
+           </size>
           </property>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="led_keys_allowed">
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="led_keys_selected">
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="lbl_keys_allowed">
-            <property name="minimumSize">
-             <size>
-              <width>70</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Allowed keys:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="lbl_keys_selected">
-            <property name="minimumSize">
-             <size>
-              <width>70</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Selected keys:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-         </layout>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>25</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="lbl_keys_allowed">
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>70</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Allowed keys:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="lbl_keys_selected">
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>70</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Selected keys:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
         </item>
        </layout>
-      </widget>
-     </item>
-    </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="gbx_components">
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>180</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -497,7 +441,7 @@
        <widget class="QTableView" name="tbv_component">
         <property name="minimumSize">
          <size>
-          <width>380</width>
+          <width>120</width>
           <height>120</height>
          </size>
         </property>
@@ -700,6 +644,8 @@
   <zorder>bbt_save</zorder>
   <zorder>gbx_frame</zorder>
   <zorder>gbx_components</zorder>
+  <zorder>gbx_task</zorder>
+  <zorder>gbx_timed</zorder>
  </widget>
  <resources/>
  <connections>

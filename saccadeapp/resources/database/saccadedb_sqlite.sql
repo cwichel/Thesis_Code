@@ -1,6 +1,6 @@
 --===============================================
 -- SQLite Script generated manually 
--- Date		: 29/01/2018
+-- Date		: 18/05/2018
 -- model	: saccadedb
 -- author	: Christian Wiche
 --===============================================
@@ -10,20 +10,21 @@ pragma foreign_keys=1;
 ---------------------------------------
 ---------------------------------------
 create table if not exists configuration (
-  	con_name    		varchar(50) 	not null	unique  default 'Unnamed',
+  	con_name    		varchar(50) 	not null	default 'Unnamed',
 	con_tracker 		varchar(20)		not null	default 'eyegaze',
 	con_monitor 		varchar(50)		not null	default 'default',
 	con_screen  		int				not null 	default 0,
 	con_path    		varchar(200)	not null	default './events',
-	primary key (con_name)
+	constraint con_pk primary key (con_name),
+    constraint con_ak unique(con_name)
 );
 -- index
-create index if not exists unq_con on configuration (con_name);
+create index if not exists con_idx on configuration (con_name);
 
 ---------------------------------------
 ---------------------------------------
 create table if not exists experiment (
-	exp_code    		varchar(10)		not null    unique  default '1234',
+	exp_code    		varchar(10)		not null    default '1234',
 	exp_name    		varchar(50)	    not null    default 'Unnamed',
 	exp_version    		varchar(10)		not null    default '1.0',
 	exp_description 	text		    null        default '',
@@ -31,7 +32,8 @@ create table if not exists experiment (
 	exp_comments    	text		    null        default '',
 	exp_date_creation  	timestamp 		null		default current_timestamp,
 	exp_date_update    	timestamp 		null		default current_timestamp,
-	primary key (exp_name, exp_version)
+	constraint exp_pk primary key (exp_name, exp_version),
+    constraint exp_ak unique(exp_code)
 );
 -- date update
 create trigger if not exists trg_exp
@@ -43,7 +45,7 @@ create trigger if not exists trg_exp
 		where exp_code = new.exp_code;
 	end;
 -- index
-create index if not exists unq_exp on experiment (exp_code);
+create index if not exists exp_idx on experiment (exp_code);
 
 ---------------------------------------
 ---------------------------------------
@@ -54,14 +56,14 @@ create table if not exists exp_dia (
 	dia_ask_gender      tinyint 		not null 	default 1,
 	dia_ask_glasses     tinyint 		not null 	default 1,
 	dia_ask_eye_color   tinyint 		not null 	default 1,
-	primary key (exp_code),
-	constraint fk_exp_dia
+	constraint exp_dia_pk primary key (exp_code),
+	constraint exp_dia_fk
 		foreign key (exp_code) references experiment (exp_code)
 		on delete cascade
 		on update cascade
 );
 -- index
-create index if not exists idx_exp_dia on exp_dia (exp_code asc);
+create index if not exists exp_dia_idx on exp_dia (exp_code asc);
 
 ---------------------------------------
 ---------------------------------------
@@ -72,14 +74,14 @@ create table if not exists exp_con (
 	con_is_rest         tinyint 		not null 	default 0,
 	con_rest_period     int 			not null	default 0,
 	con_rest_time       float			not null	default 0.0,
-	primary key (exp_code),
-	constraint fk_exp_con
+	constraint exp_con_pk primary key (exp_code),
+	constraint exp_con_fk
 		foreign key (exp_code) references experiment (exp_code)
 		on delete cascade
 		on update cascade
 );
 -- index
-create index if not exists idx_exp_con on exp_con (exp_code asc);
+create index if not exists exp_con_idx on exp_con (exp_code asc);
 
 ---------------------------------------
 ---------------------------------------
@@ -88,14 +90,15 @@ create table if not exists test (
 	tes_index	        int 		    not null,
 	tes_name 	        varchar(50)     not null    default 'Unnamed',
 	tes_description     text            null        default '',
-	primary key (exp_code, tes_index),
-    constraint fk_tes
+	constraint tes_pk primary key (exp_code, tes_index),
+    constraint tes_ak unique(exp_code, tes_name),
+    constraint tes_fk
         foreign key (exp_code) references experiment (exp_code)
         on delete cascade
         on update cascade
 );
 -- index
-create index if not exists idx_tes on test (exp_code asc, tes_index asc);
+create index if not exists tes_idx on test (exp_code asc, tes_index asc);
 
 ---------------------------------------
 ---------------------------------------
@@ -104,8 +107,8 @@ create table if not exists exp_seq (
     tes_index           int             not null,
     seq_index           int             not null,
     tes_quantity        int             not null    default 1,
-    primary key (exp_code, tes_index, seq_index),
-    constraint fk_exp_seq
+    constraint exp_seq_pk primary key (exp_code, tes_index, seq_index),
+    constraint exp_seq_fk
         foreign key (exp_code, tes_index) references test (exp_code, tes_index)
         on delete cascade
         on update cascade
@@ -125,14 +128,15 @@ create table if not exists frame (
     fra_keys_allowed    text,
 	fra_keys_selected   text,
     fra_time    float           not null    default 0.0,
-	primary key (exp_code, tes_index, fra_index),
-	constraint fk_fra
+	constraint fra_pk primary key (exp_code, tes_index, fra_index),
+    constraint fra_ak unique (exp_code, tes_index, fra_name),
+	constraint fra_fk
         foreign key (exp_code, tes_index) references test (exp_code, tes_index)
         on delete cascade
         on update cascade
 );
 -- index
-create index if not exists idx_fra on frame (exp_code asc, tes_index asc, fra_index asc);
+create index if not exists fra_idx on frame (exp_code asc, tes_index asc, fra_index asc);
 
 ---------------------------------------
 ---------------------------------------
@@ -150,11 +154,12 @@ create table if not exists component (
     com_shape	        varchar(20)		not null 	default 'square',
 	com_color	        varchar(20)		not null 	default 'white',
     com_image	        blob 			null,
-	primary key (exp_code, tes_index, fra_index, com_index),
-	constraint fk_obj
+	constraint com_pk primary key (exp_code, tes_index, fra_index, com_index),
+    constraint com_ak unique(exp_code, tes_index, fra_index, com_name),
+	constraint com_fk
 		foreign key (exp_code, tes_index, fra_index) references frame (exp_code, tes_index, fra_index)
 		on delete cascade
 		on update cascade
 );
 -- index
-create index if not exists idx_obj on component (exp_code asc, tes_index asc, fra_index asc, com_index asc);
+create index if not exists com_idx on component (exp_code asc, tes_index asc, fra_index asc, com_index asc);

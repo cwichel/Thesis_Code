@@ -717,173 +717,330 @@ tests.</string>
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="gbx_tests">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>180</height>
-      </size>
-     </property>
-     <property name="title">
-      <string>Tests</string>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QTableView" name="tbv_test">
-        <property name="minimumSize">
-         <size>
-          <width>380</width>
-          <height>120</height>
-         </size>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="vly_03">
-        <property name="spacing">
-         <number>3</number>
-        </property>
+    <layout class="QHBoxLayout" name="hly_03">
+     <item>
+      <widget class="QGroupBox" name="gbx_test_dat">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>180</height>
+        </size>
+       </property>
+       <property name="title">
+        <string>Test Data</string>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QPushButton" name="pbt_new">
-          <property name="minimumSize">
-           <size>
-            <width>80</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>New</string>
-          </property>
-         </widget>
+         <widget class="QListView" name="lsv_test_dat"/>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="hly_03">
+         <layout class="QVBoxLayout" name="vly_03">
           <property name="spacing">
-           <number>4</number>
+           <number>3</number>
           </property>
           <item>
-           <widget class="QPushButton" name="pbt_up">
+           <widget class="QPushButton" name="pbt_dat_new">
             <property name="minimumSize">
              <size>
-              <width>38</width>
+              <width>80</width>
               <height>25</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>38</width>
+              <width>16777215</width>
               <height>25</height>
              </size>
             </property>
             <property name="text">
-             <string>Up</string>
+             <string>New</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pbt_down">
+           <layout class="QHBoxLayout" name="hly_04">
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="pbt_dat_up">
+              <property name="minimumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Up</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pbt_dat_down">
+              <property name="minimumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Down</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbt_dat_edit">
             <property name="minimumSize">
              <size>
-              <width>38</width>
+              <width>80</width>
               <height>25</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>38</width>
+              <width>16777215</width>
               <height>25</height>
              </size>
             </property>
             <property name="text">
-             <string>Down</string>
+             <string>Edit</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbt_dat_copy">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Copy</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbt_dat_remove">
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Remove</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="vsp_01">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="gbx_test_seq">
+       <property name="title">
+        <string>Test Sequence</string>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QPushButton" name="pbt_edit">
+         <widget class="QTableView" name="tbv_test_seq">
           <property name="minimumSize">
            <size>
-            <width>80</width>
-            <height>25</height>
+            <width>120</width>
+            <height>120</height>
            </size>
           </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Edit</string>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pbt_copy">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
+         <layout class="QVBoxLayout" name="vly_04">
+          <property name="spacing">
+           <number>3</number>
           </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Copy</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pbt_remove">
-          <property name="minimumSize">
-           <size>
-            <width>80</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Remove</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="vsp_01">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
+          <item>
+           <widget class="QPushButton" name="pbt_seq_add">
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="hly_05">
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="pbt_seq_up">
+              <property name="minimumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Up</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pbt_seq_down">
+              <property name="minimumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>38</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Down</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbt_seq_edit">
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Edit</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbt_seq_copy">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Copy</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbt_seq_remove">
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Remove</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="vsp_02">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
        </layout>
-      </item>
-     </layout>
-    </widget>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="bbt_save">

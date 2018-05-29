@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>530</width>
-    <height>360</height>
+    <width>360</width>
+    <height>515</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>530</width>
-    <height>360</height>
+    <width>360</width>
+    <height>515</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>530</width>
-    <height>360</height>
+    <width>360</width>
+    <height>515</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -69,13 +69,13 @@
        <widget class="QLabel" name="lbl_name">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
@@ -122,13 +122,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
@@ -147,103 +147,70 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <layout class="QHBoxLayout" name="hly_01">
-        <property name="spacing">
-         <number>5</number>
-        </property>
-        <item>
-         <widget class="QComboBox" name="cmb_units">
-          <property name="minimumSize">
-           <size>
-            <width>160</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>150</width>
-            <height>25</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="Line" name="lne_01">
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_size">
-          <property name="minimumSize">
-           <size>
-            <width>30</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>30</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Size:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="dsb_size">
-          <property name="minimumSize">
-           <size>
-            <width>125</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>115</width>
-            <height>25</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="hsp_01">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="lbl_position">
+       <widget class="QComboBox" name="cmb_units">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>160</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>150</width>
+          <height>25</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="lbl_size">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Size:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="dsb_size">
+        <property name="minimumSize">
+         <size>
+          <width>125</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>115</width>
+          <height>25</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="lbl_position">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
@@ -255,7 +222,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="4" column="1">
        <layout class="QHBoxLayout" name="hly_02">
         <property name="spacing">
          <number>5</number>
@@ -299,58 +266,7 @@
          </widget>
         </item>
         <item>
-         <widget class="Line" name="lne_02">
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_posy">
-          <property name="minimumSize">
-           <size>
-            <width>30</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>30</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Y:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="dsb_posy">
-          <property name="minimumSize">
-           <size>
-            <width>125</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>115</width>
-            <height>25</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="hsp_02">
+         <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -364,14 +280,29 @@
         </item>
        </layout>
       </item>
-      <item row="3" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="lbl_orientation">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
          <string>Rotation:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="6" column="1">
        <widget class="QDoubleSpinBox" name="dsb_orientation">
         <property name="minimumSize">
          <size>
@@ -387,17 +318,17 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="7" column="0">
        <widget class="QLabel" name="lbl_type">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>60</width>
           <height>25</height>
          </size>
         </property>
@@ -409,7 +340,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="7" column="1">
        <layout class="QHBoxLayout" name="hly_03">
         <property name="spacing">
          <number>5</number>
@@ -461,8 +392,50 @@
           </attribute>
          </widget>
         </item>
+       </layout>
+      </item>
+      <item row="5" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <spacer name="hsp_03">
+         <widget class="QLabel" name="lbl_posy">
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Y:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="dsb_posy">
+          <property name="minimumSize">
+           <size>
+            <width>125</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>115</width>
+            <height>25</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -480,77 +453,149 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="hly_04">
-     <item>
-      <widget class="QGroupBox" name="gbx_shape">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="title">
-        <string>Shape</string>
-       </property>
-       <layout class="QFormLayout" name="formLayout">
-        <item row="0" column="0">
-         <widget class="QLabel" name="lbl_shape">
-          <property name="minimumSize">
-           <size>
-            <width>50</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>50</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Shape:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="lbl_shape_color">
-          <property name="minimumSize">
-           <size>
-            <width>50</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>50</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Color:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QComboBox" name="cmb_shape_color">
+    <widget class="QGroupBox" name="gbx_shape">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Shape</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="lbl_shape">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Shape:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cmb_shape">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="lbl_shape_color">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Color:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="cmb_shape_color">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="gbx_image">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Image</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QLabel" name="lbl_image_status">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>60</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>60</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>No Image</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="vly_01">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="pbt_image_open">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -559,14 +604,17 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>150</width>
+            <width>16777215</width>
             <height>25</height>
            </size>
           </property>
+          <property name="text">
+           <string>Open</string>
+          </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="cmb_shape">
+        <item>
+         <widget class="QPushButton" name="pbt_image_zoom">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -575,98 +623,19 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>150</width>
+            <width>16777215</width>
             <height>25</height>
            </size>
           </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="gbx_image">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Image</string>
-       </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <widget class="QLabel" name="lbl_image_status">
-          <property name="minimumSize">
-           <size>
-            <width>120</width>
-            <height>60</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>70</width>
-            <height>60</height>
-           </size>
-          </property>
           <property name="text">
-           <string>No Image</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+           <string>Zoom</string>
           </property>
          </widget>
         </item>
-        <item>
-         <layout class="QVBoxLayout" name="vly_01">
-          <property name="spacing">
-           <number>3</number>
-          </property>
-          <item>
-           <widget class="QPushButton" name="pbt_image_open">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Open</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pbt_image_zoom">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Zoom</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
        </layout>
-      </widget>
-     </item>
-    </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="hly_05">
@@ -727,8 +696,6 @@
     </widget>
    </item>
   </layout>
-  <zorder>bbt_save</zorder>
-  <zorder>gbx_component</zorder>
  </widget>
  <resources/>
  <connections>

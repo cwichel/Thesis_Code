@@ -115,8 +115,6 @@ class ListModel(QtCore.QAbstractListModel):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return QtCore.QString(self.__header)
-            else:
-                return QtCore.QString(u"%1").arg(section+1)
 
     def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
         self.beginInsertRows(parent, position, position + rows - 1)
@@ -139,10 +137,7 @@ class ListModel(QtCore.QAbstractListModel):
 
     # =================================
     def update_items(self, items):
-        if len(items) > 0:
-            self.__list = sorted(items, key=lambda v: v.upper())
-        else:
-            self.__list = []
+        self.__list = items if items and isinstance(items, list) else []
         self.reset()
 
     def get_item(self, index):
@@ -151,18 +146,21 @@ class ListModel(QtCore.QAbstractListModel):
         else:
             return None
 
-    def get_index(self, row):
+    def get_index(self, item):
         try:
-            return self.__list.index(row)
-        except:
+            return self.__list.index(item)
+        except ValueError:
             return -1
+
+    def get_list(self):
+        return self.__list
 
 
 # =============================================================================
 # Model: Array
 # items: list: [[item_value1, item_value2]]
 # =============================================================================
-class ArrayModel(QtCore.QAbstractTableModel):
+class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, items, header, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
         # -------------------
@@ -178,7 +176,7 @@ class ArrayModel(QtCore.QAbstractTableModel):
         return self.__cols
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return sum(1 for item in self.__array if isinstance(item, list))
+        return len(self.__array)
 
     def data(self, index, role=None):
         if role == QtCore.Qt.ToolTipRole:
@@ -205,8 +203,6 @@ class ArrayModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return QtCore.QString(self.__header[section]) if section < self.__cols else u"Not implemented"
-            else:
-                return QtCore.QString(u"%1").arg(section+1)
 
     def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
         self.beginInsertRows(parent, position, position + rows - 1)
@@ -247,9 +243,7 @@ class ArrayModel(QtCore.QAbstractTableModel):
 
     # =================================
     def update_items(self, items):
-        items_sum = sum(1 for item in items if isinstance(item, list))
-        if items_sum > 0:
-            self.__array = sorted(items, key=lambda v: v.upper())
+        self.__array = items if items and isinstance(items[0], list) else []
         self.reset()
 
     def get_item(self, index):
@@ -261,20 +255,26 @@ class ArrayModel(QtCore.QAbstractTableModel):
     def get_index(self, row):
         try:
             return self.__array.index(row)
-        except:
+        except ValueError:
             return -1
+
+    def get_list(self, row=0):
+        return [item[row] for item in self.__array] if self.__array and row < self.rowCount() else []
 
 
 # =============================================================================
 # Model: Tree
 # items: TreeNode
 # =============================================================================
-class TreeNode(object):
-    def __init__(self, mask, value, parent=None):
+class ExperimentNode(object):
+    # =================================
+    def __init__(self, mask, code=None, date_created=None, date_updated=None, parent=None):
         self.__mask = mask
-        self.__value = value
+        self.__code = code
         self.__childs = []
         self.__parent = None
+        self.__date_created = date_created
+        self.__date_updated = date_updated
         # -------------------
         self.set_parent(parent)
         if self.__parent is not None:
@@ -284,32 +284,33 @@ class TreeNode(object):
         return self.get_log()
 
     # =================================
-    def set_mask(self, mask):
-        self.__mask = mask
-
     def get_mask(self):
         return self.__mask
 
-    def set_value(self, value):
-        self.__value = value
-
-    def get_value(self):
-        return self.__value
+    def get_code(self):
+        return self.__code
 
     def set_parent(self, parent):
-        if isinstance(parent, TreeNode) or parent is None:
+        if isinstance(parent, ExperimentNode) or parent is None:
             self.__parent = parent
 
     def get_parent(self):
         return self.__parent
 
+    def get_date_created(self):
+        return self.__date_created
+
+    def get_date_updated(self):
+        return self.__date_updated
+
+    # =================================
     def append_child(self, child):
-        if isinstance(child, TreeNode):
+        if isinstance(child, ExperimentNode):
             child.set_parent(self)
             self.__childs.append(child)
 
     def insert_child(self, index, child):
-        if isinstance(child, TreeNode) and 0 <= index <= self.get_child_count():
+        if isinstance(child, ExperimentNode) and 0 <= index <= self.get_child_count():
             child.set_parent(self)
             self.__childs.insert(index, child)
             return True
@@ -331,10 +332,13 @@ class TreeNode(object):
             return self.__childs[index]
         return None
 
+    def get_childs(self):
+        return self.__childs
+
     def get_index(self, child):
         try:
             return self.__childs.index(child)
-        except:
+        except ValueError:
             return None
 
     def get_parent_index(self):
@@ -353,18 +357,17 @@ class TreeNode(object):
         return output
 
 
-class TreeModel(QtCore.QAbstractItemModel):
-    def __init__(self, items, header, parent=None):
+class ExperimentTreeModel(QtCore.QAbstractItemModel):
+    def __init__(self, items, parent=None):
         QtCore.QAbstractItemModel.__init__(self, parent)
         # -------------------
         self.__root_node = None
-        self.__header = header
         # -------------------
         self.update_items(items)
 
     # =================================
     def columnCount(self, parent=None, *args, **kwargs):
-        return 1
+        return 3
 
     def rowCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
         parent_node = self.get_node(parent)
@@ -373,42 +376,24 @@ class TreeModel(QtCore.QAbstractItemModel):
     def data(self, index, role=None):
         if not index.isValid():
             return None
+        col = index.column()
         this_node = index.internalPointer()
         if role == QtCore.Qt.DisplayRole:
-            if index.column() == 0:
+            if col == 0:
                 return unicode(this_node.get_mask())
-
-    def setData(self, index, value, role=QtCore.Qt.EditRole):
-        if not index.isValid():
-            return False
-        if role == QtCore.Qt.EditRole:
-            this_node = self.get_node(index)
-            this_node.set_mask(value)
-            return True
+            if col == 1 and this_node.get_date_created() is not None:
+                return unicode(this_node.get_date_created())
+            if col == 2 and this_node.get_date_updated() is not None:
+                return unicode(this_node.get_date_updated())
 
     def headerData(self, section, orientation, role=None):
         if role == QtCore.Qt.DisplayRole:
             if section == 0:
-                return self.__header
-
-    def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
-        success = False
-        parent_node = self.get_node(parent)
-        self.beginInsertRows(parent, position, position + rows - 1)
-        for row in range(rows):
-            new_child = TreeNode(u"untitled" + unicode(str(row)), u"Empty")
-            success = parent_node.insert_child(position, new_child)
-        self.endInsertRows()
-        return success
-
-    def removeRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
-        success = False
-        parent_node = self.get_node(parent)
-        self.beginRemoveRows(parent, position, position + rows - 1)
-        for row in range(rows):
-            success = parent_node.remove_child(position)
-        self.endRemoveRows()
-        return success
+                return u'Experiment'
+            if section == 1:
+                return u'Created on'
+            if section == 2:
+                return u'Updated on'
 
     def flags(self, index):
         this_node = self.get_node(index)
@@ -438,13 +423,23 @@ class TreeModel(QtCore.QAbstractItemModel):
                 return this_node
         return self.__root_node
 
+    def get_index_by_code(self, code=u''):
+        if self.__root_node is not None and code != u'':
+            main_nodes = self.__root_node.get_childs()
+            for main_child in main_nodes:
+                sub_nodes = main_child.get_childs()
+                for sub_child in sub_nodes:
+                    if sub_child.get_code() == code:
+                        return self.get_index(node=sub_child)
+        return None
+
     # =================================
     def update_items(self, node):
-        if isinstance(node, TreeNode):
+        if isinstance(node, ExperimentNode):
             self.__root_node = node
         self.reset()
 
     def get_index(self, node):
-        if not isinstance(node, TreeNode) or node == self.__root_node:
+        if not isinstance(node, ExperimentNode) or node == self.__root_node:
             return QtCore.QModelIndex()
         return self.createIndex(node.get_parent_index(), 0, node)
