@@ -149,7 +149,7 @@ create table if not exists component (
 	com_units           varchar(10)		not null 	default 'deg',
 	com_pos_x           float 			not null 	default 0.0,
 	com_pos_y           float 			not null 	default 0.0,
-	com_orientation     float 			not null 	default 0.0,
+	com_rotation     	float 			not null 	default 0.0,
 	com_size            float 			not null 	default 1.0,
     com_shape	        varchar(20)		not null 	default 'square',
 	com_color	        varchar(20)		not null 	default 'white',

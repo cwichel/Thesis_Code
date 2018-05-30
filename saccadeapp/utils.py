@@ -11,8 +11,8 @@ import sqlite3 as lite
 # =============================================================================
 class SaccadeDB(object):
     # =================================
-    def __init__(self, filepath=u'saccadedb.sqlite3'):
-        self.__db_script = Utils.format_path(Utils.get_file_path()+u'/resources/database/saccadedb_sqlite.sql')
+    def __init__(self, filepath=u"saccadedb.sqlite3"):
+        self.__db_script = Utils.format_path(Utils.get_file_path()+u"/resources/database/saccadedb_sqlite.sql")
         self.__db_connection = None
         self.__db_file = filepath
         self.connect()
@@ -23,7 +23,7 @@ class SaccadeDB(object):
         if path.isfile(self.__db_file):
             self.__db_connection = lite.connect(self.__db_file)
             self.__db_connection.executescript(u"pragma recursive_triggers=1; pragma foreign_keys=1;")
-            print u'Connected!'
+            print u"Connected!"
         else:
             sql = open(self.__db_script, u'r').read()
             self.__db_connection = lite.connect(self.__db_file)
@@ -33,7 +33,6 @@ class SaccadeDB(object):
     def close(self):
         try:
             self.__db_connection.close()
-            print u"Disconnected!"
             return True
         except lite.Error as error:
             print u"Error: %s" % error.message
@@ -71,47 +70,48 @@ class SaccadeDB(object):
 # =============================================================================
 class Utils(object):
     # =================================
-    def __init__(self):
-        pass
-
-    # =================================
     @staticmethod
-    def format_text(word, lmin=0, lmax=-1):
+    def format_text(text, lmin=None, lmax=None, var_name=u""):
         try:
-            temp = unicode(word)
-            if lmax <= lmin <= len(temp) or lmin <= len(temp) <= lmax:
-                return temp
-            return u''
+            text = unicode(text)
+            if lmin is not None and len(text) < lmin:
+                raise Exception(var_name+u" string too short.")
+            if lmax is not None and len(text) > lmax:
+                raise Exception(var_name+u" string too long.")
+            return text
         except ValueError:
-            return u''
+            raise Exception(var_name+u" can't be converted to string.")
 
     @staticmethod
-    def format_int(value, vmin=0, default=None):
+    def format_int(value, vmin=None, vmax=None, var_name=u""):
         try:
-            temp = int(value)
-            if temp >= vmin:
-                return temp
-            return default
+            value = int(value)
+            if vmin is not None and value < vmin:
+                raise Exception(var_name+u" value too low.")
+            if vmax is not None and value > vmax:
+                raise Exception(var_name+u" value too high.")
+            return value
         except ValueError:
-            return default
+            raise Exception(var_name+u" numeric value needed.")
 
     @staticmethod
-    def format_float(value, vmin=0.0, default=None):
+    def format_float(value, vmin=None, vmax=None, var_name=u""):
         try:
-            temp = float(value)
-            if temp >= vmin:
-                return temp
-            return default
+            value = float(value)
+            if vmin is not None and value < vmin:
+                raise Exception(var_name+u" value too low.")
+            if vmax is not None and value > vmax:
+                raise Exception(var_name+u" value too high.")
+            return value
         except ValueError:
-            return default
+            raise Exception(var_name+u" numeric value needed.")
 
     @staticmethod
-    def format_bool(state, default=False):
+    def format_bool(state, var_name=u""):
         try:
-            temp = bool(state)
-            return temp
+            return bool(state)
         except ValueError:
-            return default
+            raise Exception(var_name+u" needs to be boolean or numeric.")
 
     # =================================
     @staticmethod
@@ -126,7 +126,7 @@ class Utils(object):
             date = date.replace(tzinfo=gmt0)
             return unicode(date.astimezone(cltc).strftime(u'%Y-%m-%d %H:%M:%S'))
         except ValueError:
-            return u'No disponible'
+            return u"No disponible"
 
     # =================================
     @staticmethod
@@ -143,7 +143,7 @@ class Utils(object):
     @staticmethod
     def format_path(path):
         import platform
-        path = Utils.format_text(path)
+        path = Utils.format_text(text=path)
         is_win = any(platform.win32_ver())
         path = path.replace(u'\\', u'#').replace(u'/', u'#')
         return path.replace(u'#', u'\\') if is_win else path.replace(u'#', u'/')
@@ -182,6 +182,14 @@ class Utils(object):
         from psychopy import monitors
         return monitors.getAllMonitors()
 
+    @staticmethod
+    def get_available_units():
+        return [u"norm", u"cm", u"deg", u"degFlat", u"degFlatPos", u"pix"]
+
+    @staticmethod
+    def get_available_shapes():
+        return [u"arrow", u"circle", u"cross", u"gauss", u"square"]
+
     # =================================
     @staticmethod
     def open_documentation():
@@ -196,12 +204,12 @@ class Utils(object):
         is_open = False
         threads = thread.enumerate()
         for proccess in threads:
-            if proccess.getName() == u'MonitorCenter':
+            if proccess.getName() == u"MonitorCenter":
                 is_open = True
         if is_open:
-            print u'Error: Monitor Center is already open'
+            print u"Error: Monitor Center is already open"
             return False
-        print u'Opening Monitor Center...'
+        print u"Opening Monitor Center..."
         monitor_path = Utils.format_path(Utils.get_file_path()+u'/resources/monitors/monitorCenter.py')
         monitor_thread = thread.Thread(target=lambda: subproc.call(u'python ' + monitor_path))
         monitor_thread.setName(u'MonitorCenter')

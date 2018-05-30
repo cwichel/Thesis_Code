@@ -152,9 +152,6 @@ class ListModel(QtCore.QAbstractListModel):
         except ValueError:
             return -1
 
-    def get_list(self):
-        return self.__list
-
 
 # =============================================================================
 # Model: Array
@@ -257,9 +254,6 @@ class TableModel(QtCore.QAbstractTableModel):
             return self.__array.index(row)
         except ValueError:
             return -1
-
-    def get_list(self, row=0):
-        return [item[row] for item in self.__array] if self.__array and row < self.rowCount() else []
 
 
 # =============================================================================

@@ -298,6 +298,9 @@
           <height>25</height>
          </size>
         </property>
+        <property name="maximum">
+         <double>9999.000000000000000</double>
+        </property>
        </widget>
       </item>
      </layout>
@@ -475,7 +478,7 @@
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="hly_04">
+         <layout class="QHBoxLayout" name="hly_02">
           <property name="spacing">
            <number>4</number>
           </property>
@@ -597,7 +600,7 @@
    <item>
     <layout class="QHBoxLayout" name="hly_03">
      <item>
-      <spacer name="hsp_02">
+      <spacer name="hsp_01">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -613,13 +616,13 @@
       <widget class="QPushButton" name="pbt_preview">
        <property name="minimumSize">
         <size>
-         <width>155</width>
+         <width>145</width>
          <height>25</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>155</width>
+         <width>145</width>
          <height>25</height>
         </size>
        </property>
@@ -631,57 +634,69 @@
     </layout>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="bbt_save">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::Save</set>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="hly_04">
+     <item>
+      <spacer name="hsp_02">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbt_save">
+       <property name="minimumSize">
+        <size>
+         <width>70</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>70</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Save</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbt_cancel">
+       <property name="minimumSize">
+        <size>
+         <width>70</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>70</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
-  <zorder>bbt_save</zorder>
   <zorder>gbx_frame</zorder>
   <zorder>gbx_components</zorder>
   <zorder>gbx_task</zorder>
   <zorder>gbx_timed</zorder>
+  <zorder>horizontalLayoutWidget</zorder>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>bbt_save</sender>
-   <signal>accepted()</signal>
-   <receiver>dlg_frame</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bbt_save</sender>
-   <signal>rejected()</signal>
-   <receiver>dlg_frame</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <buttongroups>
   <buttongroup name="gbt_frame_type"/>
  </buttongroups>
