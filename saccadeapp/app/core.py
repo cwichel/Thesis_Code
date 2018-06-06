@@ -5,7 +5,7 @@
 import copy
 import numpy as np
 from psychopy import visual
-from saccadeapp import Utils, SaccadeDB
+from utils import Utils, SaccadeDB
 
 
 # =============================================================================
@@ -34,8 +34,10 @@ class Configuration(object):
             from configuration
             order by con_name asc;
             """
-            return db.pull_query(query=sql)
-        return None
+            item_list = db.pull_query(query=sql)
+            if item_list is not None:
+                return [item for item in item_list]
+        return []
 
     # =================================
     def set_database(self, db):
@@ -100,7 +102,8 @@ class Configuration(object):
 
     def get_tracker_conf_path(self):
         if self.__tracker in Utils.get_available_trackers():
-            return Utils.format_path(Utils.get_file_path()+u"/resources/eyetrackers/"+self.__tracker+u"_config.yaml")
+            base_path = Utils.format_path(Utils.get_module_path()+u"/app/resources/eyetrackers/")
+            return base_path+self.__tracker+u"_config.yaml"
         return u""
 
     # -----------------------
@@ -222,27 +225,34 @@ class ItemList(object):
 
     # =================================
     def item_add(self, item):
-        if isinstance(item, self._class) and item.get_name() not in self.get_items_str():
+        if isinstance(item, self._class) and self.get_item_index(item.get_name()) == -1:
             self._item_dat.append(item)
             return True
         return False
 
     def item_copy(self, item_id, new_name):
-        dat_len = self.get_items_length()
-        if 0 <= item_id < dat_len:
-            new_name = Utils.format_text(new_name)
-            if new_name is not None and new_name not in self.get_items_str():
+        if 0 <= item_id < self.get_items_length():
+            new_name = Utils.format_text(text=new_name, var_name=u"copy name")
+            if new_name is not None and self.get_item_index(new_name) == -1:
                 new_item = self._item_dat[item_id].copy()
                 new_item.set_name(name=new_name)
                 return self.item_add(item=new_item)
         return False
 
     def item_remove(self, item_id):
-        dat_len = self.get_items_length()
-        if 0 <= item_id < dat_len:
+        if 0 <= item_id < self.get_items_length():
             self._item_dat.pop(item_id)
             return True
         return False
+
+    def item_replace(self, item_id, new_item):
+        if 0 <= item_id < self.get_items_length():
+            item_popped = self._item_dat.pop(item_id)
+            if isinstance(new_item, self._class) and self.get_item_index(new_item.get_name()) == -1:
+                self._item_dat.insert(item_id, new_item)
+                return True
+            self._item_dat.insert(item_id, item_popped)
+            return False
 
     def item_swap(self, item1_id, item2_id):
         data_len = self.get_items_length()
@@ -266,10 +276,15 @@ class ItemList(object):
         return [item.get_name() for item in self._item_dat]
 
     def get_item(self, item_id):
-        dat_len = self.get_items_length()
-        if 0 <= item_id < dat_len:
+        if 0 <= item_id < self.get_items_length():
             return self._item_dat[item_id]
         return None
+
+    def get_item_index(self, item_name):
+        try:
+            return self.get_items_str().index(item_name)
+        except ValueError:
+            return -1
 
     def get_items_length(self):
         return len(self._item_dat)
@@ -288,11 +303,20 @@ class ItemListSequence(ItemList):
     def item_remove(self, item_id):
         if 0 <= item_id < self.get_items_length():
             item = self._item_dat[item_id]
-            new_sequence = [seq for seq in self._item_seq if seq[0] is not item]
-            self._item_seq = new_sequence
+            self._item_seq = [seq for seq in self._item_seq if seq[0] is not item]
             self._item_dat.pop(item_id)
             return True
         return False
+
+    def item_replace(self, item_id, new_item):
+        if 0 <= item_id < self.get_items_length():
+            item_popped = self._item_dat.pop(item_id)
+            if isinstance(new_item, self._class) and self.get_item_index(new_item.get_name()) == -1:
+                self._item_dat.insert(item_id, new_item)
+                self._item_seq = [[new_item, seq[1]] if seq[0] == item_popped else seq for seq in self._item_seq]
+                return True
+            self._item_dat.insert(item_id, item_popped)
+            return False
 
     # =================================
     def sequence_add(self, item_id, quantity):
@@ -361,16 +385,32 @@ class Component(object):
         self.__color = u"white"
         self.__image = None
 
+    def __deepcopy__(self, memo):
+        com_copy = Component()
+        com_copy.set_name(name=self.__name)
+        com_copy.set_units(units=self.__units)
+        com_copy.set_position(posx=self.__pos[0], posy=self.__pos[1])
+        com_copy.set_rotation(rot=self.__rot)
+        com_copy.set_size(size=self.__size)
+        com_copy.set_shape(shape=self.__shape)
+        com_copy.set_color(color=self.__color)
+        com_copy.set_image(image=self.__image)
+        return com_copy
+
     # =================================
     @classmethod
     def get_list(cls, db, exp, tes, fra):
-        sql = u"""
-        select com_index, com_name, com_shape
-        from component
-        where exp_code='%s' and tes_index='%d' and fra_index='%d'
-        order by com_index asc;
-        """ % (exp, tes, fra)
-        return db.pull_query(query=sql)
+        if isinstance(db, SaccadeDB):
+            sql = u"""
+            select com_index, com_name, com_shape
+            from component
+            where exp_code='%s' and tes_index='%d' and fra_index='%d'
+            order by com_index asc;
+            """ % (exp, tes, fra)
+            item_list = db.pull_query(query=sql)
+            if item_list is not None:
+                return [[int(item[0]), item[1], item[2]] for item in item_list]
+        return []
 
     # =================================
     def set_name(self, name):
@@ -420,12 +460,17 @@ class Component(object):
         return self.__size
 
     # -----------------------
-    def set_image(self, image_path):
+    def set_image(self, image):
         from os import path
         from PIL import Image
-        image_path = Utils.format_path(path=image_path)
-        if image_path is not u"" and path.isfile(image_path):
-            self.__image = Image.open(image_path)
+        if image is None:
+            return False
+        if isinstance(image, Image.Image):
+            self.__image = image
+            self.__shape = u"image"
+            return True
+        elif image != u"" and path.isfile(path=image):
+            self.__image = Image.open(image)
             self.__shape = u"image"
             return True
         return False
@@ -522,7 +567,7 @@ class Component(object):
 
     # =================================
     def get_execution(self, win):
-        from utils import Switch
+        from saccadeapp.app.utils import Switch
         if not isinstance(win, visual.Window):
             return None
         with Switch(self.__shape) as case:
@@ -565,19 +610,23 @@ class Frame(ItemList):
         self.__color = u"black"
         self.__is_task = False
         self.__keys_allowed = u""
-        self.__keys_selected = u""
+        self.__keys_correct = u""
         self.__time = 0.0
 
     # =================================
     @classmethod
     def get_list(cls, db, exp, tes):
-        sql = u"""
-        select fra_index, fra_name
-        from frame
-        where exp_code='%s' and tes_index='%d'
-        order by fra_index asc;
-        """ % (exp, tes)
-        return db.pull_query(query=sql)
+        if isinstance(db, SaccadeDB):
+            sql = u"""
+            select fra_index, fra_name
+            from frame
+            where exp_code='%s' and tes_index='%d'
+            order by fra_index asc;
+            """ % (exp, tes)
+            item_list = db.pull_query(query=sql)
+            if item_list is not None:
+                return [[int(item[0]), item[1]] for item in item_list]
+        return []
 
     # =================================
     def set_name(self, name):
@@ -606,7 +655,7 @@ class Frame(ItemList):
             self.__time = 0.0
             return True
         self.__keys_allowed = u""
-        self.__keys_selected = u""
+        self.__keys_correct = u""
         return False
 
     def is_task(self):
@@ -634,25 +683,25 @@ class Frame(ItemList):
         return self.__keys_allowed
 
     # -----------------------
-    def set_keys_selected(self, keys):
+    def set_keys_correct(self, keys):
         if self.__is_task and self.__keys_allowed != u"":
             keys = Utils.format_text(text=keys, var_name=u"selected keys").replace(unicode(u" "), unicode(u""))
             allowed = self.__keys_allowed.split(u",")
             selected = keys.split(u",")
             key_match = [key for key in selected if key in allowed]
             if len(key_match) == len(selected):
-                self.__keys_selected = keys
+                self.__keys_correct = keys
                 return True
         return False
 
-    def get_keys_selected(self):
-        return self.__keys_selected
+    def get_keys_correct(self):
+        return self.__keys_correct
 
     # =================================
     def load(self, db, exp, tes, fra):
         sql = u"""
         select
-        fra_name, fra_color, fra_is_task, fra_time, fra_keys_allowed, fra_keys_selected
+        fra_name, fra_color, fra_is_task, fra_time, fra_keys_allowed, fra_keys_correct
         from frame
         where exp_code='%s' and tes_index='%d' and fra_index='%d';
         """ % (exp, tes, fra)
@@ -663,7 +712,7 @@ class Frame(ItemList):
             self.__is_task = bool(int(fra_res[0, 2]))
             self.__time = float(fra_res[0, 3])
             self.__keys_allowed = unicode(fra_res[0, 4])
-            self.__keys_selected = unicode(fra_res[0, 5])
+            self.__keys_correct = unicode(fra_res[0, 5])
             self.__load_components(db=db, exp=exp, tes=tes, fra=fra)
             return True
         return False
@@ -672,11 +721,11 @@ class Frame(ItemList):
         sql = u"""
         insert into frame
         (exp_code, tes_index, fra_index, 
-        fra_name, fra_color, fra_is_task, fra_time, fra_keys_allowed, fra_keys_selected)
+        fra_name, fra_color, fra_is_task, fra_time, fra_keys_allowed, fra_keys_correct)
         values ('%s', '%d', '%d', '%s', '%s', '%x', '%f', '%s', '%s');
         """ % (
             exp, tes, fra,
-            self.__name, self.__color, self.__is_task, self.__time, self.__keys_allowed, self.__keys_selected
+            self.__name, self.__color, self.__is_task, self.__time, self.__keys_allowed, self.__keys_correct
         )
         operation_ok = db.push_query(query=sql)
         if operation_ok:
@@ -702,33 +751,31 @@ class Frame(ItemList):
 
     # =================================
     def get_execution(self, win):
-        if isinstance(win, visual.Window):
-            frame = {
-                u"is_task":             self.__is_task,
-                u"time":                self.__time,
-                u"allowed_keys":        self.__keys_allowed.replace(u"space", u" ").split(u","),
-                u"correct_keys":        self.__keys_selected.replace(u"space", u" ").split(u","),
-                u"correct_keys_str":    self.__keys_selected,
-                u"background":          visual.Rect(win=win, width=win.size[0], height=win.size[1], units=u"pix",
-                                                    lineColor=self.__color, fillColor=self.__color),
-                u"components":          None
-            }
-            if self._item_dat:
-                frame[u"components"] = [component.get_execution(win=win) for component in self._item_dat]
-            return frame
-        return None
+        if not isinstance(win, visual.Window):
+            return None
+        frame = {
+            u"name":                self.__name,
+            u"is_task":             self.__is_task,
+            u"time":                self.__time,
+            u"allowed_keys":        self.__keys_allowed.replace(u"space", u" ").split(u","),
+            u"correct_keys":        self.__keys_correct.replace(u"space", u" ").split(u","),
+            u"correct_keys_str":    self.__keys_correct,
+            u"background":          visual.Rect(win=win, width=win.size[0], height=win.size[1], units=u"pix",
+                                                lineColor=self.__color, fillColor=self.__color),
+            u"components":          [item.get_execution(win=win) for item in self._item_dat]
+        }
+        return frame
 
     def get_configuration(self):
         frame = {
+            u"name":            self.__name,
             u"is_task":         self.__is_task,
             u"time":            self.__time,
             u"allowed_keys":    self.__keys_allowed,
-            u"correct_keys":    self.__keys_selected,
+            u"correct_keys":    self.__keys_correct,
             u"background":      self.__color,
-            u"components":      None
+            u"components":      [item.get_configuration() for item in self._item_dat]
         }
-        if self._item_dat:
-            frame[u"components"] = [component.get_configuration() for component in self._item_dat]
         return frame
 
 
@@ -745,13 +792,17 @@ class Test(ItemList):
     # =================================
     @classmethod
     def get_list(cls, db, exp):
-        sql = u"""
-        select tes_index, tes_name
-        from test
-        where exp_code='%s'
-        order by tes_index asc;
-        """ % exp
-        return db.pull_query(query=sql)
+        if isinstance(db, SaccadeDB):
+            sql = u"""
+            select tes_index, tes_name
+            from test
+            where exp_code='%s'
+            order by tes_index asc;
+            """ % exp
+            item_list = db.pull_query(query=sql)
+            if item_list is not None:
+                return [[int(item[0]), item[1]] for item in item_list]
+        return []
 
     # =================================
     def set_name(self, name):
@@ -817,24 +868,20 @@ class Test(ItemList):
 
     # =================================
     def get_execution(self, win):
-        if isinstance(win, visual.Window):
-            test = {
-                u"name":        self.__name,
-                u"frames":      None
-            }
-            if self._item_dat:
-                test[u"frames"] = [frame.get_execution(win=win) for frame in self._item_dat]
-            return test
-        return None
+        if not isinstance(win, visual.Window):
+            return None
+        test = {
+            u"name":        self.__name,
+            u"frames":      [item.get_execution(win=win) for item in self._item_dat]
+        }
+        return test
 
     def get_configuration(self):
         test = {
             u"name":        self.__name,
             u"description": self.__description,
-            u"frames":      None,
+            u"frames":      [item.get_configuration() for item in self._item_dat],
         }
-        if self._item_dat:
-            test[u"frames"] = [frame.get_configuration() for frame in self._item_dat]
         return test
 
 
@@ -847,14 +894,17 @@ class Experiment(ItemListSequence):
         super(Experiment, self).__init__(item_class=Test)
         self.__in_db = False
         self.__database = None
+        # -------------------
+        self.__date_created = u""
+        self.__date_updated = u""
+        # -------------------
         self.__code = u""
         self.__name = u"Unnamed"
         self.__version = u"1.0"
         self.__description = u""
         self.__instructions = u""
         self.__comments = u""
-        self.__date_created = u""
-        self.__date_updated = u""
+        # -------------------
         self.__dia_is_active = True
         self.__dia_ask_age = True
         self.__dia_ask_gender = True
@@ -873,12 +923,16 @@ class Experiment(ItemListSequence):
     # =================================
     @classmethod
     def get_list(cls, db):
-        sql = u"""
-        select exp_code, exp_name, exp_version, exp_date_creation, exp_date_update
-        from experiment
-        order by exp_name asc, exp_version asc;
-        """
-        return db.pull_query(query=sql)
+        if isinstance(db, SaccadeDB):
+            sql = u"""
+            select exp_code, exp_name, exp_version, exp_date_creation, exp_date_update
+            from experiment
+            order by exp_name asc, exp_version asc;
+            """
+            item_list = db.pull_query(query=sql)
+            if item_list is not None:
+                return [[item[0], [item[1], item[2]], [item[3], item[4]]] for item in item_list]
+        return []
 
     # =================================
     def set_database(self, db):
@@ -890,7 +944,7 @@ class Experiment(ItemListSequence):
     def get_database(self):
         return self.__database
 
-    def is_on_database(self):
+    def in_database(self):
         return self.__in_db
 
     # -----------------------
@@ -1028,8 +1082,8 @@ class Experiment(ItemListSequence):
                 self.__name = unicode(exp_res[0, 0])
                 self.__version = unicode(exp_res[0, 1])
                 self.__description = unicode(exp_res[0, 2])
-                self.__instructions = unicode(exp_res[0, 4])
-                self.__comments = unicode(exp_res[0, 3])
+                self.__instructions = unicode(exp_res[0, 3])
+                self.__comments = unicode(exp_res[0, 4])
                 self.__date_created = Utils.get_time(exp_res[0, 5])
                 self.__date_updated = Utils.get_time(exp_res[0, 6])
                 self.__dia_is_active = bool(int(exp_res[0, 7]))
@@ -1051,7 +1105,7 @@ class Experiment(ItemListSequence):
             if self.__in_db:
                 sql = u"""
                 update experiment set
-                exp_name='%s', exp_version='%s', exp_description='%s', exp_comments='%s', exp_instructions='%s'
+                exp_name='%s', exp_version='%s', exp_description='%s', exp_instructions='%s', exp_comments='%s' 
                 where exp_code='%s';
                 update exp_dia set 
                 dia_is_active='%x', dia_ask_age='%x', dia_ask_gender='%x', dia_ask_glasses='%x', dia_ask_eye_color='%x'
@@ -1060,7 +1114,7 @@ class Experiment(ItemListSequence):
                 con_need_space='%x', con_is_random='%x', con_is_rest='%x', con_rest_period='%d', con_rest_time='%f'
                 where exp_code='%s';
                 """ % (
-                    self.__name, self.__version, self.__description, self.__comments, self.__instructions, self.__code,
+                    self.__name, self.__version, self.__description, self.__instructions, self.__comments, self.__code,
                     self.__dia_is_active, self.__dia_ask_age, self.__dia_ask_gender, self.__dia_ask_glasses,
                     self.__dia_ask_eye_color, self.__code, self.__con_need_space, self.__con_is_random,
                     self.__con_is_rest, self.__con_rest_period, self.__con_rest_time, self.__code
@@ -1189,30 +1243,29 @@ class Experiment(ItemListSequence):
         return None
 
     def get_execution(self, win):
-        if isinstance(win, visual.Window) and self.__in_db:
-            experiment = {
-                u"instructions":    self.__instructions,
-                u"space_start":     self.__con_need_space,
-                u"rest_active":     self.__con_is_rest,
-                u"rest_period":     self.__con_rest_period,
-                u"rest_time":       self.__con_rest_time,
-                u"test_data":       [],
-                u"test_sequence":   []
-            }
-            for test in self._item_dat:
-                experiment[u"test_data"].append(test.get_execution(win=win))
-            for item in self._item_seq:
-                test = item[0]
-                quantity = item[1]
-                if test.get_items():
-                    index = self._item_dat.index(test)
-                    experiment[u"test_sequence"].append(index*np.full(shape=(quantity, 1), fill_value=1, dtype=int))
-            experiment[u"test_sequence"] = np.concatenate(experiment[u"test_sequence"])
-            if self.__con_is_random:
-                np.random.shuffle(experiment[u"test_sequence"])
-            if len(experiment[u"test_sequence"]) > 0:
-                return experiment
-        return None
+        if not (isinstance(win, visual.Window) and self.__in_db):
+            return None
+        experiment = {
+            u"instructions":    self.__instructions,
+            u"space_start":     self.__con_need_space,
+            u"rest": {
+                u"active":      self.__con_is_rest,
+                u"period":      self.__con_rest_period,
+                u"time":        self.__con_rest_time,
+            },
+            u"test_data":       [item.get_execution(win=win) for item in self._item_dat],
+            u"test_sequence":   []
+        }
+        for item in self._item_seq:
+            test = item[0]
+            quantity = item[1]
+            if test.get_items():
+                index = self._item_dat.index(test)
+                experiment[u"test_sequence"].append(index*np.full(shape=(quantity, 1), fill_value=1, dtype=int))
+        experiment[u"test_sequence"] = np.concatenate(experiment[u"test_sequence"])
+        if self.__con_is_random:
+            np.random.shuffle(experiment[u"test_sequence"])
+        return experiment
 
     def get_configuration(self):
         if self.__in_db:
@@ -1239,12 +1292,8 @@ class Experiment(ItemListSequence):
                         u"ask_eye_color":   self.__dia_ask_eye_color,
                     }
                 },
-                u"tests":                   None,
-                u"sequence":                None
+                u"tests":                   [item.get_configuration() for item in self._item_dat],
+                u"sequence":                [[self._item_dat.index(item[0]), item[1]] for item in self._item_seq]
             }
-            if self._item_dat:
-                experiment[u"tests"] = [test.get_configuration() for test in self._item_dat]
-            if self._item_seq:
-                experiment[u"sequence"] = [[self._item_dat.index(item[0]), item[1]] for item in self._item_seq]
             return experiment
         return None

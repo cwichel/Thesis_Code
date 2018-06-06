@@ -11,10 +11,10 @@ import sqlite3 as lite
 # =============================================================================
 class SaccadeDB(object):
     # =================================
-    def __init__(self, filepath=u"saccadedb.sqlite3"):
-        self.__db_script = Utils.format_path(Utils.get_file_path()+u"/resources/database/saccadedb_sqlite.sql")
+    def __init__(self, filepath=u""):
+        self.__db_script = Utils.format_path(Utils.get_module_path()+u"/app/resources/database/saccadedb_sqlite.sql")
+        self.__db_file = u"saccadedb.sqlite3" if filepath == u"" else filepath
         self.__db_connection = None
-        self.__db_file = filepath
         self.connect()
 
     # =================================
@@ -115,6 +115,11 @@ class Utils(object):
 
     # =================================
     @staticmethod
+    def is_in_list(item, item_list):
+        return any(1 for row in item_list if item in row)
+
+    # =================================
+    @staticmethod
     def get_time(date):
         import pytz
         from datetime import datetime as dt
@@ -122,9 +127,9 @@ class Utils(object):
             gmt0 = pytz.timezone(u"GMT+0")
             cltc = pytz.timezone(u"Chile/Continental")
             date = Utils.format_text(date)
-            date = dt.strptime(date, u'%Y-%m-%d %H:%M:%S')
+            date = dt.strptime(date, u"%Y-%m-%d %H:%M:%S")
             date = date.replace(tzinfo=gmt0)
-            return unicode(date.astimezone(cltc).strftime(u'%Y-%m-%d %H:%M:%S'))
+            return unicode(date.astimezone(cltc).strftime(u"%Y-%m-%d %H:%M:%S"))
         except ValueError:
             return u"No disponible"
 
@@ -136,17 +141,17 @@ class Utils(object):
         return path.dirname(path.realpath(sys.argv[0]))
 
     @staticmethod
-    def get_file_path():
-        from os import path
-        return path.split(path.realpath(__file__))[0]
+    def get_module_path():
+        import imp
+        return Utils.format_path(imp.find_module(u"saccadeapp")[1])
 
     @staticmethod
     def format_path(path):
         import platform
         path = Utils.format_text(text=path)
         is_win = any(platform.win32_ver())
-        path = path.replace(u'\\', u'#').replace(u'/', u'#')
-        return path.replace(u'#', u'\\') if is_win else path.replace(u'#', u'/')
+        path = path.replace(u"\\", u"#").replace(u"/", u"#")
+        return path.replace(u"#", u"\\") if is_win else path.replace(u"#", u"/")
 
     # =================================
     @staticmethod
@@ -162,8 +167,8 @@ class Utils(object):
     def get_available_trackers():
         import glob as gl
         from os import path
-        trackers_path = Utils.format_path(Utils.get_file_path()+u'/resources/eyetrackers/')
-        return [path.basename(item).replace(u'_config.yaml', u'') for item in gl.glob(trackers_path + u'*.yaml')]
+        trackers_path = Utils.format_path(Utils.get_module_path()+u"/app/resources/eyetrackers/")
+        return [path.basename(item).replace(u"_config.yaml", u"") for item in gl.glob(trackers_path + u'*.yaml')]
 
     @staticmethod
     def get_available_screens():
@@ -199,20 +204,20 @@ class Utils(object):
 
     @staticmethod
     def open_psychopy_monitor_center():
-        import threading as thread
-        import subprocess as subproc
+        import threading
+        from subprocess import call
         is_open = False
-        threads = thread.enumerate()
-        for proccess in threads:
-            if proccess.getName() == u"MonitorCenter":
+        threads = threading.enumerate()
+        for process in threads:
+            if process.getName() == u"MonitorCenter":
                 is_open = True
         if is_open:
-            print u"Error: Monitor Center is already open"
+            print u"Error: Monitor Center is already open."
             return False
         print u"Opening Monitor Center..."
-        monitor_path = Utils.format_path(Utils.get_file_path()+u'/resources/monitors/monitorCenter.py')
-        monitor_thread = thread.Thread(target=lambda: subproc.call(u'python ' + monitor_path))
-        monitor_thread.setName(u'MonitorCenter')
+        monitor_path = Utils.format_path(Utils.get_module_path()+u"/app/resources/subprocess/monitorCenter.py")
+        monitor_thread = threading.Thread(target=lambda: call([u"python", monitor_path]))
+        monitor_thread.setName(name=u"MonitorCenter")
         monitor_thread.start()
         return True
 

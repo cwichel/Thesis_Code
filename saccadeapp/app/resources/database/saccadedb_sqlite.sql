@@ -126,7 +126,7 @@ create table if not exists frame (
     fra_color           varchar(20)     not null    default 'black',
 	fra_is_task         tinyint	        not null    default 0,
     fra_keys_allowed    text,
-	fra_keys_selected   text,
+	fra_keys_correct   	text,
     fra_time    float           not null    default 0.0,
 	constraint fra_pk primary key (exp_code, tes_index, fra_index),
     constraint fra_ak unique (exp_code, tes_index, fra_name),

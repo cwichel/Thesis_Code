@@ -33,4 +33,4 @@ def convertFiles(inputPath, outputPath):
 # Main
 # =============================================================================
 if __name__ == '__main__':
-    convertFiles(u'ui_files', u'py_files')
+    convertFiles(u'', u'')

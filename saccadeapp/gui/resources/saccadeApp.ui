@@ -470,7 +470,7 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QComboBox" name="cmb_execution_profile">
+                <widget class="QComboBox" name="cmb_execution_configuration">
                  <property name="minimumSize">
                   <size>
                    <width>200</width>

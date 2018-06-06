@@ -47,7 +47,7 @@ class ColorListModel(QtCore.QAbstractListModel):
 
     # =================================
     def __get_colors(self):
-        from saccadeapp.core import Utils
+        from saccadeapp.app import Utils
         # -------------------
         self.__colors = Utils.get_available_colors()
 
@@ -68,7 +68,7 @@ class ColorListModel(QtCore.QAbstractListModel):
     def get_index(self, item):
         try:
             return self.__items.index(item)
-        except:
+        except IndexError:
             return -1
 
 
@@ -262,13 +262,13 @@ class TableModel(QtCore.QAbstractTableModel):
 # =============================================================================
 class ExperimentNode(object):
     # =================================
-    def __init__(self, mask, code=None, date_created=None, date_updated=None, parent=None):
+    def __init__(self, mask, code=None, date=None, parent=None):
         self.__mask = mask
         self.__code = code
         self.__childs = []
         self.__parent = None
-        self.__date_created = date_created
-        self.__date_updated = date_updated
+        self.__date_created = date[0] if date is not None else None
+        self.__date_updated = date[1] if date is not None else None
         # -------------------
         self.set_parent(parent)
         if self.__parent is not None:
@@ -429,7 +429,7 @@ class ExperimentTreeModel(QtCore.QAbstractItemModel):
 
     # =================================
     def update_items(self, node):
-        if isinstance(node, ExperimentNode):
+        if node is None or isinstance(node, ExperimentNode):
             self.__root_node = node
         self.reset()
 
