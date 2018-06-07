@@ -263,17 +263,8 @@ class ItemList(object):
             return True
         return False
 
-    def item_move_up(self, item_id):
-        return self.item_swap(item_id, item_id-1)
-
-    def item_move_down(self, item_id):
-        return self.item_swap(item_id, item_id+1)
-
     def get_items(self):
         return self._item_dat
-
-    def get_items_str(self):
-        return [item.get_name() for item in self._item_dat]
 
     def get_item(self, item_id):
         if 0 <= item_id < self.get_items_length():
@@ -285,6 +276,9 @@ class ItemList(object):
             return self.get_items_str().index(item_name)
         except ValueError:
             return -1
+
+    def get_items_str(self):
+        return [item.get_name() for item in self._item_dat]
 
     def get_items_length(self):
         return len(self._item_dat)
@@ -348,23 +342,17 @@ class ItemListSequence(ItemList):
             return True
         return False
 
-    def sequence_move_up(self, index):
-        return self.sequence_swap(index, index-1)
-
-    def sequence_move_down(self, index):
-        return self.sequence_swap(index, index+1)
-
     def get_sequence(self):
         return self._item_seq
-
-    def get_sequence_str(self):
-        return [[item[0].get_name(), item[1]] for item in self._item_seq]
 
     def get_sequence_item(self, index):
         seq_len = self.get_sequence_length()
         if 0 <= index < seq_len:
             return self._item_seq[index]
         return None
+
+    def get_sequence_str(self):
+        return [[item[0].get_name(), item[1]] for item in self._item_seq]
 
     def get_sequence_length(self):
         return len(self._item_seq)

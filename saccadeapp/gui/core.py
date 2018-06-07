@@ -376,7 +376,7 @@ class ExperimentApp(base_exp, form_exp):
     def __handle_test_copy(self):
         index = self.lsv_test_dat.currentIndex().row()
         if index != -1:
-            dialog = CopyItemApp(item_parent=self.__experiment, index=index)
+            dialog = CopyItemApp(item_parent=self.__experiment, item_type=u"Test",  item_id=index)
             new_index = dialog.exec_()
             if new_index != -1:
                 self.update_data_model()
@@ -399,13 +399,13 @@ class ExperimentApp(base_exp, form_exp):
 
     def __handle_test_move_up(self):
         index = self.lsv_test_dat.currentIndex().row()
-        if self.__experiment.item_move_up(item_id=index):
+        if self.__experiment.item_swap(item1_id=index, item2_id=index-1):
             self.update_data_model()
             self.lsv_test_dat.setCurrentIndex(self.model_test_data.index(index-1, 0))
 
     def __handle_test_move_down(self):
         index = self.lsv_test_dat.currentIndex().row()
-        if self.__experiment.item_move_down(item_id=index):
+        if self.__experiment.item_swap(item1_id=index, item2_id=index+1):
             self.update_data_model()
             self.lsv_test_dat.setCurrentIndex(self.model_test_data.index(index+1, 0))
 
@@ -444,13 +444,13 @@ class ExperimentApp(base_exp, form_exp):
 
     def __handle_sequence_move_up(self):
         index = self.tbv_test_seq.currentIndex().row()
-        if self.__experiment.sequence_move_up(index=index):
+        if self.__experiment.sequence_swap(index1=index, index2=index-1):
             self.update_sequence_model()
             self.tbv_test_seq.setCurrentIndex(self.model_test_sequence.index(index-1, 0))
 
     def __handle_sequence_move_down(self):
         index = self.tbv_test_seq.currentIndex().row()
-        if self.__experiment.sequence_move_down(index=index):
+        if self.__experiment.sequence_swap(index1=index, index2=index+1):
             self.update_sequence_model()
             self.tbv_test_seq.setCurrentIndex(self.model_test_sequence.index(index+1, 0))
 
@@ -624,7 +624,7 @@ class TestApp(base_tes, form_tes):
     def __handle_frame_copy(self):
         index = self.lsv_frame.currentIndex().row()
         if index != -1:
-            dialog = CopyItemApp(item_parent=self.__test, index=index)
+            dialog = CopyItemApp(item_parent=self.__test, item_type=u"Frame", item_id=index)
             new_index = dialog.exec_()
             if new_index != -1:
                 self.update_frame_model()
@@ -645,13 +645,13 @@ class TestApp(base_tes, form_tes):
 
     def __handle_frame_move_up(self):
         index = self.lsv_frame.currentIndex().row()
-        if self.__test.item_move_up(item_id=index):
+        if self.__test.item_swap(item1_id=index, item2_id=index-1):
             self.update_frame_model()
             self.lsv_frame.setCurrentIndex(self.model_frame.index(index-1, 0))
 
     def __handle_frame_move_down(self):
         index = self.lsv_frame.currentIndex().row()
-        if self.__test.item_move_down(item_id=index):
+        if self.__test.item_swap(item1_id=index, item2_id=index+1):
             self.update_frame_model()
             self.lsv_frame.setCurrentIndex(self.model_frame.index(index+1, 0))
 
@@ -750,7 +750,7 @@ class FrameApp(base_fra, form_fra):
     def __handle_component_copy(self):
         index = self.tbv_component.currentIndex().row()
         if index != -1:
-            dialog = CopyItemApp(item_parent=self.__frame, index=index)
+            dialog = CopyItemApp(item_parent=self.__frame, item_type=u"Component", item_id=index)
             new_index = dialog.exec_()
             if new_index != -1:
                 self.update_component_model()
@@ -771,13 +771,13 @@ class FrameApp(base_fra, form_fra):
 
     def __handle_component_move_up(self):
         index = self.tbv_component.currentIndex().row()
-        if self.__frame.item_move_up(item_id=index):
+        if self.__frame.item_swap(item1_id=index, item2_id=index-1):
             self.update_component_model()
             self.tbv_component.setCurrentIndex(self.model_component.index(index-1, 0))
 
     def __handle_component_move_down(self):
         index = self.tbv_component.currentIndex().row()
-        if self.__frame.item_move_down(item_id=index):
+        if self.__frame.item_swap(item1_id=index, item2_id=index+1):
             self.update_component_model()
             self.tbv_component.setCurrentIndex(self.model_component.index(index+1, 0))
 
@@ -1049,16 +1049,21 @@ class CopyExperimentApp(base_copy_exp, form_copy_exp):
     def __handle_ok_action(self):
         new_code = unicode(self.led_code.text())
         new_version = unicode(self.led_version.text())
-        new_experiment = self.__experiment.copy(code=new_code, version=new_version)
-        if new_experiment is not None:
-            new_experiment.save()
-            self.__parent.update_experiment_model()
-            new_index = self.__parent.model_experiment_tree.get_index_by_code(code=new_code)
-            self.__parent.trv_experiment.setCurrentIndex(new_index)
-            self.close()
-        else:
+        try:
+            new_experiment = self.__experiment.copy(code=new_code, version=new_version)
+            if new_experiment is not None:
+                new_experiment.save()
+                self.__parent.update_experiment_model()
+                new_index = self.__parent.model_experiment_tree.get_index_by_code(code=new_code)
+                self.__parent.trv_experiment.setCurrentIndex(new_index)
+                self.close()
+            else:
+                diag_tit = u"Error"
+                diag_msg = u"Code or version value already\nused for this type of experiment."
+                QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
+        except Exception as error:
             diag_tit = u"Error"
-            diag_msg = u"Code or version value already\nused for this type of experiment."
+            diag_msg = u"Experiment "+error.message
             QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
 
     def __handle_cancel_action(self):
@@ -1087,16 +1092,21 @@ class CopyConfigurationApp(base_copy, form_copy):
 
     def __handle_ok_action(self):
         new_name = unicode(self.led_copy.text())
-        new_profile = self.__profile.copy(name=new_name)
-        if new_profile is not None:
-            new_profile.save()
-            self.__parent.update_configuration_model()
-            new_index = self.__parent.model_configuration.get_index(item=new_name)
-            self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(new_index, 0))
-            self.close()
-        else:
+        try:
+            new_profile = self.__profile.copy(name=new_name)
+            if new_profile is not None:
+                new_profile.save()
+                self.__parent.update_configuration_model()
+                new_index = self.__parent.model_configuration.get_index(item=new_name)
+                self.__parent.lsv_configuration.setCurrentIndex(self.__parent.model_configuration.index(new_index, 0))
+                self.close()
+            else:
+                diag_tit = u"Error"
+                diag_msg = u"Profile name already used."
+                QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
+        except Exception as error:
             diag_tit = u"Error"
-            diag_msg = u"Profile name already used."
+            diag_msg = u"Profile "+error.message
             QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
 
     def __handle_cancel_action(self):
@@ -1107,32 +1117,36 @@ class CopyConfigurationApp(base_copy, form_copy):
 # Class: CopyItemApp
 # ===============================================
 class CopyItemApp(base_copy, form_copy):
-    def __init__(self, item_parent, index=-1):
+    def __init__(self, item_parent, item_type=u"", item_id=-1):
         super(CopyItemApp, self).__init__(parent=None)
         self.setupUi(self)
         # -------------------
         self.__parent = item_parent
-        self.__item = self.__parent.get_item(item_id=index)
+        self.__item_id = item_id
+        self.__item_type = item_type
         # -------------------
         self.__setup_dialog()
 
     def __setup_dialog(self):
+        item_name = self.__parent.get_item(item_id=self.__item_id).get_name()
         self.pbt_ok.clicked.connect(self.__handle_ok_action)
         self.pbt_cancel.clicked.connect(self.__handle_cancel_action)
-        self.lbl_copy.setText(u"Old name: "+self.__item.get_name()+u".\n\nNew name:")
-        self.led_copy.setText(self.__item.get_name())
+        self.lbl_copy.setText(u"Old name: "+item_name+u".\n\nNew name:")
+        self.led_copy.setText(item_name)
 
     def __handle_ok_action(self):
         new_name = unicode(self.led_copy.text())
-        if self.__parent.get_item_index(new_name) == -1:
-            index = self.__parent.get_items_length()
-            new_item = self.__item.copy()
-            new_item.set_name(name=new_name)
-            self.__parent.item_add(item=new_item)
-            self.done(index)
-        else:
+        try:
+            new_index = self.__parent.get_items_length()
+            if self.__parent.item_copy(item_id=self.__item_id, new_name=new_name):
+                self.done(new_index)
+            else:
+                diag_tit = u"Error"
+                diag_msg = u"Name already used."
+                QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
+        except Exception as error:
             diag_tit = u"Error"
-            diag_msg = u"Name already used."
+            diag_msg = self.__item_type+u" "+error.message
             QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
 
     def __handle_cancel_action(self):
