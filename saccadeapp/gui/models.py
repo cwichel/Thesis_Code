@@ -47,9 +47,8 @@ class ColorListModel(QtCore.QAbstractListModel):
 
     # =================================
     def __get_colors(self):
-        from saccadeapp.app import Utils
-        # -------------------
-        self.__colors = Utils.get_available_colors()
+        from saccadeapp.app.utils import get_available_colors
+        self.__colors = get_available_colors()
 
     def __get_color_icon(self, row):
         value = self.__colors[row][1]

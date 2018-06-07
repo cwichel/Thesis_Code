@@ -12,7 +12,7 @@ from saccadeapp.app import *
 # =============================================================================
 def get_compiled_ui(file_name):
     from PyQt4.uic import loadUiType
-    base_path = Utils.format_path(Utils.get_module_path()+u"/gui/resources/")
+    base_path = format_path(get_module_path()+u"/gui/resources/")
     base, form = loadUiType(base_path+file_name)
     return base, form
 
@@ -73,7 +73,7 @@ class SaccadeApp(base_main, form_main):
 
     @staticmethod
     def __app_documentation():
-        Utils.open_documentation()
+        open_documentation()
 
     @staticmethod
     def __app_about():
@@ -157,7 +157,7 @@ class SaccadeApp(base_main, form_main):
     def __handle_execute_experiment(self):
         import subprocess as sp
         exp_code, cfg_name, fra_save = self.__get_execution_parameters()
-        execution_path = Utils.format_path(Utils.get_module_path()+u"/app/resources/subprocess/experimentExecution.py")
+        execution_path = format_path(get_module_path()+u"/app/resources/subprocess/experimentExecution.py")
         process = sp.check_output([u"python", execution_path, u"-e", exp_code, u"-c", cfg_name, u"-f", fra_save])
         diag_tit = u"Execution message"
         diag_msg = process.split(u"\n")[1]
@@ -196,7 +196,7 @@ class SaccadeApp(base_main, form_main):
 
     # =================================
     def __handle_monitor_center(self):
-        Utils.open_psychopy_monitor_center()
+        open_psychopy_monitor_center()
 
     def __handle_configuration_new(self):
         dialog = ConfigurationApp(parent=self, profile_name=u"")
@@ -314,9 +314,9 @@ class ExperimentApp(base_exp, form_exp):
                         is_saved = self.__experiment.save()
                     else:
                         is_info_used = True
-                elif (new_code != old_code) and not Utils.is_in_list(item=new_code, item_list=experiment_list):
+                elif (new_code != old_code) and not is_in_list(item=new_code, item_list=experiment_list):
                     if ((new_name == old_name and new_version == old_version) or not
-                        Utils.is_in_list(item=[new_name, new_version], item_list=experiment_list)
+                        is_in_list(item=[new_name, new_version], item_list=experiment_list)
                     ):
                         self.__experiment.remove()
                         self.__experiment.set_code(code=new_code)
@@ -837,8 +837,8 @@ class ComponentApp(base_com, form_com):
         self.__component = Component()
         self.__old_name = u""
         # -------------------
-        self.__model_units = ListModel(items=Utils.get_available_units(), header=u"Measure unit")
-        self.__model_shape = ListModel(items=Utils.get_available_shapes(), header=u"Component shape")
+        self.__model_units = ListModel(items=get_available_units(), header=u"Measure unit")
+        self.__model_shape = ListModel(items=get_available_shapes(), header=u"Component shape")
         self.__model_shape_color = ColorListModel()
         # -------------------
         self.__setup_component()
@@ -879,7 +879,7 @@ class ComponentApp(base_com, form_com):
             QtGui.QMessageBox.warning(self, diag_tit, diag_msg)
 
     def __handle_image_open(self):
-        base_path = Utils.get_main_path()
+        base_path = get_main_path()
         image_path = QtGui.QFileDialog.getOpenFileName(self, u"Open File...", base_path, u"Images (*.png *.jpeg *.jpg)")
         self.lbl_image_status.set_image(image=unicode(image_path))
 
@@ -941,9 +941,9 @@ class ConfigurationApp(base_con, form_con):
         # -------------------
         self.__parent = parent
         self.__profile = Configuration(db=parent.database)
-        self.__model_tracker = ListModel(items=Utils.get_available_trackers())
-        self.__model_monitor = ListModel(items=Utils.get_available_monitors())
-        self.__model_screen = ListModel(items=Utils.get_available_screens())
+        self.__model_tracker = ListModel(items=get_available_trackers())
+        self.__model_monitor = ListModel(items=get_available_monitors())
+        self.__model_screen = ListModel(items=get_available_screens())
         # -------------------
         self.__setup_dialog()
         self.__check_name(name=profile_name)

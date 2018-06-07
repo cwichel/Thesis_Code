@@ -3,9 +3,9 @@
 # Modules
 # =============================================================================
 import copy
-import numpy as np
 from psychopy import visual
-from utils import Utils, SaccadeDB
+from .utils import *
+from .saccadedb import SaccadeDB
 
 
 # =============================================================================
@@ -20,7 +20,7 @@ class Configuration(object):
         self.__tracker = u"eyegaze"
         self.__monitor = u"default"
         self.__screen = 0
-        self.__path = Utils.format_path(Utils.get_main_path()+u"/events/")
+        self.__path = format_path(get_main_path()+u"/events/")
         # -------------------
         if self.set_database(db=db) and name != u"":
             self.load(name=name)
@@ -54,7 +54,7 @@ class Configuration(object):
 
     # -----------------------
     def set_name(self, name):
-        name = Utils.format_text(text=name, lmin=3, lmax=50, var_name=u"name")
+        name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
         if self.__database:
             sql = u"select * from configuration where con_name='%s';" % name
             mas_res = self.__database.pull_query(query=sql)
@@ -68,20 +68,20 @@ class Configuration(object):
 
     # -----------------------
     def set_screen(self, screen):
-        screen_num = len(Utils.get_available_screens())
-        self.__screen = Utils.format_int(value=screen, vmin=0, vmax=screen_num, var_name=u"screen")
+        screen_num = len(get_available_screens())
+        self.__screen = format_int(value=screen, vmin=0, vmax=screen_num, var_name=u"screen")
         return True
 
     def get_screen(self):
         try:
-            return Utils.get_available_screens()[self.__screen]
+            return get_available_screens()[self.__screen]
         except IndexError:
-            return Utils.get_available_screens()[0]
+            return get_available_screens()[0]
 
     # -----------------------
     def set_monitor(self, monitor):
-        monitor = Utils.format_text(text=monitor, var_name=u"monitor")
-        if monitor in Utils.get_available_monitors():
+        monitor = format_text(text=monitor, var_name=u"monitor")
+        if monitor in get_available_monitors():
             self.__monitor = monitor
             return True
         return False
@@ -91,8 +91,8 @@ class Configuration(object):
 
     # -----------------------
     def set_tracker(self, tracker):
-        tracker = Utils.format_text(text=tracker, var_name=u"tracker")
-        if tracker in Utils.get_available_trackers():
+        tracker = format_text(text=tracker, var_name=u"tracker")
+        if tracker in get_available_trackers():
             self.__tracker = tracker
             return True
         return False
@@ -101,15 +101,15 @@ class Configuration(object):
         return self.__tracker
 
     def get_tracker_conf_path(self):
-        if self.__tracker in Utils.get_available_trackers():
-            base_path = Utils.format_path(Utils.get_module_path()+u"/app/resources/eyetrackers/")
+        if self.__tracker in get_available_trackers():
+            base_path = format_path(get_module_path()+u"/app/resources/eyetrackers/")
             return base_path+self.__tracker+u"_config.yaml"
         return u""
 
     # -----------------------
     def set_events_path(self, experiment_path):
         from os import path
-        experiment_path = Utils.format_path(experiment_path)
+        experiment_path = format_path(experiment_path)
         if path.isdir(experiment_path):
             self.__path = experiment_path
             return True
@@ -120,7 +120,7 @@ class Configuration(object):
 
     # =================================
     def load(self, name):
-        name = Utils.format_text(text=name, lmin=3, lmax=50, var_name=u"name")
+        name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
         if self.__database:
             sql = u"""
             select 
@@ -232,7 +232,7 @@ class ItemList(object):
 
     def item_copy(self, item_id, new_name):
         if 0 <= item_id < self.get_items_length():
-            new_name = Utils.format_text(text=new_name, var_name=u"copy name")
+            new_name = format_text(text=new_name, var_name=u"copy name")
             if new_name is not None and self.get_item_index(new_name) == -1:
                 new_item = self._item_dat[item_id].copy()
                 new_item.set_name(name=new_name)
@@ -320,14 +320,14 @@ class ItemListSequence(ItemList):
 
     # =================================
     def sequence_add(self, item_id, quantity):
-        quantity = Utils.format_int(quantity)
+        quantity = format_int(quantity)
         if 0 <= item_id < self.get_items_length() and quantity is not None:
             self._item_seq.append([self._item_dat[item_id], quantity])
             return True
         return False
 
     def sequence_edit(self, index, item_id, quantity):
-        quantity = Utils.format_int(quantity)
+        quantity = format_int(quantity)
         if 0 <= index < self.get_sequence_length() and 0 <= item_id < self.get_items_length() and quantity is not None:
             self._item_seq[index] = [self._item_dat[item_id], quantity]
             return True
@@ -414,7 +414,7 @@ class Component(object):
 
     # =================================
     def set_name(self, name):
-        self.__name = Utils.format_text(text=name, lmin=3, lmax=50, var_name=u"name")
+        self.__name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
         return True
 
     def get_name(self):
@@ -422,8 +422,8 @@ class Component(object):
 
     # -----------------------
     def set_units(self, units):
-        units = Utils.format_text(text=units, lmin=2, lmax=20, var_name=u"units")
-        if units in Utils.get_available_units():
+        units = format_text(text=units, lmin=2, lmax=20, var_name=u"units")
+        if units in get_available_units():
             self.__units = units
             return True
         return False
@@ -433,8 +433,8 @@ class Component(object):
 
     # -----------------------
     def set_position(self, posx, posy):
-        posx = Utils.format_float(value=posx, vmin=-9999.0, vmax=9999.0, var_name=u"position (x)")
-        posy = Utils.format_float(value=posy, vmin=-9999.0, vmax=9999.0, var_name=u"position (y)")
+        posx = format_float(value=posx, vmin=-9999.0, vmax=9999.0, var_name=u"position (x)")
+        posy = format_float(value=posy, vmin=-9999.0, vmax=9999.0, var_name=u"position (y)")
         self.__pos = (posx, posy)
         return True
 
@@ -443,7 +443,7 @@ class Component(object):
 
     # -----------------------
     def set_rotation(self, rot):
-        rot = Utils.format_float(value=rot, vmin=-360.0, vmax=360.0, var_name=u"rotation")
+        rot = format_float(value=rot, vmin=-360.0, vmax=360.0, var_name=u"rotation")
         self.__rot = rot
         return True
 
@@ -452,7 +452,7 @@ class Component(object):
 
     # -----------------------
     def set_size(self, size):
-        size = Utils.format_float(value=size, vmin=0.0, vmax=9999.0, var_name=u"size")
+        size = format_float(value=size, vmin=0.0, vmax=9999.0, var_name=u"size")
         self.__size = size
         return True
 
@@ -483,8 +483,8 @@ class Component(object):
 
     # -----------------------
     def set_shape(self, shape):
-        shape = Utils.format_text(text=shape, lmin=5, lmax=20, var_name=u"shape")
-        if shape in Utils.get_available_shapes():
+        shape = format_text(text=shape, lmin=5, lmax=20, var_name=u"shape")
+        if shape in get_available_shapes():
             self.__shape = shape
             return True
         return False
@@ -495,7 +495,7 @@ class Component(object):
     # -----------------------
     def set_color(self, color):
         from psychopy import colors
-        color = Utils.format_text(text=color, lmin=3, lmax=20, var_name=u"shape color")
+        color = format_text(text=color, lmin=3, lmax=20, var_name=u"shape color")
         if colors.isValidColor(color):
             self.__color = color
             return True
@@ -508,7 +508,7 @@ class Component(object):
     def __decode_image(self, encimg):
         from PIL import Image
         from io import BytesIO
-        coded = Utils.format_text(text=encimg, var_name=u"encoded image")
+        coded = format_text(text=encimg, var_name=u"encoded image")
         if coded == u"":
             self.__image = None
         else:
@@ -567,7 +567,7 @@ class Component(object):
 
     # =================================
     def get_execution(self, win):
-        from saccadeapp.app.utils import Switch
+        from switch import Switch
         if not isinstance(win, visual.Window):
             return None
         with Switch(self.__shape) as case:
@@ -630,7 +630,7 @@ class Frame(ItemList):
 
     # =================================
     def set_name(self, name):
-        self.__name = Utils.format_text(text=name, lmin=3, lmax=50, var_name=u"name")
+        self.__name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
         return True
 
     def get_name(self):
@@ -639,7 +639,7 @@ class Frame(ItemList):
     # -----------------------
     def set_color(self, color):
         from psychopy import colors
-        color = Utils.format_text(text=color, lmin=3, lmax=20, var_name=u"background")
+        color = format_text(text=color, lmin=3, lmax=20, var_name=u"background")
         if colors.isValidColor(color):
             self.__color = color
             return True
@@ -650,7 +650,7 @@ class Frame(ItemList):
 
     # -----------------------
     def set_as_task(self, state):
-        self.__is_task = Utils.format_bool(state=state, var_name=u"task selection")
+        self.__is_task = format_bool(state=state, var_name=u"task selection")
         if self.__is_task:
             self.__time = 0.0
             return True
@@ -664,7 +664,7 @@ class Frame(ItemList):
     # -----------------------
     def set_time(self, value):
         if not self.__is_task:
-            self.__time = Utils.format_float(value=value, vmin=0.0, vmax=9999.0, var_name=u"time")
+            self.__time = format_float(value=value, vmin=0.0, vmax=9999.0, var_name=u"time")
             return True
         return False
 
@@ -674,7 +674,7 @@ class Frame(ItemList):
     # -----------------------
     def set_keys_allowed(self, keys):
         if self.__is_task:
-            keys = Utils.format_text(text=keys, var_name=u"allowed keys").replace(unicode(u" "), unicode(u""))
+            keys = format_text(text=keys, var_name=u"allowed keys").replace(unicode(u" "), unicode(u""))
             self.__keys_allowed = keys
             return True
         return False
@@ -685,7 +685,7 @@ class Frame(ItemList):
     # -----------------------
     def set_keys_correct(self, keys):
         if self.__is_task and self.__keys_allowed != u"":
-            keys = Utils.format_text(text=keys, var_name=u"selected keys").replace(unicode(u" "), unicode(u""))
+            keys = format_text(text=keys, var_name=u"selected keys").replace(unicode(u" "), unicode(u""))
             allowed = self.__keys_allowed.split(u",")
             selected = keys.split(u",")
             key_match = [key for key in selected if key in allowed]
@@ -806,14 +806,14 @@ class Test(ItemList):
 
     # =================================
     def set_name(self, name):
-        self.__name = Utils.format_text(text=name, lmin=3, lmax=50, var_name=u"name")
+        self.__name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
         return True
 
     def get_name(self):
         return self.__name
 
     def set_description(self, text):
-        self.__description = Utils.format_text(text=text, var_name=u"description")
+        self.__description = format_text(text=text, var_name=u"description")
         return True
 
     def get_description(self):
@@ -949,7 +949,7 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_code(self, code):
-        code = Utils.format_text(text=code, lmin=3, lmax=10, var_name=u"code")
+        code = format_text(text=code, lmin=3, lmax=10, var_name=u"code")
         if self.__database:
             sql = u"select * from experiment where exp_code='%s';" % code
             operation_ok = self.__database.pull_query(query=sql)
@@ -963,8 +963,8 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_info(self, name, version):
-        name = Utils.format_text(text=name, lmin=3, lmax=50, var_name=u"name")
-        version = Utils.format_text(text=version, lmin=3, lmax=10, var_name=u"version")
+        name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
+        version = format_text(text=version, lmin=3, lmax=10, var_name=u"version")
         if self.__database:
             sql = u"select * from experiment where exp_name='%s' and exp_version='%s';" % (name, version)
             operation_ok = self.__database.pull_query(query=sql)
@@ -982,7 +982,7 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_descripton(self, text):
-        self.__description = Utils.format_text(text=text, var_name=u"description")
+        self.__description = format_text(text=text, var_name=u"description")
         return True
 
     def get_description(self):
@@ -990,7 +990,7 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_comments(self, text):
-        self.__comments = Utils.format_text(text=text, var_name=u"comments")
+        self.__comments = format_text(text=text, var_name=u"comments")
         return True
 
     def get_comments(self):
@@ -998,7 +998,7 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_instructions(self, text):
-        self.__instructions = Utils.format_text(text=text, var_name=u"instructions")
+        self.__instructions = format_text(text=text, var_name=u"instructions")
         return True
 
     def get_instructions(self):
@@ -1006,11 +1006,11 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_dialog(self, status, askage=False, askgender=False, askglasses=False, askeyecolor=False):
-        self.__dia_is_active = Utils.format_bool(state=status, var_name=u"dialog state")
-        self.__dia_ask_age = Utils.format_bool(state=askage, var_name=u"ask age state")
-        self.__dia_ask_gender = Utils.format_bool(state=askgender, var_name=u"ask gender state")
-        self.__dia_ask_glasses = Utils.format_bool(state=askglasses, var_name=u"ask glasses state")
-        self.__dia_ask_eye_color = Utils.format_bool(state=askeyecolor, var_name=u"ask eye color state")
+        self.__dia_is_active = format_bool(state=status, var_name=u"dialog state")
+        self.__dia_ask_age = format_bool(state=askage, var_name=u"ask age state")
+        self.__dia_ask_gender = format_bool(state=askgender, var_name=u"ask gender state")
+        self.__dia_ask_glasses = format_bool(state=askglasses, var_name=u"ask glasses state")
+        self.__dia_ask_eye_color = format_bool(state=askeyecolor, var_name=u"ask eye color state")
         return True
 
     def is_dialog_active(self):
@@ -1030,7 +1030,7 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_space_start(self, status):
-        self.__con_need_space = Utils.format_bool(state=status, var_name=u"use space status")
+        self.__con_need_space = format_bool(state=status, var_name=u"use space status")
         return True
 
     def is_space_start(self):
@@ -1038,7 +1038,7 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_random(self, status):
-        self.__con_is_random = Utils.format_bool(state=status, var_name=u"use random sequence status")
+        self.__con_is_random = format_bool(state=status, var_name=u"use random sequence status")
         return True
 
     def is_random(self):
@@ -1046,9 +1046,9 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_rest_conf(self, status, period, time):
-        self.__con_is_rest = Utils.format_bool(state=status, var_name=u"include rest status")
-        self.__con_rest_period = Utils.format_int(value=period, vmin=1, vmax=9999, var_name=u"rest period")
-        self.__con_rest_time = Utils.format_float(value=time, vmin=1.0, vmax=9999.0, var_name=u"rest_time")
+        self.__con_is_rest = format_bool(state=status, var_name=u"include rest status")
+        self.__con_rest_period = format_int(value=period, vmin=1, vmax=9999, var_name=u"rest period")
+        self.__con_rest_time = format_float(value=time, vmin=1.0, vmax=9999.0, var_name=u"rest_time")
         return True
 
     def is_rest(self):
@@ -1062,7 +1062,7 @@ class Experiment(ItemListSequence):
 
     # =================================
     def load(self, code):
-        code = Utils.format_text(text=code, lmin=3, lmax=10, var_name=u"code")
+        code = format_text(text=code, lmin=3, lmax=10, var_name=u"code")
         if self.__database:
             sql = u"""
             select
@@ -1084,8 +1084,8 @@ class Experiment(ItemListSequence):
                 self.__description = unicode(exp_res[0, 2])
                 self.__instructions = unicode(exp_res[0, 3])
                 self.__comments = unicode(exp_res[0, 4])
-                self.__date_created = Utils.get_time(exp_res[0, 5])
-                self.__date_updated = Utils.get_time(exp_res[0, 6])
+                self.__date_created = get_time(exp_res[0, 5])
+                self.__date_updated = get_time(exp_res[0, 6])
                 self.__dia_is_active = bool(int(exp_res[0, 7]))
                 self.__dia_ask_age = bool(int(exp_res[0, 8]))
                 self.__dia_ask_gender = bool(int(exp_res[0, 9]))
@@ -1243,6 +1243,7 @@ class Experiment(ItemListSequence):
         return None
 
     def get_execution(self, win):
+        import numpy as np
         if not (isinstance(win, visual.Window) and self.__in_db):
             return None
         experiment = {

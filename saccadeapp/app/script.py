@@ -3,7 +3,6 @@
 # Modules
 # =============================================================================
 from psychopy import visual, core
-from saccadeapp.app.utils import Switch
 from psychopy.iohub.util import MessageDialog
 from psychopy.iohub import (ioHubExperimentRuntime, getCurrentDateTimeString)
 
@@ -23,7 +22,9 @@ class ExperimentHandler(object):
         import yaml
         import codecs
         from os import path, makedirs
-        from saccadeapp import SaccadeDB, Utils, Configuration, Experiment
+        from .utils import format_path
+        from .saccadedb import SaccadeDB
+        from .core import Configuration, Experiment
         if not self.__is_ready:
             database = SaccadeDB(filepath=db_path)
             exp_data = Experiment(db=database, code=exp_code)
@@ -35,12 +36,12 @@ class ExperimentHandler(object):
                 exp_code = exp_data.get_code()
                 exp_version = exp_data.get_version()
                 event_path = cfg_data.get_events_path()
-                exp_base_path = Utils.format_path(event_path+u"["+exp_name+u"]/")
-                exp_this_path = Utils.format_path(exp_base_path+u"["+exp_code+u"]"+u"["+exp_version+u"]/")
-                exp_conf_path = Utils.format_path(exp_this_path+u"conf/")
-                exp_logs_path = Utils.format_path(exp_this_path+u"logs/")
-                exp_imag_path = Utils.format_path(exp_this_path+u"imag/")
-                exp_logs_file = u"["+exp_code+u"]["+u"["+exp_timestamp+u"]configuration_log.yaml"
+                exp_base_path = format_path(event_path+u"["+exp_name+u"]/")
+                exp_this_path = format_path(exp_base_path+u"["+exp_version+u"]"+u"["+exp_code+u"]/")
+                exp_conf_path = format_path(exp_this_path+u"iohub/")
+                exp_back_path = format_path(exp_this_path+u"backup/")
+                exp_imag_path = format_path(exp_this_path+u"frames/")
+                exp_back_file = u"["+exp_code+u"]["+u"["+exp_timestamp+u"]configuration_back.yaml"
                 exp_conf_file = u"["+exp_code+u"]["+u"["+exp_timestamp+u"]experiment_config.yaml"
                 exp_exec_file = u"["+exp_code+u"]["+u"["+exp_timestamp+u"]iohub_config.yaml"
                 if not path.exists(event_path):
@@ -51,18 +52,18 @@ class ExperimentHandler(object):
                     makedirs(exp_this_path)
                 if not path.exists(exp_conf_path):
                     makedirs(exp_conf_path)
-                if not path.exists(exp_logs_path):
-                    makedirs(exp_logs_path)
+                if not path.exists(exp_back_path):
+                    makedirs(exp_back_path)
                 if not path.exists(exp_imag_path):
                     makedirs(exp_imag_path)
                 # Prepare and save data to files
                 # Execution configuration log
-                exp_logs_data = {
+                exp_back_data = {
                     u"Experiment": exp_data.get_configuration(),
                     u"Configuration": cfg_data.get_configuration()
                 }
-                with codecs.open(filename=exp_logs_path+exp_logs_file, mode=u"w", encoding=u"utf-8") as outfile:
-                    yaml.safe_dump(data=exp_logs_data, stream=outfile, default_flow_style=False, indent=4)
+                with codecs.open(filename=exp_back_path+exp_back_file, mode=u"w", encoding=u"utf-8") as outfile:
+                    yaml.safe_dump(data=exp_back_data, stream=outfile, default_flow_style=False, indent=4)
                 # Experiment configuration data
                 exp_conf_data = exp_data.get_iohub()
                 exp_conf_data[u"ioHub"][u"config"] = exp_conf_path+exp_exec_file
@@ -109,6 +110,7 @@ class ExperimentRuntime(ioHubExperimentRuntime):
 
     # =================================
     def run(self, *args):
+        from .switch import Switch
         # Hardware configuration
         try:
             tracker = self.hub.devices.tracker
