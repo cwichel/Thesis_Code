@@ -20,10 +20,10 @@ def get_compiled_ui(file_name):
 def check_item_name(item_parent, item, old_name=u""):
     new_name = item.get_name()
     is_edit = True if old_name != u"" else False
-    index = item_parent.get_item_index(item_name=old_name) if is_edit else -1
-    if is_edit and (new_name == old_name or item_parent.get_item_index(item_name=new_name) == -1):
+    index = item_parent.check_item_name(item_name=old_name) if is_edit else -1
+    if is_edit and (new_name == old_name or item_parent.check_item_name(item_name=new_name) == -1):
         item_parent.item_replace(item_id=index, new_item=item)
-    elif not is_edit and item_parent.get_item_index(item_name=new_name) == -1:
+    elif not is_edit and item_parent.check_item_name(item_name=new_name) == -1:
         index = item_parent.get_items_length()
         item_parent.item_add(item=item)
     else:
@@ -281,7 +281,7 @@ class ExperimentApp(base_exp, form_exp):
         self.__experiment.set_space_start(status=self.cbt_use_space_key.isChecked())
         self.__experiment.set_random(status=self.cbt_random_active.isChecked())
         self.__experiment.set_rest_conf(
-            status=self.cbt_rest_active,
+            status=self.cbt_rest_active.isChecked(),
             period=self.isb_rest_period.value(),
             time=self.dsb_rest_time.value(),
         )
@@ -1005,7 +1005,7 @@ class ConfigurationApp(base_con, form_con):
         folder = QtGui.QFileDialog.getExistingDirectory(self, title, self.led_path.text(),
                                                         QtGui.QFileDialog.ShowDirsOnly)
         if folder:
-            self.led_path.setText(unicode(folder))
+            self.led_path.setText(format_path(unicode(folder)+u"/"))
 
     def __check_name(self, name=u""):
         if name != u"":

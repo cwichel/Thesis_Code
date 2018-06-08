@@ -26,8 +26,8 @@ class Configuration(object):
             self.load(name=name)
 
     # =================================
-    @classmethod
-    def get_list(cls, db):
+    @staticmethod
+    def get_list(db):
         if isinstance(db, SaccadeDB):
             sql = u"""
             select con_name
@@ -225,7 +225,7 @@ class ItemList(object):
 
     # =================================
     def item_add(self, item):
-        if isinstance(item, self._class) and self.get_item_index(item.get_name()) == -1:
+        if isinstance(item, self._class) and self.check_item_name(item.get_name()) == -1:
             self._item_dat.append(item)
             return True
         return False
@@ -233,7 +233,7 @@ class ItemList(object):
     def item_copy(self, item_id, new_name):
         if 0 <= item_id < self.get_items_length():
             new_name = format_text(text=new_name, var_name=u"copy name")
-            if new_name is not None and self.get_item_index(new_name) == -1:
+            if new_name is not None and self.check_item_name(new_name) == -1:
                 new_item = self._item_dat[item_id].copy()
                 new_item.set_name(name=new_name)
                 return self.item_add(item=new_item)
@@ -248,7 +248,7 @@ class ItemList(object):
     def item_replace(self, item_id, new_item):
         if 0 <= item_id < self.get_items_length():
             item_popped = self._item_dat.pop(item_id)
-            if isinstance(new_item, self._class) and self.get_item_index(new_item.get_name()) == -1:
+            if isinstance(new_item, self._class) and self.check_item_name(new_item.get_name()) == -1:
                 self._item_dat.insert(item_id, new_item)
                 return True
             self._item_dat.insert(item_id, item_popped)
@@ -271,7 +271,7 @@ class ItemList(object):
             return self._item_dat[item_id]
         return None
 
-    def get_item_index(self, item_name):
+    def check_item_name(self, item_name):
         try:
             return self.get_items_str().index(item_name)
         except ValueError:
@@ -305,7 +305,7 @@ class ItemListSequence(ItemList):
     def item_replace(self, item_id, new_item):
         if 0 <= item_id < self.get_items_length():
             item_popped = self._item_dat.pop(item_id)
-            if isinstance(new_item, self._class) and self.get_item_index(new_item.get_name()) == -1:
+            if isinstance(new_item, self._class) and self.check_item_name(new_item.get_name()) == -1:
                 self._item_dat.insert(item_id, new_item)
                 self._item_seq = [[new_item, seq[1]] if seq[0] == item_popped else seq for seq in self._item_seq]
                 return True
@@ -386,8 +386,8 @@ class Component(object):
         return com_copy
 
     # =================================
-    @classmethod
-    def get_list(cls, db, exp, tes, fra):
+    @staticmethod
+    def get_list(db, exp, tes, fra):
         if isinstance(db, SaccadeDB):
             sql = u"""
             select com_index, com_name, com_shape
@@ -493,10 +493,10 @@ class Component(object):
         return self.__color
 
     # =================================
-    def __decode_image(self, encimg):
+    def __decode_image(self, enc_img):
         from PIL import Image
         from io import BytesIO
-        coded = format_text(text=encimg, var_name=u"encoded image")
+        coded = format_text(text=enc_img, var_name=u"encoded image")
         if coded == u"":
             self.__image = None
         else:
@@ -531,7 +531,7 @@ class Component(object):
             self.__size = float(com_res[0, 5])
             self.__shape = unicode(com_res[0, 7])
             self.__color = unicode(com_res[0, 8])
-            self.__decode_image(unicode(com_res[0, 6]))
+            self.__decode_image(enc_img=unicode(com_res[0, 6]))
             return True
         return False
 
@@ -602,8 +602,8 @@ class Frame(ItemList):
         self.__time = 0.0
 
     # =================================
-    @classmethod
-    def get_list(cls, db, exp, tes):
+    @staticmethod
+    def get_list(db, exp, tes):
         if isinstance(db, SaccadeDB):
             sql = u"""
             select fra_index, fra_name
@@ -778,8 +778,8 @@ class Test(ItemList):
         self.__description = u""
 
     # =================================
-    @classmethod
-    def get_list(cls, db, exp):
+    @staticmethod
+    def get_list(db, exp):
         if isinstance(db, SaccadeDB):
             sql = u"""
             select tes_index, tes_name
@@ -909,8 +909,8 @@ class Experiment(ItemListSequence):
             self.load(code=code)
 
     # =================================
-    @classmethod
-    def get_list(cls, db):
+    @staticmethod
+    def get_list(db):
         if isinstance(db, SaccadeDB):
             sql = u"""
             select exp_code, exp_name, exp_version, exp_date_creation, exp_date_update
@@ -1150,16 +1150,14 @@ class Experiment(ItemListSequence):
     # =================================
     def __load_tests(self):
         test_list = Test.get_list(db=self.__database, exp=self.__code)
-        if test_list is not None:
-            for test in test_list:
-                new_test = Test()
-                new_test.load(db=self.__database, exp=self.__code, tes=int(test[0]))
-                self.item_add(item=new_test)
-        self.__load_test_sequence()
-
-    def __load_test_sequence(self):
+        if not test_list:
+            return
+        for test in test_list:
+            new_test = Test()
+            new_test.load(db=self.__database, exp=self.__code, tes=int(test[0]))
+            self.item_add(item=new_test)
         sql = u"""
-        select exp_code, seq_index, tes_index, tes_quantity 
+        select tes_index, tes_quantity 
         from exp_seq
         where exp_code='%s'
         order by seq_index asc;
@@ -1167,25 +1165,21 @@ class Experiment(ItemListSequence):
         seq_res = self.__database.pull_query(query=sql)
         if seq_res is not None:
             for item in seq_res:
-                test_id = int(item[2])
-                quantity = int(item[3])
-                self.sequence_add(test_id, quantity)
+                self.sequence_add(int(item[0]), int(item[1]))
 
     def __save_tests(self):
-        sql = u"delete from test where exp_code='%s';" % self.__code
-        self.__database.push_query(query=sql)
+        self.__database.push_query(query=u"delete from test where exp_code='%s';" % self.__code)
+        if not self._item_dat:
+            return
         for test in self._item_dat:
             index = self._item_dat.index(test)
             test.save(db=self.__database, exp=self.__code, tes=index)
-        self.__save_test_sequence()
-
-    def __save_test_sequence(self):
+        seq_index = 0
         sql = u"""
         insert into exp_seq 
         (exp_code, tes_index, seq_index, tes_quantity)
         values ('%s', '%d', '%d', '%d');
         """
-        seq_index = 0
         for item in self._item_seq:
             tes_index = self._item_dat.index(item[0])
             self.__database.push_query(query=sql % (self.__code, tes_index, seq_index, item[1]))

@@ -12,9 +12,9 @@ from .utils import get_module_path, format_path
 # =============================================================================
 class SaccadeDB(object):
     # =================================
-    def __init__(self, filepath=u""):
+    def __init__(self, path=u""):
         self.__db_script = format_path(get_module_path()+u"/app/resources/database/saccadedb_sqlite.sql")
-        self.__db_file = u"saccadedb.sqlite3" if filepath == u"" else filepath
+        self.__db_file = u"saccadedb.sqlite3" if path == u"" else path
         self.__db_connection = None
         self.connect()
 

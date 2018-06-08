@@ -26,7 +26,7 @@ class ExperimentHandler(object):
         from .saccadedb import SaccadeDB
         from .core import Configuration, Experiment
         if not self.__is_ready:
-            database = SaccadeDB(filepath=db_path)
+            database = SaccadeDB(path=db_path)
             exp_data = Experiment(db=database, code=exp_code)
             cfg_data = Configuration(db=database, name=conf_name)
             if cfg_data.in_database() and exp_data.in_database():
