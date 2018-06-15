@@ -335,42 +335,6 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="hly_02">
-     <item>
-      <spacer name="hsp_01">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pbt_preview">
-       <property name="minimumSize">
-        <size>
-         <width>145</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>145</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>PreView</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
     <layout class="QHBoxLayout" name="hly_03">
      <item>
       <spacer name="hsp_02">

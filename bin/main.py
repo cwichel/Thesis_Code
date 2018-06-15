@@ -9,7 +9,7 @@ from saccadeapp import SaccadeApp
 # =============================================================================
 # Main: Use example
 # =============================================================================
-if __name__ == '__main__':
+if __name__ == u"__main__":
     app = QtGui.QApplication(sys.argv)
     exe = SaccadeApp()
     exe.show()

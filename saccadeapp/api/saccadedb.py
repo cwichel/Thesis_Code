@@ -13,10 +13,21 @@ from .utils import get_module_path, format_path
 class SaccadeDB(object):
     # =================================
     def __init__(self, path=u""):
-        self.__db_script = format_path(get_module_path()+u"/app/resources/database/saccadedb_sqlite.sql")
-        self.__db_file = u"saccadedb.sqlite3" if path == u"" else path
+        self.__db_script = format_path(get_module_path()+u"/api/resources/database/saccadedb_sqlite.sql")
+        self.__db_file = self.__check_path(path=path)
         self.__db_connection = None
         self.connect()
+
+    # =================================
+    @staticmethod
+    def __check_path(path=u""):
+        import os
+        path = format_path(path)
+        if path == u"":
+            return u"saccadedb.sqlite3"
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        return os.path.join(path, u"saccadedb.sqlite3")
 
     # =================================
     def connect(self):

@@ -102,16 +102,18 @@ class Configuration(object):
 
     def get_tracker_conf_path(self):
         if self.__tracker in get_available_trackers():
-            base_path = format_path(get_module_path()+u"/app/resources/eyetrackers/")
+            base_path = format_path(get_module_path()+u"/api/resources/eyetrackers/")
             return base_path+self.__tracker+u"_config.yaml"
         return u""
 
     # -----------------------
-    def set_events_path(self, experiment_path):
-        from os import path
-        experiment_path = format_path(experiment_path)
-        if path.isdir(experiment_path):
-            self.__path = experiment_path
+    def set_events_path(self, path):
+        import os
+        path = format_path(path)
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        if os.path.isdir(path):
+            self.__path = path
             return True
         return False
 
@@ -1033,7 +1035,7 @@ class Experiment(ItemListSequence):
         return self.__con_is_random
 
     # -----------------------
-    def set_rest_conf(self, status, period, time):
+    def set_rest_conf(self, status, period=1, time=1.0):
         self.__con_is_rest = format_bool(state=status, var_name=u"include rest status")
         self.__con_rest_period = format_int(value=period, vmin=1, vmax=9999, var_name=u"rest period")
         self.__con_rest_time = format_float(value=time, vmin=1.0, vmax=9999.0, var_name=u"rest_time")

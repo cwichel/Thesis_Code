@@ -103,7 +103,7 @@ def get_available_colors():
 def get_available_trackers():
     import glob as gl
     from os import path
-    trackers_path = format_path(get_module_path()+u"/app/resources/eyetrackers/")
+    trackers_path = format_path(get_module_path()+u"/api/resources/eyetrackers/")
     return [path.basename(item).replace(u"_config.yaml", u"") for item in gl.glob(trackers_path + u'*.yaml')]
 
 
@@ -151,7 +151,7 @@ def open_psychopy_monitor_center():
         print u"Error: Monitor Center is already open."
         return False
     print u"Opening Monitor Center..."
-    monitor_path = format_path(get_module_path()+u"/app/resources/subprocess/monitorCenter.py")
+    monitor_path = format_path(get_module_path()+u"/api/resources/subprocess/monitorCenter.py")
     monitor_thread = threading.Thread(target=lambda: call([u"python", monitor_path]))
     monitor_thread.setName(name=u"MonitorCenter")
     monitor_thread.start()

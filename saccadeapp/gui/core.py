@@ -4,7 +4,7 @@
 # =============================================================================
 import sys
 from models import *
-from saccadeapp.app import *
+from saccadeapp.api import *
 
 
 # =============================================================================
@@ -157,11 +157,8 @@ class SaccadeApp(base_main, form_main):
     def __handle_execute_experiment(self):
         import subprocess as sp
         exp_code, cfg_name, fra_save = self.__get_execution_parameters()
-        execution_path = format_path(get_module_path()+u"/app/resources/subprocess/experimentExecution.py")
-        process = sp.check_output([u"python", execution_path, u"-e", exp_code, u"-c", cfg_name, u"-f", fra_save])
-        diag_tit = u"Execution message"
-        diag_msg = process.split(u"\n")[1]
-        QtGui.QMessageBox.warning(None, diag_tit, diag_msg)
+        execution_path = format_path(get_module_path()+u"/api/resources/subprocess/experimentExecution.py")
+        sp.call([u"python", execution_path, u"-e", exp_code, u"-c", cfg_name, u"-f", fra_save])
 
     # =================================
     def __handle_experiment_new(self):
@@ -590,7 +587,6 @@ class TestApp(base_tes, form_tes):
         self.pbt_remove.clicked.connect(self.__handle_frame_remove)
         self.pbt_up.clicked.connect(self.__handle_frame_move_up)
         self.pbt_down.clicked.connect(self.__handle_frame_move_down)
-        self.pbt_preview.clicked.connect(self.__handle_preview)
         self.lsv_frame.setModel(self.model_frame)
 
     def __handle_save_action(self):
@@ -655,9 +651,6 @@ class TestApp(base_tes, form_tes):
             self.update_frame_model()
             self.lsv_frame.setCurrentIndex(self.model_frame.index(index+1, 0))
 
-    def __handle_preview(self):
-        print u"Preview Test..."
-
     def __check_id(self, test_id=-1):
         if test_id != -1:
             self.__test = self.__experiment.get_item(item_id=test_id).copy()
@@ -705,7 +698,6 @@ class FrameApp(base_fra, form_fra):
         self.pbt_remove.clicked.connect(self.__handle_component_remove)
         self.pbt_up.clicked.connect(self.__handle_component_move_up)
         self.pbt_down.clicked.connect(self.__handle_component_move_down)
-        self.pbt_preview.clicked.connect(self.__handle_preview)
         self.rbt_task.clicked.connect(self.__handle_task_select)
         self.rbt_time.clicked.connect(self.__handle_task_select)
         self.cmb_background.setModel(self.__model_color)
@@ -794,9 +786,6 @@ class FrameApp(base_fra, form_fra):
             self.led_keys_allowed.setEnabled(False)
             self.led_keys_correct.setEnabled(False)
 
-    def __handle_preview(self):
-        print u"Preview Frame..."
-
     def __check_id(self, frame_id=-1):
         if frame_id != -1:
             self.__frame = self.__test.get_item(item_id=frame_id).copy()
@@ -851,7 +840,6 @@ class ComponentApp(base_com, form_com):
         self.pbt_image_open.clicked.connect(self.__handle_image_open)
         self.pbt_image_remove.clicked.connect(self.__handle_image_remove)
         self.lbl_image_status.setOpenExternalLinks(True)
-        self.pbt_preview.clicked.connect(self.__handle_preview)
         self.rbt_shape.clicked.connect(self.__handle_type_select)
         self.rbt_image.clicked.connect(self.__handle_type_select)
         self.cmb_units.setModel(self.__model_units)
@@ -902,9 +890,6 @@ class ComponentApp(base_com, form_com):
             self.cmb_shape_color.setEnabled(False)
             self.pbt_image_open.setEnabled(True)
             self.pbt_image_remove.setEnabled(True)
-
-    def __handle_preview(self):
-        pass
 
     def __check_id(self, component_id=-1):
         if component_id != -1:
@@ -958,10 +943,10 @@ class ConfigurationApp(base_con, form_con):
         self.cmb_screen.setModel(self.__model_screen)
 
     def __update_profile_data(self):
-        self.__profile.set_events_path(self.led_path.text())
-        self.__profile.set_monitor(self.cmb_monitor.currentText())
-        self.__profile.set_tracker(self.cmb_tracker.currentText())
-        self.__profile.set_screen(self.cmb_screen.currentIndex())
+        self.__profile.set_events_path(path=self.led_path.text())
+        self.__profile.set_screen(screen=self.cmb_screen.currentIndex())
+        self.__profile.set_monitor(monitor=self.cmb_monitor.currentText())
+        self.__profile.set_tracker(tracker=self.cmb_tracker.currentText())
 
     def __handle_save_action(self):
         try:

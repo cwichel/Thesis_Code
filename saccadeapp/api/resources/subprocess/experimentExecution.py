@@ -4,7 +4,7 @@
 # =============================================================================
 import sys
 import argparse
-from saccadeapp.app import ExperimentHandler
+from saccadeapp.api import ExperimentHandler
 
 
 # =============================================================================
@@ -24,6 +24,7 @@ if __name__ == u"__main__":
     database_path, experiment_code, configuration_name, frame_save = check_args(sys.argv[1:])
     database_path = u"" if database_path is None else database_path
     frame_save = True if frame_save is not None and frame_save == u"True" else False
+
     handler = ExperimentHandler()
     msg, op_ok = handler.prepare(db_path=database_path, conf_name=configuration_name, exp_code=experiment_code)
     if not op_ok:
