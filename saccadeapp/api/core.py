@@ -56,7 +56,7 @@ class Configuration(object):
     def set_name(self, name):
         name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
         if self.__database:
-            sql = u"select * from configuration where con_name='%s';" % name
+            sql = u"select * from configuration where con_name='{0}';".format(name)
             mas_res = self.__database.pull_query(query=sql)
             if mas_res is None:
                 self.__name = name
@@ -128,8 +128,8 @@ class Configuration(object):
             select 
             con_screen, con_monitor, con_tracker, con_path
             from configuration
-            where con_name='%s';
-            """ % name
+            where con_name='{0}';
+            """.format(name)
             con_res = self.__database.pull_query(query=sql)
             if con_res is not None:
                 self.__in_db = True
@@ -146,8 +146,8 @@ class Configuration(object):
             sql = u"""
             insert or replace into configuration
             (con_name, con_screen, con_tracker, con_monitor, con_path)
-            values ('%s', '%d', '%s', '%s', '%s')
-            """ % (self.__name, self.__screen, self.__tracker, self.__monitor, self.__path)
+            values ('{0}', '{1}', '{2}', '{3}', '{4}')
+            """.format(self.__name, self.__screen, self.__tracker, self.__monitor, self.__path)
             operation_ok = self.__database.push_query(query=sql)
             self.__in_db = operation_ok
             return operation_ok
@@ -162,7 +162,7 @@ class Configuration(object):
 
     def remove(self):
         if self.__in_db:
-            sql = u"delete from configuration where con_name='%s';" % self.__name
+            sql = u"delete from configuration where con_name='{0}';".format(self.__name)
             operation_ok = self.__database.push_query(query=sql)
             self.__in_db = not operation_ok
             return operation_ok
@@ -394,9 +394,9 @@ class Component(object):
             sql = u"""
             select com_index, com_name, com_shape
             from component
-            where exp_code='%s' and tes_index='%d' and fra_index='%d'
+            where exp_code='{0}' and tes_index='{1}' and fra_index='{2}'
             order by com_index asc;
-            """ % (exp, tes, fra)
+            """.format(exp, tes, fra)
             item_list = db.pull_query(query=sql)
             if item_list is not None:
                 return [[int(item[0]), item[1], item[2]] for item in item_list]
@@ -521,8 +521,8 @@ class Component(object):
         select
         com_name, com_units, com_pos_x, com_pos_y, com_rotation, com_size, com_image, com_shape, com_color
         from component
-        where exp_code='%s' and tes_index='%d' and fra_index='%d' and com_index='%d';
-        """ % (exp, tes, fra, com)
+        where exp_code='{0}' and tes_index='{1}' and fra_index='{2}' and com_index='{3}';
+        """.format(exp, tes, fra, com)
         com_res = db.pull_query(query=sql)
         if com_res is not None:
             self.__name = unicode(com_res[0, 0])
@@ -543,8 +543,8 @@ class Component(object):
         (exp_code, tes_index, fra_index, com_index, 
         com_name, com_units, com_pos_x, com_pos_y, com_rotation, com_size, 
         com_image, com_shape, com_color)
-        values ('%s', '%d', '%d', '%d', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s', '%s');
-        """ % (
+        values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}', '{11}', '{12}');
+        """.format(
             exp, tes, fra, com,
             self.__name, self.__units, self.__pos[0], self.__pos[1], self.__rot, self.__size,
             self.__encode_image(), self.__shape, self.__color
@@ -610,9 +610,9 @@ class Frame(ItemList):
             sql = u"""
             select fra_index, fra_name
             from frame
-            where exp_code='%s' and tes_index='%d'
+            where exp_code='{0}' and tes_index='{1}'
             order by fra_index asc;
-            """ % (exp, tes)
+            """.format(exp, tes)
             item_list = db.pull_query(query=sql)
             if item_list is not None:
                 return [[int(item[0]), item[1]] for item in item_list]
@@ -693,8 +693,8 @@ class Frame(ItemList):
         select
         fra_name, fra_color, fra_is_task, fra_time, fra_keys_allowed, fra_keys_correct
         from frame
-        where exp_code='%s' and tes_index='%d' and fra_index='%d';
-        """ % (exp, tes, fra)
+        where exp_code='{0}' and tes_index='{1}' and fra_index='{2}';
+        """.format(exp, tes, fra)
         fra_res = db.pull_query(query=sql)
         if fra_res is not None:
             self.__name = unicode(fra_res[0, 0])
@@ -712,8 +712,8 @@ class Frame(ItemList):
         insert into frame
         (exp_code, tes_index, fra_index, 
         fra_name, fra_color, fra_is_task, fra_time, fra_keys_allowed, fra_keys_correct)
-        values ('%s', '%d', '%d', '%s', '%s', '%x', '%f', '%s', '%s');
-        """ % (
+        values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5:x}', '{6}', '{7}', '{8}');
+        """.format(
             exp, tes, fra,
             self.__name, self.__color, self.__is_task, self.__time, self.__keys_allowed, self.__keys_correct
         )
@@ -786,9 +786,9 @@ class Test(ItemList):
             sql = u"""
             select tes_index, tes_name
             from test
-            where exp_code='%s'
+            where exp_code='{0}'
             order by tes_index asc;
-            """ % exp
+            """.format(exp)
             item_list = db.pull_query(query=sql)
             if item_list is not None:
                 return [[int(item[0]), item[1]] for item in item_list]
@@ -815,8 +815,8 @@ class Test(ItemList):
         select
         tes_name, tes_description
         from test
-        where exp_code='%s' and tes_index='%d';
-        """ % (exp, tes)
+        where exp_code='{0}' and tes_index='{1}';
+        """.format(exp, tes)
         tes_res = db.pull_query(query=sql)
         if tes_res is not None:
             self.__name = unicode(tes_res[0, 0])
@@ -829,8 +829,8 @@ class Test(ItemList):
         sql = u"""
         insert into test
         (exp_code, tes_index, tes_name, tes_description) 
-        values ('%s', '%d', '%s', '%s');
-        """ % (
+        values ('{0}', '{1}', '{2}', '{3}');
+        """.format(
             exp, tes,
             self.__name, self.__description
         )
@@ -941,7 +941,7 @@ class Experiment(ItemListSequence):
     def set_code(self, code):
         code = format_text(text=code, lmin=3, lmax=10, var_name=u"code")
         if self.__database:
-            sql = u"select * from experiment where exp_code='%s';" % code
+            sql = u"select * from experiment where exp_code='{0}';".format(code)
             operation_ok = self.__database.pull_query(query=sql)
             if operation_ok is None:
                 self.__code = code
@@ -956,7 +956,7 @@ class Experiment(ItemListSequence):
         name = format_text(text=name, lmin=3, lmax=50, var_name=u"name")
         version = format_text(text=version, lmin=3, lmax=10, var_name=u"version")
         if self.__database:
-            sql = u"select * from experiment where exp_name='%s' and exp_version='%s';" % (name, version)
+            sql = u"select * from experiment where exp_name='{0}' and exp_version='{1}';".format(name, version)
             operation_ok = self.__database.pull_query(query=sql)
             if operation_ok is None:
                 self.__name = name
@@ -980,7 +980,7 @@ class Experiment(ItemListSequence):
 
     # -----------------------
     def set_comments(self, text):
-        self.__comments = format_text(text=text, var_name=u"comments")
+        self.__comments = format_text(text=text, lmax=50, var_name=u"comments")
         return True
 
     def get_comments(self):
@@ -1063,8 +1063,8 @@ class Experiment(ItemListSequence):
             from experiment as exp
             inner join exp_dia as dia on exp.exp_code=dia.exp_code
             inner join exp_con as con on exp.exp_code=con.exp_code
-            where exp.exp_code='%s';
-            """ % code
+            where exp.exp_code='{0}';
+            """.format(code)
             exp_res = self.__database.pull_query(query=sql)
             if exp_res is not None:
                 self.__in_db = True
@@ -1095,36 +1095,38 @@ class Experiment(ItemListSequence):
             if self.__in_db:
                 sql = u"""
                 update experiment set
-                exp_name='%s', exp_version='%s', exp_description='%s', exp_instructions='%s', exp_comments='%s' 
-                where exp_code='%s';
+                exp_name='{1}', exp_version='{2}', exp_description='{3}', exp_instructions='{4}', exp_comments='{5}' 
+                where exp_code='{0}';
                 update exp_dia set 
-                dia_is_active='%x', dia_ask_age='%x', dia_ask_gender='%x', dia_ask_glasses='%x', dia_ask_eye_color='%x'
-                where exp_code='%s';
+                dia_is_active='{6:x}', dia_ask_age='{7:x}', dia_ask_gender='{8:x}', dia_ask_glasses='{9:x}', 
+                dia_ask_eye_color='{10:x}'
+                where exp_code='{0}';
                 update exp_con set 
-                con_need_space='%x', con_is_random='%x', con_is_rest='%x', con_rest_period='%d', con_rest_time='%f'
-                where exp_code='%s';
-                """ % (
-                    self.__name, self.__version, self.__description, self.__instructions, self.__comments, self.__code,
+                con_need_space='{11:x}', con_is_random='{12:x}', con_is_rest='{13:x}', con_rest_period='{14}', 
+                con_rest_time='{15}'
+                where exp_code='{0}';
+                """.format(
+                    self.__code, self.__name, self.__version, self.__description, self.__instructions, self.__comments,
                     self.__dia_is_active, self.__dia_ask_age, self.__dia_ask_gender, self.__dia_ask_glasses,
-                    self.__dia_ask_eye_color, self.__code, self.__con_need_space, self.__con_is_random,
-                    self.__con_is_rest, self.__con_rest_period, self.__con_rest_time, self.__code
+                    self.__dia_ask_eye_color, self.__con_need_space, self.__con_is_random, self.__con_is_rest,
+                    self.__con_rest_period, self.__con_rest_time
                 )
             else:
                 sql = u"""
                 insert into experiment 
                 (exp_code, exp_name, exp_version, exp_description, exp_comments, exp_instructions)
-                values ('%s', '%s', '%s', '%s', '%s', '%s');
+                values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}');
                 insert into exp_dia
                 (exp_code, dia_is_active, dia_ask_age, dia_ask_gender, dia_ask_glasses, dia_ask_eye_color)
-                values ('%s', '%x', '%x', '%x', '%x', '%x');
+                values ('{0}', '{6:x}', '{7:x}', '{8:x}', '{9:x}', '{10:x}');
                 insert into exp_con
                 (exp_code, con_need_space, con_is_random, con_is_rest, con_rest_period, con_rest_time)
-                values ('%s', '%x', '%x', '%x', '%d', '%f');
-                """ % (
+                values ('{0}', '{11:x}', '{12:x}', '{13:x}', '{14}', '{15}');
+                """.format(
                     self.__code, self.__name, self.__version, self.__description, self.__comments, self.__instructions,
-                    self.__code, self.__dia_is_active, self.__dia_ask_age, self.__dia_ask_gender,
-                    self.__dia_ask_glasses, self.__dia_ask_eye_color, self.__code, self.__con_need_space,
-                    self.__con_is_random, self.__con_is_rest, self.__con_rest_period, self.__con_rest_time
+                    self.__dia_is_active, self.__dia_ask_age, self.__dia_ask_gender, self.__dia_ask_glasses,
+                    self.__dia_ask_eye_color, self.__con_need_space, self.__con_is_random, self.__con_is_rest,
+                    self.__con_rest_period, self.__con_rest_time
                 )
             operation_ok = self.__database.push_query(query=sql)
             self.__in_db = operation_ok
@@ -1143,7 +1145,7 @@ class Experiment(ItemListSequence):
 
     def remove(self):
         if self.__in_db:
-            sql = u"delete from experiment where exp_code='%s';" % self.__code
+            sql = u"delete from experiment where exp_code='{0}';".format(self.__code)
             exp_res = self.__database.push_query(query=sql)
             self.__in_db = not exp_res
             return exp_res
@@ -1161,16 +1163,16 @@ class Experiment(ItemListSequence):
         sql = u"""
         select tes_index, tes_quantity 
         from exp_seq
-        where exp_code='%s'
+        where exp_code='{0}'
         order by seq_index asc;
-        """ % self.__code
+        """.format(self.__code)
         seq_res = self.__database.pull_query(query=sql)
         if seq_res is not None:
             for item in seq_res:
                 self.sequence_add(int(item[0]), int(item[1]))
 
     def __save_tests(self):
-        self.__database.push_query(query=u"delete from test where exp_code='%s';" % self.__code)
+        self.__database.push_query(query=u"delete from test where exp_code='{0}';".format(self.__code))
         if not self._item_dat:
             return
         for test in self._item_dat:
@@ -1180,11 +1182,11 @@ class Experiment(ItemListSequence):
         sql = u"""
         insert into exp_seq 
         (exp_code, tes_index, seq_index, tes_quantity)
-        values ('%s', '%d', '%d', '%d');
+        values ('{0}', '{1}', '{2}', '{3}');
         """
         for item in self._item_seq:
             tes_index = self._item_dat.index(item[0])
-            self.__database.push_query(query=sql % (self.__code, tes_index, seq_index, item[1]))
+            self.__database.push_query(query=sql.format(self.__code, tes_index, seq_index, item[1]))
             seq_index += 1
 
     # =================================

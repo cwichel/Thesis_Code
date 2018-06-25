@@ -37,16 +37,16 @@ def check_item_name(item_parent, item, old_name=u""):
 # =============================================================================
 # Qt GUI Modules
 # =============================================================================
-base_main, form_main = get_compiled_ui(u"saccadeApp.ui")
-base_exp, form_exp = get_compiled_ui(u"experiment.ui")
-base_tes, form_tes = get_compiled_ui(u"test.ui")
-base_tes_seq, form_tes_seq = get_compiled_ui(u"test_sequence.ui")
-base_fra, form_fra = get_compiled_ui(u"frame.ui")
-base_com, form_com = get_compiled_ui(u"component.ui")
-base_con, form_con = get_compiled_ui(u"configuration.ui")
-base_copy_exp, form_copy_exp = get_compiled_ui(u"copy_experiment.ui")
-base_copy, form_copy = get_compiled_ui(u"copy_item.ui")                 # Used for: ItemList objects, Configuration
-base_about, form_about = get_compiled_ui(u"about.ui")
+base_main, form_main = get_compiled_ui(u"SaccadeApp.ui")
+base_exp, form_exp = get_compiled_ui(u"ExperimentApp.ui")
+base_tes, form_tes = get_compiled_ui(u"TestApp.ui")
+base_tes_seq, form_tes_seq = get_compiled_ui(u"TestSequenceApp.ui")
+base_fra, form_fra = get_compiled_ui(u"FrameApp.ui")
+base_com, form_com = get_compiled_ui(u"ComponentApp.ui")
+base_con, form_con = get_compiled_ui(u"ConfigurationApp.ui")
+base_copy_exp, form_copy_exp = get_compiled_ui(u"CopyExperimentApp.ui")
+base_copy, form_copy = get_compiled_ui(u"CopyItemApp.ui")                 # Used for: ItemList objects, Configuration
+base_about, form_about = get_compiled_ui(u"AboutApp.ui")
 
 
 # =============================================================================
@@ -69,7 +69,6 @@ class SaccadeApp(base_main, form_main):
     def __setup_menu(self):
         self.mac_documentation.triggered.connect(self.__app_documentation)
         self.mac_about.triggered.connect(self.__app_about)
-        self.mac_exit.triggered.connect(self.__app_close)
 
     @staticmethod
     def __app_documentation():
@@ -79,10 +78,6 @@ class SaccadeApp(base_main, form_main):
     def __app_about():
         dialog = AboutApp()
         dialog.exec_()
-
-    @staticmethod
-    def __app_close():
-        sys.exit()
 
     # =================================
     def __setup_tabs(self):
@@ -184,7 +179,7 @@ class SaccadeApp(base_main, form_main):
             name = parent_node.get_mask()
             version = this_node.get_mask()
             diag_tit = u"Remove"
-            diag_msg = u"Do you really want to remove this\nexperiment (%s %s)?" % (name, version)
+            diag_msg = u"Do you really want to remove this\nexperiment ({0} {1})?".format(name, version)
             diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if diag_res == QtGui.QMessageBox.Yes:
                 experiment = Experiment(db=self.database, code=this_node.get_code())
@@ -217,7 +212,7 @@ class SaccadeApp(base_main, form_main):
         if index != -1:
             name = self.model_configuration.get_item(index=index)
             diag_tit = u"Remove"
-            diag_msg = u"Do you really want to remove this\nconfiguration profile (%s)?" % name
+            diag_msg = u"Do you really want to remove this\nconfiguration profile ({0})?".format(name)
             diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if diag_res == QtGui.QMessageBox.Yes:
                 profile = Configuration(db=self.database, name=name)
@@ -384,7 +379,7 @@ class ExperimentApp(base_exp, form_exp):
         if index != -1:
             name = self.model_test_data.get_item(index=index)
             diag_tit = u"Remove"
-            diag_msg = u"Do you really want to remove this\ntest (%s)?" % name
+            diag_msg = u"Do you really want to remove this\ntest ({0})?".format(name)
             diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if diag_res == QtGui.QMessageBox.Yes:
                 self.__experiment.item_remove(item_id=index)
@@ -631,7 +626,7 @@ class TestApp(base_tes, form_tes):
         if index != -1:
             name = self.model_frame.get_item(index=index)
             diag_tit = u"Remove"
-            diag_msg = u"Do you really want to remove this\nframe (%s)?" % name
+            diag_msg = u"Do you really want to remove this\nframe ({0})?".format(name)
             diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if diag_res == QtGui.QMessageBox.Yes:
                 self.__test.item_remove(item_id=index)
@@ -753,7 +748,7 @@ class FrameApp(base_fra, form_fra):
         if index != -1:
             name = self.model_component.get_item(index=index)[0]
             diag_tit = u"Remove"
-            diag_msg = u"Do you really want to remove this\ncomponent (%s)?" % name
+            diag_msg = u"Do you really want to remove this\ncomponent ({0})?".format(name)
             diag_res = QtGui.QMessageBox.question(self, diag_tit, diag_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if diag_res == QtGui.QMessageBox.Yes:
                 self.__frame.item_remove(item_id=index)

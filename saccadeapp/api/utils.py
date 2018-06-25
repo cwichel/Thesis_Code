@@ -114,7 +114,7 @@ def get_available_screens():
     scr_num = 1
     scr_lst = []
     for screen in screens:
-        scr_lst.append(u"monitor %d: (w=%s, h=%s)" % (scr_num, screen.width, screen.height))
+        scr_lst.append(u"monitor {0}: (w={1}, h={2})".format(scr_num, screen.width, screen.height))
         scr_num += 1
     return scr_lst
 
@@ -152,7 +152,7 @@ def open_psychopy_monitor_center():
         return False
     print u"Opening Monitor Center..."
     monitor_path = format_path(get_module_path()+u"/api/resources/subprocess/monitorCenter.py")
-    monitor_thread = threading.Thread(target=lambda: call([u"python", monitor_path]))
+    monitor_thread = threading.Thread(target=lambda: call([u"python ", monitor_path]))
     monitor_thread.setName(name=u"MonitorCenter")
     monitor_thread.start()
     return True

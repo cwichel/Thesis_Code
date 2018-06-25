@@ -112,6 +112,8 @@ class ExperimentRuntime(ioHubExperimentRuntime):
     def run(self, *args):
         from .switch import Switch
         # Hardware configuration
+        kb = self.hub.devices.keyboard
+        display = self.hub.devices.display
         try:
             tracker = self.hub.devices.tracker
             tracker.runSetupProcedure()
@@ -123,8 +125,6 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                                allowCancel=False, display_index=0)
             md.show()
             core.quit()
-        display = self.hub.devices.display
-        kb = self.hub.devices.keyboard
         # Main window configuration
         win = visual.Window(size=display.getPixelResolution(), monitor=display.getPsychopyMonitorName(), fullscr=True,
                             units=display.getCoordinateType(), allowGUI=False, screen=display.getIndex())
