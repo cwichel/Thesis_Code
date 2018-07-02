@@ -111,8 +111,10 @@ def get_available_screens():
     import pyglet
     display = pyglet.window.Display()
     screens = display.get_screens()
-    scr_num = 1
     scr_lst = []
+    scr_num = 1
+    # scr_lst.append(u"monitor {0}: (w={1}, h={2})".format(1, 1680, 1050))
+    # scr_lst.append(u"monitor {0}: (w={1}, h={2})".format(2, 1680, 1050))
     for screen in screens:
         scr_lst.append(u"monitor {0}: (w={1}, h={2})".format(scr_num, screen.width, screen.height))
         scr_num += 1

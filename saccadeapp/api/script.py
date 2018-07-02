@@ -208,7 +208,7 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                                 next_index, next_frame[u"name"]))
                         else:
                             self.hub.sendMessageEvent(text=u"No More Frames Available.")
-                        test_state = u"flip" if next_index==0 else u"loop"
+                        test_state = u"flip" if next_index == 0 else u"loop"
                     elif case(u"flip"):
                         if frame_index+1 == frame_count:
                             test_state = u"end"
@@ -224,8 +224,8 @@ class ExperimentRuntime(ioHubExperimentRuntime):
                         flip_time = win.flip()
                         timer.reset()
                         if self.__frame_save:
-                            frame_name = u"Test[{0}_{1}]_Frame[{2}_{3}].png".format(
-                                test_index, test[u"name"], frame_index, this_frame[u"name"])
+                            frame_name = u"Test[{0}]_Frame[{1}].png".format(
+                                test_index, frame_index)
                             win.getMovieFrame()
                             win.saveMovieFrames(self.__frame_save_path+frame_name)
                         test_state = u"buffer"
